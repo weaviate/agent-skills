@@ -1,0 +1,8 @@
+{
+  "name": "weaviate",
+  "description": "Weaviate plugin for Claude Coding",
+  "version": "0.1.0",
+  "author": {
+    "name": "Weaviate"
+  }
+}
