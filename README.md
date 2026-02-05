@@ -1,10 +1,6 @@
 # Weaviate Agent Skills
 
-A [Claude Code plugin](https://code.claude.com/docs/en/plugins) and [Agent Skill](https://agentskills.io) for interacting with [Weaviate](https://weaviate.io) database.
-
-
-## Compatibility
-
+Agent Skills to empower developers building AI applications with Weaviate.
 Works with any agent that supports the [Agent Skills](https://agentskills.io/home#adoption) format.
 
 ## Installation

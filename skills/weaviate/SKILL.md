@@ -21,20 +21,6 @@ Set keys for providers your collections use. All are auto-detected from environm
 - `AZURE_API_KEY`, `ANTHROPIC_API_KEY`, `XAI_API_KEY`
 - `AWS_ACCESS_KEY`, `AWS_SECRET_KEY`
 
-## Prerequisites
-
-Scripts require `uv` (recommended) or Python 3.11+ with pip.
-
-Check if uv is installed:
-```bash
-uv --version
-```
-
-Install uv if needed:
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
 ## Available Scripts
 
 ### Query Agent - Ask Mode
