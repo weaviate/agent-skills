@@ -78,11 +78,15 @@ def main(
                     for p in config.properties
                 ],
                 "replication_config": {
-                    "factor": config.replication_config.factor if config.replication_config else None
+                    "factor": config.replication_config.factor
+                    if config.replication_config
+                    else None
                 },
                 "multi_tenancy_config": {
-                    "enabled": config.multi_tenancy_config.enabled if config.multi_tenancy_config else False
-                }
+                    "enabled": config.multi_tenancy_config.enabled
+                    if config.multi_tenancy_config
+                    else False
+                },
             }
 
             if json_output:
@@ -91,20 +95,24 @@ def main(
                 print(f"## Collection: {name}\n")
                 if config.description:
                     print(f"**Description**: {config.description}\n")
-                
+
                 print(f"**Vectorizer**: {config.vectorizer or 'None'}\n")
-                
+
                 print("### Properties\n")
                 print("| Name | Data Type | Description |")
                 print("|------|-----------|-------------|")
                 for p in config.properties:
                     print(f"| {p.name} | {p.data_type} | {p.description or 'N/A'} |")
-                
+
                 if config.replication_config:
-                   print(f"\n**Replication Factor**: {config.replication_config.factor}")
-                
+                    print(
+                        f"\n**Replication Factor**: {config.replication_config.factor}"
+                    )
+
                 if config.multi_tenancy_config:
-                   print(f"**Multi-tenancy**: {'Enabled' if config.multi_tenancy_config.enabled else 'Disabled'}")
+                    print(
+                        f"**Multi-tenancy**: {'Enabled' if config.multi_tenancy_config.enabled else 'Disabled'}"
+                    )
 
     except weaviate.exceptions.WeaviateConnectionError as e:
         print(f"Error: Connection failed - {e}", file=sys.stderr)

@@ -63,14 +63,16 @@ def main(
             if json_output:
                 result = []
                 for name, config in collections.items():
-                    result.append({
-                        "name": name,
-                        "description": config.description,
-                        "properties": [
-                            {"name": p.name, "data_type": str(p.data_type)}
-                            for p in config.properties
-                        ]
-                    })
+                    result.append(
+                        {
+                            "name": name,
+                            "description": config.description,
+                            "properties": [
+                                {"name": p.name, "data_type": str(p.data_type)}
+                                for p in config.properties
+                            ],
+                        }
+                    )
                 print(json.dumps(result, indent=2, default=str))
             else:
                 if not collections:
