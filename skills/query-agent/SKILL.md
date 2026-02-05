@@ -1,6 +1,6 @@
 ---
 name: query-agent
-description: Query Weaviate using natural language with Query Agent. Supports search mode (returns objects for agent processing) and ask mode (returns generated answers with sources). Use when user wants to search Weaviate collections with natural language queries.
+description: Query Weaviate using natural language with Query Agent. Supports search mode (returns raw objects) and ask mode (returns generated answers with sources). Use when user wants to search Weaviate collections with natural language queries.
 ---
 
 # Weaviate Query Agent
