@@ -10,43 +10,25 @@
 Query Weaviate using Query Agent in Search mode.
 
 Usage:
-    uv run search.py --query "your search" --collections "Collection1,Collection2" [--limit 10] [--json]
+    uv run search.py --query "your query" --collections "Collection1,Collection2" [--limit 10] [--json]
 
 Environment Variables:
     WEAVIATE_URL: Weaviate Cloud cluster URL
     WEAVIATE_API_KEY: API key for authentication
-    OPENAI_API_KEY: OpenAI API key (if collections use OpenAI embeddings)
-
-Output:
-    Retrieved objects in markdown format (or JSON with --json flag)
+    + Any provider API keys (OPENAI_API_KEY, COHERE_API_KEY, etc.) - auto-detected
 """
 
-import os
-import sys
 import json
+import sys
+
 import typer
 import weaviate
-from weaviate.classes.init import Auth
 from weaviate.agents.query import QueryAgent
 
+# Import shared connection utilities (local to this skill)
+from weaviate_conn import get_client
+
 app = typer.Typer()
-
-
-def validate_env() -> tuple[str, str, str | None]:
-    """Validate required environment variables."""
-    url = os.environ.get("WEAVIATE_URL", "").strip()
-    api_key = os.environ.get("WEAVIATE_API_KEY", "").strip()
-    openai_key = os.environ.get("OPENAI_API_KEY", "").strip() or None
-
-    if not url:
-        print("Error: WEAVIATE_URL environment variable not set", file=sys.stderr)
-        raise typer.Exit(1)
-
-    if not api_key:
-        print("Error: WEAVIATE_API_KEY environment variable not set", file=sys.stderr)
-        raise typer.Exit(1)
-
-    return url, api_key, openai_key
 
 
 def parse_collections(collections_str: str) -> list[str]:
@@ -60,31 +42,18 @@ def parse_collections(collections_str: str) -> list[str]:
 
 @app.command()
 def main(
-    query: str = typer.Option(
-        ..., "--query", "-q", help="Natural language search query"
-    ),
+    query: str = typer.Option(..., "--query", "-q", help="Natural language search query"),
     collections: str = typer.Option(
         ..., "--collections", "-c", help="Comma-separated collection names"
     ),
-    limit: int = typer.Option(
-        10, "--limit", "-l", help="Maximum number of results to return"
-    ),
+    limit: int = typer.Option(10, "--limit", "-l", help="Maximum results to return"),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
 ):
-    """Query Weaviate using Query Agent in Search mode (retrieval only, no answer generation)."""
-
-    url, api_key, openai_key = validate_env()
+    """Query Weaviate using Query Agent in Search mode (retrieves raw objects)."""
     collection_list = parse_collections(collections)
 
     try:
-        headers = {"X-OpenAI-Api-Key": openai_key} if openai_key else None
-
-        print("Connecting to Weaviate...", file=sys.stderr)
-        with weaviate.connect_to_weaviate_cloud(
-            cluster_url=url,
-            auth_credentials=Auth.api_key(api_key),
-            headers=headers,
-        ) as client:
+        with get_client() as client:
             agent = QueryAgent(client=client, collections=collection_list)
 
             print("Searching...", file=sys.stderr)
@@ -115,25 +84,19 @@ def main(
             if json_output:
                 print(json.dumps(result, indent=2, default=str))
             else:
-                # Markdown output for agent consumption
                 print(f"## Search Results\n")
                 print(f"**Query:** {query}")
                 print(f"**Collections:** {', '.join(collection_list)}")
                 print(f"**Found:** {len(objects)} objects\n")
 
                 if objects:
-                    # Get all unique property keys
+                    # Collect all property keys
                     all_props = set()
                     for obj in objects:
                         all_props.update(obj.get("properties", {}).keys())
-
-                    # Sort property keys for consistent display
                     sorted_props = sorted(list(all_props))
 
-                    # Define headers
-                    headers = ["#", "Full UUID", "Collection"] + sorted_props
-
-                    # Create table header
+                    headers = ["#", "UUID", "Collection"] + sorted_props
                     header_row = "| " + " | ".join(headers) + " |"
                     separator_row = "| " + " | ".join(["---"] * len(headers)) + " |"
 
@@ -143,19 +106,14 @@ def main(
                     for idx, obj in enumerate(objects, 1):
                         row_data = [
                             str(idx),
-                            str(obj.get("uuid", "N/A")),  # Full UUID
-                            obj.get("collection", "Unknown"),
+                            str(obj.get("uuid", "N/A")),
+                            str(obj.get("collection", "N/A")),
                         ]
 
                         props = obj.get("properties", {})
                         for prop in sorted_props:
                             val = props.get(prop, "-")
                             val_str = str(val).replace("\n", " ").replace("|", "\\|")
-
-                            # Only truncate if NOT 'content'
-                            if prop.lower() != "content" and len(val_str) > 100:
-                                val_str = val_str[:97] + "..."
-
                             row_data.append(val_str)
 
                         print("| " + " | ".join(row_data) + " |")

@@ -14,42 +14,24 @@ Usage:
 Environment Variables:
     WEAVIATE_URL: Weaviate Cloud cluster URL
     WEAVIATE_API_KEY: API key for authentication
-    OPENAI_API_KEY: OpenAI API key (if collections use OpenAI embeddings)
-
-Output:
-    Search results with scores in markdown format (or JSON with --json flag)
+    + Any provider API keys (OPENAI_API_KEY, COHERE_API_KEY, etc.) - auto-detected
 """
 
-import os
-import sys
 import json
+import sys
+
 import typer
 import weaviate
-from weaviate.classes.init import Auth
 from weaviate.classes.query import MetadataQuery
+
+# Import shared connection utilities (local to this skill)
+from weaviate_conn import get_client
 
 app = typer.Typer()
 
 
-def validate_env() -> tuple[str, str, str | None]:
-    """Validate required environment variables."""
-    url = os.environ.get("WEAVIATE_URL", "").strip()
-    api_key = os.environ.get("WEAVIATE_API_KEY", "").strip()
-    openai_key = os.environ.get("OPENAI_API_KEY", "").strip() or None
-
-    if not url:
-        print("Error: WEAVIATE_URL environment variable not set", file=sys.stderr)
-        raise typer.Exit(1)
-
-    if not api_key:
-        print("Error: WEAVIATE_API_KEY environment variable not set", file=sys.stderr)
-        raise typer.Exit(1)
-
-    return url, api_key, openai_key
-
-
 def parse_properties(properties_str: str | None) -> list[str] | None:
-    """Parse comma-separated property names with optional boost."""
+    """Parse comma-separated property names."""
     if not properties_str:
         return None
     return [p.strip() for p in properties_str.split(",") if p.strip()]
@@ -78,19 +60,10 @@ def main(
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
 ):
     """Perform hybrid search (vector + keyword) on a Weaviate collection."""
-
-    url, api_key, openai_key = validate_env()
     query_properties = parse_properties(properties)
 
     try:
-        headers = {"X-OpenAI-Api-Key": openai_key} if openai_key else None
-
-        print("Connecting to Weaviate...", file=sys.stderr)
-        with weaviate.connect_to_weaviate_cloud(
-            cluster_url=url,
-            auth_credentials=Auth.api_key(api_key),
-            headers=headers,
-        ) as client:
+        with get_client() as client:
             if not client.collections.exists(collection):
                 print(f"Error: Collection '{collection}' not found.", file=sys.stderr)
                 raise typer.Exit(1)
@@ -114,9 +87,7 @@ def main(
                     "uuid": str(obj.uuid),
                     "properties": dict(obj.properties),
                     "score": obj.metadata.score if obj.metadata else None,
-                    "explain_score": obj.metadata.explain_score
-                    if obj.metadata
-                    else None,
+                    "explain_score": obj.metadata.explain_score if obj.metadata else None,
                 }
                 objects.append(obj_data)
 

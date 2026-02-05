@@ -25,7 +25,7 @@ When necessary, use AskUserQuestion to make entering arguments easier.
    - Default limit to 10 if not specified
 3. Run the Query Agent search script:
    ```bash
-   uv run skills/query-agent/scripts/search.py --query "USER_QUERY" --collections "COLLECTIONS" --limit "LIMIT" --json
+   uv run skills/weaviate/scripts/query_search.py --query "USER_QUERY" --collections "COLLECTIONS" --limit "LIMIT" --json
    ```
 4. Display results to user
 

@@ -14,40 +14,23 @@ Usage:
 Environment Variables:
     WEAVIATE_URL: Weaviate Cloud cluster URL
     WEAVIATE_API_KEY: API key for authentication
-
-Output:
-    Search results with BM25 scores in markdown format (or JSON with --json flag)
 """
 
-import os
-import sys
 import json
+import sys
+
 import typer
 import weaviate
-from weaviate.classes.init import Auth
 from weaviate.classes.query import MetadataQuery
+
+# Import shared connection utilities (local to this skill)
+from weaviate_conn import get_client
 
 app = typer.Typer()
 
 
-def validate_env() -> tuple[str, str]:
-    """Validate required environment variables."""
-    url = os.environ.get("WEAVIATE_URL", "").strip()
-    api_key = os.environ.get("WEAVIATE_API_KEY", "").strip()
-
-    if not url:
-        print("Error: WEAVIATE_URL environment variable not set", file=sys.stderr)
-        raise typer.Exit(1)
-
-    if not api_key:
-        print("Error: WEAVIATE_API_KEY environment variable not set", file=sys.stderr)
-        raise typer.Exit(1)
-
-    return url, api_key
-
-
 def parse_properties(properties_str: str | None) -> list[str] | None:
-    """Parse comma-separated property names with optional boost (e.g., 'title^2,content')."""
+    """Parse comma-separated property names with optional boost."""
     if not properties_str:
         return None
     return [p.strip() for p in properties_str.split(",") if p.strip()]
@@ -62,21 +45,15 @@ def main(
         None,
         "--properties",
         "-p",
-        help="Comma-separated properties to search (e.g., 'title^2,content')",
+        help="Properties to search with optional boost (e.g., 'title^2,content')",
     ),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
 ):
     """Perform keyword (BM25) search on a Weaviate collection."""
-
-    url, api_key = validate_env()
     query_properties = parse_properties(properties)
 
     try:
-        print("Connecting to Weaviate...", file=sys.stderr)
-        with weaviate.connect_to_weaviate_cloud(
-            cluster_url=url,
-            auth_credentials=Auth.api_key(api_key),
-        ) as client:
+        with get_client() as client:
             if not client.collections.exists(collection):
                 print(f"Error: Collection '{collection}' not found.", file=sys.stderr)
                 raise typer.Exit(1)
@@ -126,7 +103,7 @@ def main(
                         all_props.update(obj.get("properties", {}).keys())
                     sorted_props = sorted(list(all_props))
 
-                    headers = ["#", "UUID", "BM25 Score"] + sorted_props
+                    headers = ["#", "UUID", "Score"] + sorted_props
                     header_row = "| " + " | ".join(headers) + " |"
                     separator_row = "| " + " | ".join(["---"] * len(headers)) + " |"
 
