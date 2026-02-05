@@ -72,9 +72,7 @@ def main(
                 "description": config.description,
                 "vectorizer_config": vectorizer_config,
                 "properties": properties,
-                "replication_factor": getattr(
-                    config.replication_config, "factor", None
-                )
+                "replication_factor": getattr(config.replication_config, "factor", None)
                 if hasattr(config, "replication_config")
                 else None,
                 "multi_tenancy_enabled": getattr(
@@ -91,11 +89,15 @@ def main(
                 print(f"**Description:** {config.description or 'N/A'}")
 
                 if vectorizer_config:
-                    print(f"**Vectorizer:** {vectorizer_config.get('vectorizer', 'N/A')}")
+                    print(
+                        f"**Vectorizer:** {vectorizer_config.get('vectorizer', 'N/A')}"
+                    )
                     if vectorizer_config.get("model"):
                         print(f"**Model:** {vectorizer_config['model']}")
 
-                print(f"**Replication Factor:** {result['replication_factor'] or 'N/A'}")
+                print(
+                    f"**Replication Factor:** {result['replication_factor'] or 'N/A'}"
+                )
                 print(
                     f"**Multi-Tenancy:** {'Enabled' if result['multi_tenancy_enabled'] else 'Disabled'}"
                 )

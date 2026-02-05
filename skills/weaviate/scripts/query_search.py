@@ -42,7 +42,9 @@ def parse_collections(collections_str: str) -> list[str]:
 
 @app.command()
 def main(
-    query: str = typer.Option(..., "--query", "-q", help="Natural language search query"),
+    query: str = typer.Option(
+        ..., "--query", "-q", help="Natural language search query"
+    ),
     collections: str = typer.Option(
         ..., "--collections", "-c", help="Comma-separated collection names"
     ),

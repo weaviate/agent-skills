@@ -87,7 +87,9 @@ def main(
                     "uuid": str(obj.uuid),
                     "properties": dict(obj.properties),
                     "score": obj.metadata.score if obj.metadata else None,
-                    "explain_score": obj.metadata.explain_score if obj.metadata else None,
+                    "explain_score": obj.metadata.explain_score
+                    if obj.metadata
+                    else None,
                 }
                 objects.append(obj_data)
 

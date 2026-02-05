@@ -5,7 +5,7 @@ A [Claude Code plugin](https://code.claude.com/docs/en/plugins) and [Agent Skill
 
 ## Compatibility
 
-Works with any agent that supports the [Agent Skills](https://agentskills.io) format.
+Works with any agent that supports the [Agent Skills](https://agentskills.io/home#adoption) format.
 
 ## Installation
 
@@ -88,13 +88,9 @@ The skill is automatically discovered by compatible agents. Simply describe what
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
 - A Weaviate Cloud instance
 
-### Python Dependencies
-
-Dependencies are managed per-script using inline metadata. When using `uv run`, dependencies are automatically installed.
-
 ## Resources
 
-- [Weaviate Documentation](https://weaviate.io/developers/weaviate)
+- [Weaviate Documentation](https://docs.weaviate.io/weaviate)
 - [Agent Skills Specification](https://agentskills.io/specification)
 - [Claude Code Plugins](https://code.claude.com/docs/en/plugins)
-- [Weaviate Query Agent](https://weaviate.io/developers/weaviate/agents)
+- [Weaviate Query Agent](https://docs.weaviate.io/agents/query)

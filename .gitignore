@@ -1,1 +1,50 @@
+# Python
+__pycache__/
+*.py[oc]
+*.egg-info/
+build/
+wheels/
+.venv
+
+# Ruff
 .ruff_cache
+
+# Node
+node_modules/
+dist/
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE / Editors / AI Assistant / CodeGen Tools
+.vscode/
+.cursor/
+.windsurf/
+.trae/
+.idea/
+*.iml
+.agent/
+.agents/
+.claude/
+.codex/
+.gemini/
+.goose/
+.kiro/
+.opencode/
+
+# Generated Skills
+.*/skills/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+.pytest_cache/
+.mypy_cache/
+
+# Jupyter
+.ipynb_checkpoints
