@@ -106,7 +106,7 @@ def detect_file_format(file_path: Path) -> str:
 
 def read_csv(file_path: Path, mapping: dict[str, str] | None = None) -> list[dict[str, Any]]:
     """
-    Read data from CSV file.
+    Read data from CSV file with automatic dialect detection.
 
     Args:
         file_path: Path to CSV file
@@ -117,7 +117,33 @@ def read_csv(file_path: Path, mapping: dict[str, str] | None = None) -> list[dic
     """
     data = []
     with open(file_path, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
+        # Read a sample to detect the CSV dialect
+        sample = f.read(8192)
+        f.seek(0)
+
+        # Use Sniffer to detect the dialect (delimiter, quoting, etc.)
+        sniffer = csv.Sniffer()
+        try:
+            dialect = sniffer.sniff(sample)
+            has_header = sniffer.has_header(sample)
+        except csv.Error:
+            # Fall back to default dialect if detection fails
+            dialect = csv.excel
+            has_header = True
+
+        # Read the CSV with detected dialect
+        if has_header:
+            reader = csv.DictReader(f, dialect=dialect)
+        else:
+            # If no header detected, use default field names
+            f.seek(0)
+            reader_base = csv.reader(f, dialect=dialect)
+            first_row = next(reader_base)
+            fieldnames = [f"column_{i+1}" for i in range(len(first_row))]
+            f.seek(0)
+            reader = csv.DictReader(f, fieldnames=fieldnames, dialect=dialect)
+            next(reader)  # Skip first row since it's data, not header
+
         for row in reader:
             # Apply mapping if provided
             if mapping:
