@@ -245,7 +245,7 @@ def main(
                     file=sys.stderr,
                 )
                 raise typer.Exit(1)
-            collection_config["vectorizer_config"] = VECTORIZER_MAP[vectorizer_lower]()
+            collection_config["vector_config"] = VECTORIZER_MAP[vectorizer_lower]()
 
         # Add replication config if specified
         if replication_factor is not None:
