@@ -27,7 +27,7 @@ Set keys for providers your collections use. All are auto-detected from environm
 Generate AI-powered answers with source citations.
 
 ```bash
-uv run scripts/ask.py --query "USER_QUESTION" --collections "Collection1,Collection2" [--json]
+uv run scripts/ask.py --query "USER_QUESTION" --collections "COLLECTION_1,COLLECTION_2" [--json]
 ```
 
 **When to use:** User wants a direct answer to a question based on collection data.
@@ -36,7 +36,7 @@ uv run scripts/ask.py --query "USER_QUESTION" --collections "Collection1,Collect
 Retrieve raw objects using natural language queries across multiple collections.
 
 ```bash
-uv run scripts/query_search.py --query "USER_QUERY" --collections "Collection1,Collection2" [--limit 10] [--json]
+uv run scripts/query_search.py --query "USER_QUERY" --collections "COLLECTION_1,COLLECTION_2" [--limit 10] [--json]
 ```
 
 **When to use:** User wants to explore/browse results across collections.
@@ -45,7 +45,7 @@ uv run scripts/query_search.py --query "USER_QUERY" --collections "Collection1,C
 Combines vector similarity and keyword matching (best default choice).
 
 ```bash
-uv run scripts/hybrid_search.py --query "USER_QUERY" --collection "CollectionName" [--alpha 0.7] [--limit 10] [--json]
+uv run scripts/hybrid_search.py --query "USER_QUERY" --collection "COLLECTION_NAME" [--alpha 0.7] [--limit 10] [--json]
 ```
 
 Parameters:
@@ -59,7 +59,7 @@ Parameters:
 Pure vector similarity search using embeddings.
 
 ```bash
-uv run scripts/semantic_search.py --query "USER_QUERY" --collection "CollectionName" [--limit 10] [--distance 0.5] [--json]
+uv run scripts/semantic_search.py --query "USER_QUERY" --collection "COLLECTION_NAME" [--limit 10] [--distance 0.5] [--json]
 ```
 
 Parameters:
@@ -72,7 +72,7 @@ Parameters:
 BM25 keyword matching for exact term searches.
 
 ```bash
-uv run scripts/keyword_search.py --query "USER_QUERY" --collection "CollectionName" [--limit 10] [--json]
+uv run scripts/keyword_search.py --query "USER_QUERY" --collection "COLLECTION_NAME" [--limit 10] [--json]
 ```
 
 Parameters:
@@ -93,7 +93,7 @@ uv run scripts/list_collections.py [--json]
 Get detailed configuration of a specific collection.
 
 ```bash
-uv run scripts/get_collection.py --name "CollectionName" [--json]
+uv run scripts/get_collection.py --name "COLLECTION_NAME" [--json]
 ```
 
 **When to use:** Understanding collection schema, vectorizer config, and properties.
@@ -107,7 +107,7 @@ uv run scripts/get_collection.py --name "CollectionName" [--json]
 
 2. **Get collection details** to understand the schema:
    ```bash
-   uv run scripts/get_collection.py --name "CollectionName"
+   uv run scripts/get_collection.py --name "COLLECTION_NAME"
    ```
 
 3. **Choose the right search type:**
