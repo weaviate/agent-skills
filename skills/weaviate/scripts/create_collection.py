@@ -31,6 +31,21 @@ Examples:
             {"name": "tags", "data_type": "text[]"}
         ]'
 
+    # Collection with multi-tenancy enabled
+    uv run create_collection.py --name "MultiTenant" \\
+        --properties '[{"name": "content", "data_type": "text"}]' \\
+        --multi-tenancy
+
+    # Collection with multi-tenancy and auto-tenant creation
+    uv run create_collection.py --name "MultiTenant" \\
+        --properties '[{"name": "content", "data_type": "text"}]' \\
+        --multi-tenancy \\
+        --auto-tenant-creation
+
+Options:
+    --multi-tenancy: Enable multi-tenancy for data isolation (each tenant on separate shard)
+    --auto-tenant-creation: Auto-create tenants on insert (requires --multi-tenancy)
+
 Environment Variables:
     WEAVIATE_URL: Weaviate Cloud cluster URL
     WEAVIATE_API_KEY: API key for authentication
@@ -194,10 +209,20 @@ def main(
     description: str = typer.Option(None, "--description", "-d", help="Collection description"),
     vectorizer: str = typer.Option(None, "--vectorizer", "-v", help=f"Vectorizer to use. Options: {', '.join(VECTORIZER_MAP.keys())}"),
     replication_factor: int = typer.Option(None, "--replication-factor", "-r", help="Replication factor (default: 1)"),
+    multi_tenancy: bool = typer.Option(False, "--multi-tenancy", "-m", help="Enable multi-tenancy for data isolation"),
+    auto_tenant_creation: bool = typer.Option(False, "--auto-tenant-creation", "-a", help="Auto-create tenants on insert (requires --multi-tenancy)"),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
 ):
     """Create a new Weaviate collection with specified properties."""
     try:
+        # Validate multi-tenancy options
+        if auto_tenant_creation and not multi_tenancy:
+            print(
+                "Error: --auto-tenant-creation requires --multi-tenancy to be enabled",
+                file=sys.stderr,
+            )
+            raise typer.Exit(1)
+
         # Validate collection name (should start with uppercase)
         if not name[0].isupper():
             print(
@@ -256,6 +281,13 @@ def main(
                 factor=replication_factor
             )
 
+        # Add multi-tenancy config if specified
+        if multi_tenancy:
+            collection_config["multi_tenancy_config"] = Configure.multi_tenancy(
+                enabled=True,
+                auto_tenant_creation=auto_tenant_creation
+            )
+
         with get_client() as client:
             # Check if collection already exists
             if client.collections.exists(name):
@@ -284,6 +316,10 @@ def main(
                     }
                     for p in config.properties
                 ],
+                "multi_tenancy": {
+                    "enabled": config.multi_tenancy_config.enabled if config.multi_tenancy_config else False,
+                    "auto_tenant_creation": config.multi_tenancy_config.auto_tenant_creation if config.multi_tenancy_config else False,
+                },
                 "status": "created",
             }
 
@@ -292,6 +328,13 @@ def main(
             else:
                 print(f"\n✓ Collection '{name}' created successfully!\n")
                 print(f"**Description:** {config.description or 'N/A'}")
+
+                # Display multi-tenancy status
+                if result["multi_tenancy"]["enabled"]:
+                    print(f"**Multi-Tenancy:** Enabled")
+                    if result["multi_tenancy"]["auto_tenant_creation"]:
+                        print(f"**Auto-Tenant Creation:** Enabled")
+
                 print(f"\n### Properties ({len(config.properties)})\n")
                 print("| Name | Data Type | Description |")
                 print("|------|-----------|-------------|")

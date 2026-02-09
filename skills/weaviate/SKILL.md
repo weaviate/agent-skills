@@ -111,6 +111,8 @@ Parameters:
 - `--description`: Optional collection description
 - `--vectorizer`: Optional vectorizer (e.g., `text2vec_openai`, `text2vec_cohere`, `none`)
 - `--replication-factor`: Optional replication factor (default: 1)
+- `--multi-tenancy`: Enable multi-tenancy for data isolation (each tenant on separate shard)
+- `--auto-tenant-creation`: Auto-create tenants on insert (requires `--multi-tenancy`)
 
 **Supported Data Types:**
 `text`, `text[]`, `boolean`, `boolean[]`, `int`, `int[]`, `number`, `number[]`, `date`, `date[]`, `uuid`, `uuid[]`, `geoCoordinates`, `phoneNumber`, `blob`, `object`, `object[]`
