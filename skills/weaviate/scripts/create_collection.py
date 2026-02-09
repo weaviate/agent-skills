@@ -105,22 +105,22 @@ TOKENIZATION_MAP = {
 
 # Vectorizer string to config mapping
 VECTORIZER_MAP = {
-    "text2vec_openai": lambda: Configure.Vectorizer.text2vec_openai(),
-    "text2vec_cohere": lambda: Configure.Vectorizer.text2vec_cohere(),
-    "text2vec_huggingface": lambda: Configure.Vectorizer.text2vec_huggingface(),
-    "text2vec_palm": lambda: Configure.Vectorizer.text2vec_palm(),
-    "text2vec_jinaai": lambda: Configure.Vectorizer.text2vec_jinaai(),
-    "text2vec_voyageai": lambda: Configure.Vectorizer.text2vec_voyageai(),
-    "text2vec_contextionary": lambda: Configure.Vectorizer.text2vec_contextionary(),
-    "text2vec_transformers": lambda: Configure.Vectorizer.text2vec_transformers(),
-    "text2vec_gpt4all": lambda: Configure.Vectorizer.text2vec_gpt4all(),
-    "text2vec_ollama": lambda: Configure.Vectorizer.text2vec_ollama(),
-    "multi2vec_clip": lambda: Configure.Vectorizer.multi2vec_clip(),
-    "multi2vec_bind": lambda: Configure.Vectorizer.multi2vec_bind(),
-    "multi2vec_palm": lambda: Configure.Vectorizer.multi2vec_palm(),
-    "img2vec_neural": lambda: Configure.Vectorizer.img2vec_neural(),
-    "ref2vec_centroid": lambda: Configure.Vectorizer.ref2vec_centroid(),
-    "none": lambda: Configure.Vectorizer.none(),
+    "text2vec_openai": lambda: Configure.Vectors.text2vec_openai(),
+    "text2vec_cohere": lambda: Configure.Vectors.text2vec_cohere(),
+    "text2vec_huggingface": lambda: Configure.Vectors.text2vec_huggingface(),
+    "text2vec_palm": lambda: Configure.Vectors.text2vec_palm(),
+    "text2vec_jinaai": lambda: Configure.Vectors.text2vec_jinaai(),
+    "text2vec_voyageai": lambda: Configure.Vectors.text2vec_voyageai(),
+    "text2vec_contextionary": lambda: Configure.Vectors.text2vec_contextionary(),
+    "text2vec_transformers": lambda: Configure.Vectors.text2vec_transformers(),
+    "text2vec_gpt4all": lambda: Configure.Vectors.text2vec_gpt4all(),
+    "text2vec_ollama": lambda: Configure.Vectors.text2vec_ollama(),
+    "multi2vec_clip": lambda: Configure.Vectors.multi2vec_clip(),
+    "multi2vec_bind": lambda: Configure.Vectors.multi2vec_bind(),
+    "multi2vec_palm": lambda: Configure.Vectors.multi2vec_palm(),
+    "img2vec_neural": lambda: Configure.Vectors.img2vec_neural(),
+    "ref2vec_centroid": lambda: Configure.Vectors.ref2vec_centroid(),
+    "none": lambda: Configure.Vectors.none(),
 }
 
 
