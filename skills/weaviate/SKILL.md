@@ -157,11 +157,11 @@ uv run scripts/create_collection.py Article \
 
 **When to use:** Creating new collections with custom schemas before importing data.
 
-### Upload Data
-Upload data from CSV, JSON, or JSONL files to an existing collection.
+### Import Data
+Import data from CSV, JSON, or JSONL files to an existing collection.
 
 ```bash
-uv run scripts/upload.py "data.csv" --collection "CollectionName" [--mapping '{}'] [--tenant "name"] [--batch-size 100] [--json]
+uv run scripts/import.py "data.csv" --collection "CollectionName" [--mapping '{}'] [--tenant "name"] [--batch-size 100] [--json]
 ```
 
 Parameters:
@@ -221,9 +221,9 @@ uv run scripts/upload.py data.jsonl --collection Article \
    uv run scripts/get_collection.py --name "COLLECTION_NAME"
    ```
 
-3. **Upload data** to populate a collection (if needed):
+3. **Import data** to populate a collection (if needed):
    ```bash
-   uv run scripts/upload.py "data.csv" --collection "CollectionName"
+   uv run scripts/import.py "data.csv" --collection "CollectionName"
    ```
 
 4. **Choose the right search type:**

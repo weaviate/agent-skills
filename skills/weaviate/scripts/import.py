@@ -6,31 +6,31 @@
 # ]
 # ///
 """
-Upload data from CSV, JSON, or JSONL files to a Weaviate collection.
+Import data from CSV, JSON, or JSONL files to a Weaviate collection.
 
 Usage:
-    uv run upload.py "data.csv" --collection "CollectionName" [options]
-    uv run upload.py "data.json" --collection "CollectionName" [options]
-    uv run upload.py "data.jsonl" --collection "CollectionName" [options]
+    uv run import.py "data.csv" --collection "CollectionName" [options]
+    uv run import.py "data.json" --collection "CollectionName" [options]
+    uv run import.py "data.jsonl" --collection "CollectionName" [options]
 
 Examples:
-    # Upload CSV file
-    uv run upload.py data.csv --collection Article
+    # Import CSV file
+    uv run import.py data.csv --collection Article
 
-    # Upload JSON array
-    uv run upload.py data.json --collection Product
+    # Import JSON array
+    uv run import.py data.json --collection Product
 
-    # Upload JSONL file
-    uv run upload.py data.jsonl --collection News
+    # Import JSONL file
+    uv run import.py data.jsonl --collection News
 
-    # Upload to multi-tenant collection
-    uv run upload.py data.csv --collection Article --tenant "tenant1"
+    # Import to multi-tenant collection
+    uv run import.py data.csv --collection Article --tenant "tenant1"
 
-    # Upload with custom batch size
-    uv run upload.py data.csv --collection Article --batch-size 500
+    # Import with custom batch size
+    uv run import.py data.csv --collection Article --batch-size 500
 
     # Map CSV columns to collection properties
-    uv run upload.py data.csv --collection Article --mapping '{"csv_col": "weaviate_prop"}'
+    uv run import.py data.csv --collection Article --mapping '{"csv_col": "weaviate_prop"}'
 
 File Formats:
     CSV:
@@ -232,7 +232,7 @@ def main(
     batch_size: int = typer.Option(100, "--batch-size", "-b", help="Number of objects per batch"),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
 ):
-    """Upload data from CSV, JSON, or JSONL files to a Weaviate collection."""
+    """Import data from CSV, JSON, or JSONL files to a Weaviate collection."""
     try:
         # Validate file path
         file_path = Path(file)
@@ -324,10 +324,10 @@ def main(
                 coll = coll.with_tenant(tenant)
                 print(f"Using tenant: {tenant}", file=sys.stderr)
 
-            # Upload data in batches
-            print(f"Uploading {len(data)} objects in batches of {batch_size}...", file=sys.stderr)
+            # Import data in batches
+            print(f"Importing {len(data)} objects in batches of {batch_size}...", file=sys.stderr)
 
-            uploaded_count = 0
+            imported_count = 0
             failed_count = 0
             errors = []
 
@@ -339,7 +339,7 @@ def main(
 
                         # Add object to batch
                         batch.add_object(properties=converted_obj)
-                        uploaded_count += 1
+                        imported_count += 1
 
                         # Show progress
                         if i % batch_size == 0:
@@ -360,13 +360,13 @@ def main(
                         errors.append(f"Batch error: {failed}")
 
             # Calculate success count
-            success_count = uploaded_count - failed_count
+            success_count = imported_count - failed_count
 
             result = {
                 "collection": collection,
                 "tenant": tenant,
                 "total_objects": len(data),
-                "uploaded": success_count,
+                "imported": success_count,
                 "failed": failed_count,
                 "file": str(file_path),
                 "format": file_format,
@@ -378,12 +378,12 @@ def main(
             if json_output:
                 print(json.dumps(result, indent=2))
             else:
-                print(f"\n✓ Upload completed!", file=sys.stderr)
+                print(f"\n✓ Import completed!", file=sys.stderr)
                 print(f"\n**Collection:** {collection}")
                 if tenant:
                     print(f"**Tenant:** {tenant}")
                 print(f"**Total Objects:** {len(data)}")
-                print(f"**Successfully Uploaded:** {success_count}")
+                print(f"**Successfully Imported:** {success_count}")
                 if failed_count > 0:
                     print(f"**Failed:** {failed_count}")
                     if errors:
@@ -391,7 +391,7 @@ def main(
                         for error in errors[:5]:
                             print(f"  - {error}")
 
-            # Exit with error code if any uploads failed
+            # Exit with error code if any imports failed
             if failed_count > 0:
                 raise typer.Exit(1)
 
