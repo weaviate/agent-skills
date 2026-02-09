@@ -1,11 +1,11 @@
 ---
 name: weaviate
-description: Search, query, and manage Weaviate vector database collections. Use for semantic search, hybrid search, keyword search, natural language queries with AI-generated answers, and collection inspection.
+description: Search, query, and manage Weaviate vector database collections. Use for semantic search, hybrid search, keyword search, natural language queries with AI-generated answers, collection inspection, data uploads from CSV/JSON/JSONL files, and collection creation.
 ---
 
 # Weaviate Database Operations
 
-This skill provides comprehensive access to Weaviate vector databases including search operations, natural language queries, and schema inspection.
+This skill provides comprehensive access to Weaviate vector databases including search operations, natural language queries, schema inspection, collection creation, and data uploads from CSV, JSON, and JSONL files.
 
 ## Environment Variables
 
@@ -157,6 +157,58 @@ uv run scripts/create_collection.py Article \
 
 **When to use:** Creating new collections with custom schemas before importing data.
 
+### Upload Data
+Upload data from CSV, JSON, or JSONL files to an existing collection.
+
+```bash
+uv run scripts/upload.py "data.csv" --collection "CollectionName" [--mapping '{}'] [--tenant "name"] [--batch-size 100] [--json]
+```
+
+Parameters:
+- `file`: Path to CSV, JSON, or JSONL file (positional argument)
+- `--collection`: Target collection name (must already exist)
+- `--mapping`: Optional JSON object to map file columns/keys to collection properties
+- `--tenant`: Tenant name for multi-tenant collections (required if collection is multi-tenant)
+- `--batch-size`: Number of objects per batch (default: 100)
+
+**File Formats:**
+
+CSV:
+- First row must be header with column names
+- Columns are mapped to collection properties by name (case-sensitive)
+- Use `--mapping` to rename columns: `'{"csv_col": "weaviate_prop"}'`
+
+JSON:
+- Must be an array of objects: `[{"prop1": "value1"}, {"prop2": "value2"}]`
+- Object keys must match collection property names
+- Use `--mapping` to rename keys if needed
+
+JSONL:
+- One JSON object per line
+- Each object's keys must match collection property names
+- Use `--mapping` to rename keys if needed
+
+**Examples:**
+
+Upload CSV file:
+```bash
+uv run scripts/upload.py data.csv --collection Article
+```
+
+Upload with column mapping:
+```bash
+uv run scripts/upload.py data.csv --collection Article \
+  --mapping '{"title_col": "title", "body_col": "content"}'
+```
+
+Upload to multi-tenant collection:
+```bash
+uv run scripts/upload.py data.jsonl --collection Article \
+  --tenant "tenant1"
+```
+
+**When to use:** Bulk importing data into a collection from CSV, JSON, or JSONL files.
+
 ## Workflow Recommendations
 
 1. **Start by listing collections** if you don't know what's available:
@@ -169,7 +221,12 @@ uv run scripts/create_collection.py Article \
    uv run scripts/get_collection.py --name "COLLECTION_NAME"
    ```
 
-3. **Choose the right search type:**
+3. **Upload data** to populate a collection (if needed):
+   ```bash
+   uv run scripts/upload.py "data.csv" --collection "CollectionName"
+   ```
+
+4. **Choose the right search type:**
    - Direct answer needed → `ask.py`
    - Explore multiple collections → `query_search.py`
    - General search → `hybrid_search.py` (default)

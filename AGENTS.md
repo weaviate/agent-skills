@@ -208,6 +208,27 @@ uv run scripts/create_collection.py Article \
 
 **When to use:** Creating new collections for organizing data.
 
+### Upload Data
+Upload data from CSV, JSON, or JSONL files to an existing collection.
+
+```bash
+uv run scripts/upload.py "data.csv" --collection "CollectionName" [--mapping '{}'] [--tenant "name"] [--batch-size 100] [--json]
+```
+
+Parameters:
+- `file`: Path to CSV, JSON, or JSONL file (positional argument)
+- `--collection`: Target collection name
+- `--mapping`: Optional JSON object to map file columns/keys to collection properties (e.g., `'{"csv_col": "weaviate_prop"}'`)
+- `--tenant`: Tenant name for multi-tenant collections (required if collection is multi-tenant)
+- `--batch-size`: Number of objects per batch (default: 100)
+
+File Formats:
+- **CSV**: First row must be header with column names matching collection properties
+- **JSON**: Must be an array of objects: `[{"prop1": "value1"}, {"prop2": "value2"}]`
+- **JSONL**: One JSON object per line
+
+**When to use:** Bulk importing data into a collection.
+
 ## Workflow Recommendations
 
 1. **Start by listing collections** if you don't know what's available:
@@ -220,7 +241,12 @@ uv run scripts/create_collection.py Article \
    uv run scripts/get_collection.py --name "CollectionName"
    ```
 
-3. **Choose the right search type:**
+3. **Upload data** to a collection (if needed):
+   ```bash
+   uv run scripts/upload.py "data.csv" --collection "CollectionName"
+   ```
+
+4. **Choose the right search type:**
    - Direct answer needed → `ask.py`
    - Explore multiple collections → `query_search.py`
    - General search → `hybrid_search.py` (default)
