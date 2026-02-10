@@ -10,54 +10,11 @@ Import data from CSV, JSON, or JSONL files to a Weaviate collection.
 
 Usage:
     uv run import.py "data.csv" --collection "CollectionName" [options]
-    uv run import.py "data.json" --collection "CollectionName" [options]
-    uv run import.py "data.jsonl" --collection "CollectionName" [options]
-
-Examples:
-    # Import CSV file
-    uv run import.py data.csv --collection Article
-
-    # Import JSON array
-    uv run import.py data.json --collection Product
-
-    # Import JSONL file
-    uv run import.py data.jsonl --collection News
-
-    # Import to multi-tenant collection
-    uv run import.py data.csv --collection Article --tenant "tenant1"
-
-    # Import with custom batch size
-    uv run import.py data.csv --collection Article --batch-size 500
-
-    # Map CSV columns to collection properties
-    uv run import.py data.csv --collection Article --mapping '{"csv_col": "weaviate_prop"}'
-
-File Formats:
-    CSV:
-        - First row must be header with column names
-        - Columns are mapped to collection properties by name (case-sensitive)
-        - Use --mapping to rename columns
-
-    JSON:
-        - Must be an array of objects: [{"prop1": "value1"}, {"prop2": "value2"}]
-        - Object keys must match collection property names
-        - Use --mapping to rename keys
-
-    JSONL:
-        - One JSON object per line
-        - Each object's keys must match collection property names
-        - Use --mapping to rename keys
-
-Options:
-    --mapping: JSON object mapping file columns/keys to collection properties
-               Example: '{"title_col": "title", "body_col": "content"}'
-    --tenant: Tenant name for multi-tenant collections
-    --batch-size: Number of objects per batch (default: 100)
-    --json: Output in JSON format
 
 Environment Variables:
     WEAVIATE_URL: Weaviate Cloud cluster URL
     WEAVIATE_API_KEY: API key for authentication
+    + Any provider API keys (OPENAI_API_KEY, COHERE_API_KEY, etc.) - auto-detected
 """
 
 import csv
