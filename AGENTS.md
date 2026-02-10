@@ -151,6 +151,63 @@ uv run scripts/get_collection.py --name "CollectionName" [--json]
 
 **When to use:** Understanding collection schema and properties.
 
+### Create Collection
+Create a new Weaviate collection with custom properties.
+
+```bash
+uv run scripts/create_collection.py CollectionName --properties '[{"name": "property1", "data_type": "text"}]' [options]
+```
+
+Parameters:
+- `name`: Collection name (positional argument, should start with uppercase)
+- `--properties`: JSON array of property definitions (required)
+- `--description`: Collection description
+- `--vectorizer`: Vectorizer to use (e.g., `text2vec_openai`, `text2vec_cohere`, `none`)
+- `--replication-factor`: Replication factor (default: 1)
+- `--multi-tenancy`: Enable multi-tenancy for data isolation
+- `--auto-tenant-creation`: Auto-create tenants on insert (requires `--multi-tenancy`)
+
+**Property Definition Format:**
+```json
+{
+  "name": "property_name",
+  "data_type": "text",
+  "description": "Optional description",
+  "tokenization": "word"
+}
+```
+
+**Supported Data Types:**
+- `text`, `text[]`
+- `boolean`, `boolean[]`
+- `int`, `int[]`
+- `number`, `number[]`
+- `date`, `date[]`
+- `uuid`, `uuid[]`
+- `geoCoordinates`
+- `phoneNumber`
+- `blob`
+- `object`, `object[]`
+
+**Examples:**
+```bash
+# Basic collection
+uv run scripts/create_collection.py Article \
+  --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
+
+# With multi-tenancy
+uv run scripts/create_collection.py MultiTenant \
+  --properties '[{"name": "content", "data_type": "text"}]' \
+  --multi-tenancy --auto-tenant-creation
+
+# With vectorizer
+uv run scripts/create_collection.py Article \
+--properties '[{"name": "title", "data_type": "text"}]' \
+--vectorizer "text2vec_openai"
+```
+
+**When to use:** Creating new collections for organizing data.
+
 ## Workflow Recommendations
 
 1. **Start by listing collections** if you don't know what's available:
@@ -169,6 +226,12 @@ uv run scripts/get_collection.py --name "CollectionName" [--json]
    - General search → `hybrid_search.py` (default)
    - Conceptual similarity → `semantic_search.py`
    - Exact terms/IDs → `keyword_search.py`
+
+4. **Do not specify a vectorizer when creating collections** unless requested:
+  ```bash
+  uv run scripts/create_collection.py Article \
+    --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
+  ```
 
 ## Output Formats
 

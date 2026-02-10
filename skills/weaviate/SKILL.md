@@ -98,6 +98,65 @@ uv run scripts/get_collection.py --name "COLLECTION_NAME" [--json]
 
 **When to use:** Understanding collection schema, vectorizer config, and properties.
 
+### Create Collection
+Create a new Weaviate collection with custom schema.
+
+```bash
+uv run scripts/create_collection.py CollectionName --properties '[...]' [--description "..."] [--vectorizer "..."] [--json]
+```
+
+Parameters:
+- `name`: Collection name (positional argument, will be capitalized per GraphQL convention)
+- `--properties`: JSON array of property definitions (see examples below)
+- `--description`: Optional collection description
+- `--vectorizer`: Optional vectorizer (e.g., `text2vec_openai`, `text2vec_cohere`, `none`)
+- `--replication-factor`: Optional replication factor (default: 1)
+- `--multi-tenancy`: Enable multi-tenancy for data isolation (each tenant on separate shard)
+- `--auto-tenant-creation`: Auto-create tenants on insert (requires `--multi-tenancy`)
+
+**Supported Data Types:**
+`text`, `text[]`, `boolean`, `boolean[]`, `int`, `int[]`, `number`, `number[]`, `date`, `date[]`, `uuid`, `uuid[]`, `geoCoordinates`, `phoneNumber`, `blob`, `object`, `object[]`
+
+**Property Definition Format:**
+```json
+{
+  "name": "property_name",
+  "data_type": "text",
+  "description": "Optional description",
+  "tokenization": "word",  // Optional for text types: word, lowercase, whitespace, field
+  "nested_properties": []  // Optional for object types
+}
+```
+
+**Examples:**
+
+Basic collection with text properties:
+```bash
+uv run scripts/create_collection.py Article \
+  --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
+```
+
+Collection with various data types:
+```bash
+uv run scripts/create_collection.py Product \
+  --properties '[
+    {"name": "name", "data_type": "text"},
+    {"name": "price", "data_type": "number"},
+    {"name": "in_stock", "data_type": "boolean"},
+    {"name": "tags", "data_type": "text[]"}
+  ]'
+```
+
+Collection with vectorizer and description:
+```bash
+uv run scripts/create_collection.py Article \
+  --description "News articles collection" \
+  --properties '[{"name": "title", "data_type": "text"}]' \
+  --vectorizer "text2vec_openai"
+```
+
+**When to use:** Creating new collections with custom schemas before importing data.
+
 ## Workflow Recommendations
 
 1. **Start by listing collections** if you don't know what's available:
@@ -117,6 +176,12 @@ uv run scripts/get_collection.py --name "COLLECTION_NAME" [--json]
    - Conceptual similarity → `semantic_search.py`
    - Exact terms/IDs → `keyword_search.py`
 
+4. **Do not specify a vectorizer when creating collections** unless requested:
+  ```bash
+  uv run scripts/create_collection.py Article \
+    --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
+  ```
+   
 ## Output Formats
 
 All scripts support:
