@@ -9,7 +9,7 @@
 Create a Weaviate collection.
 
 Usage:
-    uv run create_collection.py "CollectionName" --properties '[...]' [options]
+    uv run create_collection.py CollectionName --properties '[...]' [options]
 
 Environment Variables:
     WEAVIATE_URL: Weaviate Cloud cluster URL

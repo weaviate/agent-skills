@@ -155,7 +155,7 @@ uv run scripts/get_collection.py --name "CollectionName" [--json]
 Create a new Weaviate collection with custom properties.
 
 ```bash
-uv run scripts/create_collection.py "CollectionName" --properties '[{"name": "property1", "data_type": "text"}]' [options]
+uv run scripts/create_collection.py CollectionName --properties '[{"name": "property1", "data_type": "text"}]' [options]
 ```
 
 Parameters:
@@ -192,16 +192,16 @@ Parameters:
 **Examples:**
 ```bash
 # Basic collection
-uv run scripts/create_collection.py "Article" \
+uv run scripts/create_collection.py Article \
   --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
 
 # With multi-tenancy
-uv run scripts/create_collection.py "MultiTenant" \
+uv run scripts/create_collection.py MultiTenant \
   --properties '[{"name": "content", "data_type": "text"}]' \
   --multi-tenancy --auto-tenant-creation
 
 # With vectorizer
-uv run scripts/create_collection.py "Article" \
+uv run scripts/create_collection.py Article \
 --properties '[{"name": "title", "data_type": "text"}]' \
 --vectorizer "text2vec_openai"
 ```
@@ -229,7 +229,7 @@ uv run scripts/create_collection.py "Article" \
 
 4. **Do not specify a vectorizer when creating collections** unless requested:
   ```bash
-  uv run scripts/create_collection.py "Article" \
+  uv run scripts/create_collection.py Article \
     --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
   ```
 
