@@ -102,11 +102,11 @@ uv run scripts/get_collection.py --name "COLLECTION_NAME" [--json]
 Create a new Weaviate collection with custom schema.
 
 ```bash
-uv run scripts/create_collection.py --name "CollectionName" --properties '[...]' [--description "..."] [--vectorizer "..."] [--json]
+uv run scripts/create_collection.py "CollectionName" --properties '[...]' [--description "..."] [--vectorizer "..."] [--json]
 ```
 
 Parameters:
-- `--name`: Collection name (will be capitalized per GraphQL convention)
+- `name`: Collection name (positional argument, will be capitalized per GraphQL convention)
 - `--properties`: JSON array of property definitions (see examples below)
 - `--description`: Optional collection description
 - `--vectorizer`: Optional vectorizer (e.g., `text2vec_openai`, `text2vec_cohere`, `none`)
