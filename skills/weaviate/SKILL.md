@@ -98,6 +98,35 @@ uv run scripts/get_collection.py --name "COLLECTION_NAME" [--json]
 
 **When to use:** Understanding collection schema, vectorizer config, and properties.
 
+### Explore Collection
+Get statistical insights and sample data from a collection.
+
+```bash
+uv run scripts/explore_collection.py "COLLECTION_NAME" [--limit 5] [--json]
+```
+
+Parameters:
+- `--limit`: Number of sample objects to show (default: 5)
+- `--no-metrics`: Skip calculating individual property metrics (faster)
+
+**When to use:** Analyzing data distribution, top values, and inspecting actual content.
+
+### Fetch and Filter
+Fetch objects with powerful filtering capabilities (AND, OR, nested logic).
+
+```bash
+uv run scripts/fetch_filter.py "COLLECTION_NAME" [--id "UUID"] [--filters 'JSON_FILTERS'] [--limit 10] [--json]
+```
+
+Parameters:
+- `--id`: Fetch specific object by UUID
+- `--filters`: JSON string defining filters. Supports:
+    - Simple property filters: `{"property": "category", "operator": "equal", "value": "Science"}`
+    - Logical operators: `{"operator": "and", "filters": [...]}` or `{"operator": "or", "filters": [...]}`
+    - Operators: `equal`, `not_equal`, `less_than`, `greater_than`, `like`, `contains_any`, etc.
+
+**When to use:** Retrieving specific objects or strictly filtered subsets of data.
+
 ### Create Collection
 Create a new Weaviate collection with custom schema.
 
@@ -221,24 +250,30 @@ uv run scripts/import.py data.jsonl --collection Article \
    uv run scripts/get_collection.py --name "COLLECTION_NAME"
    ```
 
-3. **Import data** to populate a collection (if needed):
+3. **Explore collection data** to see values and statistics:
+   ```bash
+   uv run scripts/explore_collection.py "COLLECTION_NAME"
+   ```
+
+4. **Import data** to populate a new collection (if needed):
    ```bash
    uv run scripts/import.py "data.csv" --collection "CollectionName"
    ```
 
-4. **Choose the right search type:**
-   - Direct answer needed → `ask.py`
-   - Explore multiple collections → `query_search.py`
-   - General search → `hybrid_search.py` (default)
-   - Conceptual similarity → `semantic_search.py`
-   - Exact terms/IDs → `keyword_search.py`
-
-4. **Do not specify a vectorizer when creating collections** unless requested:
+5. **Do not specify a vectorizer when creating collections** unless requested:
   ```bash
   uv run scripts/create_collection.py Article \
     --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
   ```
    
+
+6. **Choose the right search type:**
+   - Get AI-powered answers with source citations across multiple collections → `ask.py`
+   - Get raw objects from multiple collections → `query_search.py`
+   - General search → `hybrid_search.py` (default)
+   - Conceptual similarity → `semantic_search.py`
+   - Exact terms/IDs → `keyword_search.py`
+
 ## Output Formats
 
 All scripts support:
