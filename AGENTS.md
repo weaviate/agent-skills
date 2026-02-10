@@ -195,15 +195,15 @@ Parameters:
 uv run scripts/create_collection.py --name "Article" \
   --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
 
-# With vectorizer
-uv run scripts/create_collection.py --name "Article" \
-  --properties '[{"name": "title", "data_type": "text"}]' \
-  --vectorizer "text2vec_openai"
-
 # With multi-tenancy
 uv run scripts/create_collection.py --name "MultiTenant" \
   --properties '[{"name": "content", "data_type": "text"}]' \
   --multi-tenancy --auto-tenant-creation
+  
+# With vectorizer
+uv run scripts/create_collection.py --name "Article" \
+--properties '[{"name": "title", "data_type": "text"}]' \
+--vectorizer "text2vec_openai"
 ```
 
 **When to use:** Creating new collections for organizing data.
@@ -226,6 +226,12 @@ uv run scripts/create_collection.py --name "MultiTenant" \
    - General search → `hybrid_search.py` (default)
    - Conceptual similarity → `semantic_search.py`
    - Exact terms/IDs → `keyword_search.py`
+
+4. **Do not specify a vectorizer when creating collections** unless requested:
+  ```bash
+  uv run scripts/create_collection.py --name "Article" \
+    --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
+  ```
 
 ## Output Formats
 

@@ -16,12 +16,6 @@ Examples:
     uv run create_collection.py --name "Article" \\
         --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
 
-    # Collection with description and vectorizer
-    uv run create_collection.py --name "Article" \\
-        --description "News articles collection" \\
-        --properties '[{"name": "title", "data_type": "text"}]' \\
-        --vectorizer "text2vec_openai"
-
     # Collection with various data types
     uv run create_collection.py --name "Product" \\
         --properties '[
@@ -30,6 +24,12 @@ Examples:
             {"name": "in_stock", "data_type": "boolean"},
             {"name": "tags", "data_type": "text[]"}
         ]'
+
+    # Collection with description and a custom vectorizer
+    uv run create_collection.py --name "Article" \\
+        --description "News articles collection" \\
+        --properties '[{"name": "title", "data_type": "text"}]' \\
+        --vectorizer "text2vec_openai"
 
     # Collection with multi-tenancy enabled
     uv run create_collection.py --name "MultiTenant" \\
