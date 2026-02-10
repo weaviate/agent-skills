@@ -212,7 +212,7 @@ uv run scripts/create_collection.py Article \
 Import data from CSV, JSON, or JSONL files to an existing collection.
 
 ```bash
-uv run scripts/import.py "data.csv" --collection "CollectionName" [--mapping '{}'] [--tenant "name"] [--batch-size 100] [--json]
+uv run scripts/import.py data.csv --collection "CollectionName" [--mapping '{}'] [--tenant "name"] [--batch-size 100] [--json]
 ```
 
 Parameters:
