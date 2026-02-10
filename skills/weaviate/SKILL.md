@@ -132,13 +132,13 @@ Parameters:
 
 Basic collection with text properties:
 ```bash
-uv run scripts/create_collection.py --name "Article" \
+uv run scripts/create_collection.py "Article" \
   --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
 ```
 
 Collection with various data types:
 ```bash
-uv run scripts/create_collection.py --name "Product" \
+uv run scripts/create_collection.py "Product" \
   --properties '[
     {"name": "name", "data_type": "text"},
     {"name": "price", "data_type": "number"},
@@ -149,7 +149,7 @@ uv run scripts/create_collection.py --name "Product" \
 
 Collection with vectorizer and description:
 ```bash
-uv run scripts/create_collection.py --name "Article" \
+uv run scripts/create_collection.py "Article" \
   --description "News articles collection" \
   --properties '[{"name": "title", "data_type": "text"}]' \
   --vectorizer "text2vec_openai"
@@ -178,7 +178,7 @@ uv run scripts/create_collection.py --name "Article" \
 
 4. **Do not specify a vectorizer when creating collections** unless requested:
   ```bash
-  uv run scripts/create_collection.py --name "Article" \
+  uv run scripts/create_collection.py "Article" \
     --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
   ```
    
