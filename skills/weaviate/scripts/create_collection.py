@@ -9,65 +9,12 @@
 Create a Weaviate collection.
 
 Usage:
-    uv run create_collection.py --name "CollectionName" --properties '[...]' [options]
-
-Examples:
-    # Basic collection with text properties
-    uv run create_collection.py --name "Article" \\
-        --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
-
-    # Collection with various data types
-    uv run create_collection.py --name "Product" \\
-        --properties '[
-            {"name": "name", "data_type": "text"},
-            {"name": "price", "data_type": "number"},
-            {"name": "in_stock", "data_type": "boolean"},
-            {"name": "tags", "data_type": "text[]"}
-        ]'
-
-    # Collection with description and a custom vectorizer
-    uv run create_collection.py --name "Article" \\
-        --description "News articles collection" \\
-        --properties '[{"name": "title", "data_type": "text"}]' \\
-        --vectorizer "text2vec_openai"
-
-    # Collection with multi-tenancy enabled
-    uv run create_collection.py --name "MultiTenant" \\
-        --properties '[{"name": "content", "data_type": "text"}]' \\
-        --multi-tenancy
-
-    # Collection with multi-tenancy and auto-tenant creation
-    uv run create_collection.py --name "MultiTenant" \\
-        --properties '[{"name": "content", "data_type": "text"}]' \\
-        --multi-tenancy \\
-        --auto-tenant-creation
-
-Options:
-    --multi-tenancy: Enable multi-tenancy for data isolation (each tenant on separate shard)
-    --auto-tenant-creation: Auto-create tenants on insert (requires --multi-tenancy)
+    uv run create_collection.py "CollectionName" --properties '[...]' [options]
 
 Environment Variables:
     WEAVIATE_URL: Weaviate Cloud cluster URL
     WEAVIATE_API_KEY: API key for authentication
-
-Supported Data Types:
-    - text, text[]
-    - boolean, boolean[]
-    - int, int[]
-    - number, number[]
-    - date, date[]
-    - uuid, uuid[]
-    - geoCoordinates
-    - phoneNumber
-    - blob
-    - object, object[]
-
-Property Options:
-    - name (required): Property name
-    - data_type (required): Data type from list above
-    - description (optional): Property description
-    - tokenization (optional, text only): "word", "lowercase", "whitespace", "field"
-    - nested_properties (optional, object only): Array of nested property definitions
+    + Any provider API keys (OPENAI_API_KEY, COHERE_API_KEY, etc.) - auto-detected
 """
 
 import json
@@ -204,7 +151,7 @@ def parse_property(prop_dict: dict) -> Property:
 
 @app.command()
 def main(
-    name: str = typer.Option(..., "--name", "-n", help="Collection name (capitalize first letter)"),
+    name: str = typer.Argument(..., help="Collection name (capitalize first letter)"),
     properties: str = typer.Option(..., "--properties", "-p", help="JSON array of property definitions"),
     description: str = typer.Option(None, "--description", "-d", help="Collection description"),
     vectorizer: str = typer.Option(None, "--vectorizer", "-v", help=f"Vectorizer to use. Options: {', '.join(VECTORIZER_MAP.keys())}"),
