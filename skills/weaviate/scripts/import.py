@@ -9,7 +9,7 @@
 Import data from CSV, JSON, or JSONL files to a Weaviate collection.
 
 Usage:
-    uv run import.py "data.csv" --collection "CollectionName" [options]
+    uv run import.py data.csv --collection "CollectionName" [options]
 
 Environment Variables:
     WEAVIATE_URL: Weaviate Cloud cluster URL

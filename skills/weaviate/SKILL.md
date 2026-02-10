@@ -1,11 +1,11 @@
 ---
 name: weaviate
-description: Search, query, and manage Weaviate vector database collections. Use for semantic search, hybrid search, keyword search, natural language queries with AI-generated answers, collection inspection, data uploads from CSV/JSON/JSONL files, and collection creation.
+description: Search, query, and manage Weaviate vector database collections. Use for semantic search, hybrid search, keyword search, natural language queries with AI-generated answers, collection inspection, data imports from CSV/JSON/JSONL files, and collection creation.
 ---
 
 # Weaviate Database Operations
 
-This skill provides comprehensive access to Weaviate vector databases including search operations, natural language queries, schema inspection, collection creation, and data uploads from CSV, JSON, and JSONL files.
+This skill provides comprehensive access to Weaviate vector databases including search operations, natural language queries, schema inspection, collection creation, and data imports from CSV, JSON, and JSONL files.
 
 ## Environment Variables
 
@@ -190,20 +190,20 @@ JSONL:
 
 **Examples:**
 
-Upload CSV file:
+Import data from files:
 ```bash
-uv run scripts/upload.py data.csv --collection Article
+uv run scripts/import.py data.csv --collection Article
 ```
 
-Upload with column mapping:
+Import with column mapping:
 ```bash
-uv run scripts/upload.py data.csv --collection Article \
+uv run scripts/import.py data.csv --collection Article \
   --mapping '{"title_col": "title", "body_col": "content"}'
 ```
 
-Upload to multi-tenant collection:
+Import to multi-tenant collection:
 ```bash
-uv run scripts/upload.py data.jsonl --collection Article \
+uv run scripts/import.py data.jsonl --collection Article \
   --tenant "tenant1"
 ```
 

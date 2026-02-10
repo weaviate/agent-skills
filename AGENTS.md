@@ -151,7 +151,6 @@ uv run scripts/get_collection.py --name "CollectionName" [--json]
 
 **When to use:** Understanding collection schema and properties.
 
-<<<<<<< HEAD
 ### Create Collection
 Create a new Weaviate collection with custom properties.
 
@@ -209,12 +208,8 @@ uv run scripts/create_collection.py Article \
 
 **When to use:** Creating new collections for organizing data.
 
-### Upload Data
-Upload data from CSV, JSON, or JSONL files to an existing collection.
-=======
 ### Import Data
 Import data from CSV, JSON, or JSONL files to an existing collection.
->>>>>>> 805d4ac (Rename upload to import)
 
 ```bash
 uv run scripts/import.py "data.csv" --collection "CollectionName" [--mapping '{}'] [--tenant "name"] [--batch-size 100] [--json]
@@ -248,7 +243,7 @@ File Formats:
 
 3. **Import data** to a collection (if needed):
    ```bash
-   uv run scripts/import.py "data.csv" --collection "CollectionName"
+   uv run scripts/import.py data.csv --collection "CollectionName"
    ```
 
 4. **Choose the right search type:**
