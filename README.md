@@ -58,7 +58,7 @@ Set API keys for the providers your collections use. All keys are automatically 
 ### Commands (Claude Code Plugin)
 
 ```bash
-# Ask a question and get an AI-generated answer with citations
+# Ask a question and get an AI-generated answer with source citations
 /weaviate:ask query "What are the benefits of vector databases?" collections "Documentation"
 
 # Search collections and get raw results
