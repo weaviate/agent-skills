@@ -22,56 +22,47 @@ import weaviate
 from weaviate.classes.init import Auth
 from weaviate.client import WeaviateClient
 
-# Environment variable to Weaviate header mapping
-# Supports both APIKEY and API_KEY variants
+# Canonical environment variable to Weaviate header mapping
 API_KEY_MAP = {
-    # Anthropic
-    "ANTHROPIC_APIKEY": "X-Anthropic-Api-Key",
     "ANTHROPIC_API_KEY": "X-Anthropic-Api-Key",
-    # Anyscale
-    "ANYSCALE_APIKEY": "X-Anyscale-Api-Key",
     "ANYSCALE_API_KEY": "X-Anyscale-Api-Key",
-    # AWS
     "AWS_ACCESS_KEY": "X-Aws-Access-Key",
     "AWS_SECRET_KEY": "X-Aws-Secret-Key",
-    # Cohere
-    "COHERE_APIKEY": "X-Cohere-Api-Key",
     "COHERE_API_KEY": "X-Cohere-Api-Key",
-    # Databricks
     "DATABRICKS_TOKEN": "X-Databricks-Token",
-    # Friendli
     "FRIENDLI_TOKEN": "X-Friendli-Api-Key",
-    # Google Vertex AI
-    "VERTEX_APIKEY": "X-Goog-Vertex-Api-Key",
     "VERTEX_API_KEY": "X-Goog-Vertex-Api-Key",
-    # Google AI Studio
-    "STUDIO_APIKEY": "X-Goog-Studio-Api-Key",
     "STUDIO_API_KEY": "X-Goog-Studio-Api-Key",
-    # HuggingFace
-    "HUGGINGFACE_APIKEY": "X-HuggingFace-Api-Key",
     "HUGGINGFACE_API_KEY": "X-HuggingFace-Api-Key",
-    # Jina AI
-    "JINAAI_APIKEY": "X-JinaAI-Api-Key",
     "JINAAI_API_KEY": "X-JinaAI-Api-Key",
-    # Mistral
-    "MISTRAL_APIKEY": "X-Mistral-Api-Key",
     "MISTRAL_API_KEY": "X-Mistral-Api-Key",
-    # NVIDIA
-    "NVIDIA_APIKEY": "X-Nvidia-Api-Key",
     "NVIDIA_API_KEY": "X-Nvidia-Api-Key",
-    # OpenAI
-    "OPENAI_APIKEY": "X-OpenAI-Api-Key",
     "OPENAI_API_KEY": "X-OpenAI-Api-Key",
-    # Azure OpenAI
-    "AZURE_APIKEY": "X-Azure-Api-Key",
     "AZURE_API_KEY": "X-Azure-Api-Key",
-    # Voyage AI
-    "VOYAGE_APIKEY": "X-Voyage-Api-Key",
     "VOYAGE_API_KEY": "X-Voyage-Api-Key",
-    # xAI
-    "XAI_APIKEY": "X-Xai-Api-Key",
     "XAI_API_KEY": "X-Xai-Api-Key",
 }
+
+
+def _collect_headers_and_detected_keys() -> tuple[dict[str, str], list[str]]:
+    """
+    Scan env once to build Weaviate headers and detected key names.
+
+    Returns:
+        Tuple of (headers, detected_env_var_names)
+    """
+    headers: dict[str, str] = {}
+    detected_keys: list[str] = []
+
+    for env_var, header_name in API_KEY_MAP.items():
+        value = os.environ.get(env_var, "").strip()
+        if not value:
+            continue
+
+        detected_keys.append(env_var)
+        headers[header_name] = value
+
+    return headers, detected_keys
 
 
 def validate_env(require_weaviate: bool = True) -> tuple[str, str]:
@@ -113,53 +104,19 @@ def get_headers() -> dict[str, str] | None:
     Returns:
         Dict of headers if any API keys found, None otherwise
     """
-    headers = {}
-
-    for env_var, header_name in API_KEY_MAP.items():
-        value = os.environ.get(env_var, "").strip()
-        if value:
-            # Only add if we don't already have this header
-            # (handles APIKEY vs API_KEY variants)
-            if header_name not in headers:
-                headers[header_name] = value
-
+    headers, _ = _collect_headers_and_detected_keys()
     return headers if headers else None
 
 
 def get_detected_providers() -> list[str]:
     """
-    Get list of provider names with detected API keys.
+    Get list of detected API key environment variable names.
 
     Returns:
-        List of provider names (e.g., ["OpenAI", "Cohere"])
+        List of env var names (e.g., ["OPENAI_API_KEY", "COHERE_API_KEY"])
     """
-    providers = set()
-    provider_map = {
-        "X-Anthropic-Api-Key": "Anthropic",
-        "X-Anyscale-Api-Key": "Anyscale",
-        "X-Aws-Access-Key": "AWS",
-        "X-Cohere-Api-Key": "Cohere",
-        "X-Databricks-Token": "Databricks",
-        "X-Friendli-Api-Key": "Friendli",
-        "X-Goog-Vertex-Api-Key": "Google Vertex AI",
-        "X-Goog-Studio-Api-Key": "Google AI Studio",
-        "X-HuggingFace-Api-Key": "HuggingFace",
-        "X-JinaAI-Api-Key": "Jina AI",
-        "X-Mistral-Api-Key": "Mistral",
-        "X-Nvidia-Api-Key": "NVIDIA",
-        "X-OpenAI-Api-Key": "OpenAI",
-        "X-Azure-Api-Key": "Azure OpenAI",
-        "X-Voyage-Api-Key": "Voyage AI",
-        "X-Xai-Api-Key": "xAI",
-    }
-
-    headers = get_headers()
-    if headers:
-        for header_name in headers:
-            if header_name in provider_map:
-                providers.add(provider_map[header_name])
-
-    return sorted(providers)
+    _, detected_keys = _collect_headers_and_detected_keys()
+    return sorted(detected_keys)
 
 
 @contextmanager
@@ -196,12 +153,15 @@ def get_client(
 
     # Auto-detect headers if not provided
     if headers is None:
-        headers = get_headers()
+        headers, detected_keys = _collect_headers_and_detected_keys()
+        headers = headers or None
+    else:
+        detected_keys = None
 
     if verbose:
-        providers = get_detected_providers()
-        if providers:
-            print(f"Detected API keys: {', '.join(providers)}", file=sys.stderr)
+        detected = sorted(detected_keys) if detected_keys is not None else []
+        if detected:
+            print(f"Detected API keys: {', '.join(detected)}", file=sys.stderr)
         print("Connecting to Weaviate...", file=sys.stderr)
 
     client = weaviate.connect_to_weaviate_cloud(
@@ -244,12 +204,15 @@ def connect_client(
         api_key = api_key or env_api_key
 
     if headers is None:
-        headers = get_headers()
+        headers, detected_keys = _collect_headers_and_detected_keys()
+        headers = headers or None
+    else:
+        detected_keys = None
 
     if verbose:
-        providers = get_detected_providers()
-        if providers:
-            print(f"Detected API keys: {', '.join(providers)}", file=sys.stderr)
+        detected = sorted(detected_keys) if detected_keys is not None else []
+        if detected:
+            print(f"Detected API keys: {', '.join(detected)}", file=sys.stderr)
         print("Connecting to Weaviate...", file=sys.stderr)
 
     client = weaviate.connect_to_weaviate_cloud(

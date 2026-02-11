@@ -13,13 +13,28 @@ This skill provides comprehensive access to Weaviate vector databases including 
 - `WEAVIATE_URL` - Your Weaviate Cloud cluster URL
 - `WEAVIATE_API_KEY` - Your Weaviate API key
 
-**Vectorizer API Keys (auto-detected):**
-Set keys for providers your collections use. All are auto-detected from environment:
-- `OPENAI_API_KEY`, `COHERE_API_KEY`, `HUGGINGFACE_API_KEY`
-- `JINAAI_API_KEY`, `VOYAGE_API_KEY`, `MISTRAL_API_KEY`
-- `NVIDIA_API_KEY`, `VERTEX_API_KEY`, `STUDIO_API_KEY`
-- `AZURE_API_KEY`, `ANTHROPIC_API_KEY`, `XAI_API_KEY`
-- `AWS_ACCESS_KEY`, `AWS_SECRET_KEY`
+**External Provider Keys (auto-detected):**
+Set only the keys your collections use:
+- `OPENAI_API_KEY`
+- `COHERE_API_KEY`
+- `HUGGINGFACE_API_KEY`
+- `JINAAI_API_KEY`
+- `VOYAGE_API_KEY`
+- `MISTRAL_API_KEY`
+- `NVIDIA_API_KEY`
+- `VERTEX_API_KEY`
+- `STUDIO_API_KEY`
+- `AZURE_API_KEY`
+- `ANTHROPIC_API_KEY`
+- `ANYSCALE_API_KEY`
+- `DATABRICKS_TOKEN`
+- `FRIENDLI_TOKEN`
+- `XAI_API_KEY`
+- `AWS_ACCESS_KEY`
+- `AWS_SECRET_KEY`
+
+Provider-to-header mapping reference:
+- [Environment Requirements](../cookbooks/references/environment-requirements.md)
 
 ## Available Scripts
 
