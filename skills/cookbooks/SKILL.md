@@ -12,6 +12,7 @@ This skill provides an index of implementation guides and foundational requireme
 ## Environment Requirements
 
 Before generating backend code that initializes a Weaviate client:
+
 1. Read [Environment Requirements](references/environment-requirements.md) for the canonical env var and header mapping.
 2. Use provider-specific env var names only (for example, `OPENAI_API_KEY`).
 3. Do not introduce generic placeholders like `INFERENCE_API_KEY` or `EXTERNAL_PROVIDER_API_KEY`.
@@ -20,3 +21,9 @@ Before generating backend code that initializes a Weaviate client:
 
 - [Query Agent Chatbot](references/query-agent-chatbot.md): Build a full-stack Next.js + FastAPI chatbot using Weaviate Query Agent with streaming and chat history support.
 - [Multimodal RAG: Building Document Search](references/multimodal_rag.md): Build a multimodal Retrieval-Augmented Generation (RAG) system using Weaviate, ColQwen2 for embeddings and Qwen2.5-VL for generation.
+
+## Interface (Optional)
+
+Use this when the user explicitly asks for a frontend for their Weaviate backend.
+
+- [Frontend Interface](references/frontend_interface.md): Build a Next.js frontend to interact with the Weaviate backend.
