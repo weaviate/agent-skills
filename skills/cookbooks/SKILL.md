@@ -20,6 +20,7 @@ Before generating backend code that initializes a Weaviate client:
 ## Cookbook Index
 
 - [Query Agent Chatbot](references/query-agent-chatbot.md): Build a full-stack Next.js + FastAPI chatbot using Weaviate Query Agent with streaming and chat history support.
+- [Data Explorer](references/data_explorer.md): Build a full-stack Next.js + FastAPI data explorer app including sorting, keyword search and tabular view of weaviate data.
 - [Multimodal RAG: Building Document Search](references/multimodal_rag.md): Build a multimodal Retrieval-Augmented Generation (RAG) system using Weaviate, ColQwen2 for embeddings and Qwen2.5-VL for generation.
 
 ## Interface (Optional)
