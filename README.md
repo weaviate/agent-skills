@@ -30,28 +30,10 @@ export WEAVIATE_URL="https://your-cluster.weaviate.cloud"
 export WEAVIATE_API_KEY="your-api-key"
 ```
 
-### External Providers API Keys (Auto-Detected)
+### External Provider Keys (Auto-Detected)
 
-Set API keys for the providers your collections use. All keys are automatically detected:
-
-| Provider | Environment Variable |
-|----------|---------------------|
-| OpenAI | `OPENAI_API_KEY` |
-| Cohere | `COHERE_API_KEY` |
-| HuggingFace | `HUGGINGFACE_API_KEY` |
-| Jina AI | `JINAAI_API_KEY` |
-| Voyage AI | `VOYAGE_API_KEY` |
-| Mistral | `MISTRAL_API_KEY` |
-| NVIDIA | `NVIDIA_API_KEY` |
-| Google Vertex AI | `VERTEX_API_KEY` |
-| Google AI Studio | `STUDIO_API_KEY` |
-| Azure OpenAI | `AZURE_API_KEY` |
-| Anthropic | `ANTHROPIC_API_KEY` |
-| Anyscale | `ANYSCALE_API_KEY` |
-| Databricks | `DATABRICKS_TOKEN` |
-| Friendli | `FRIENDLI_TOKEN` |
-| xAI | `XAI_API_KEY` |
-| AWS | `AWS_ACCESS_KEY`, `AWS_SECRET_KEY` |
+For the complete env var list and header mapping, see:
+- [Environment Requirements](./skills/cookbooks/references/environment-requirements.md)
 
 ## Usage
 

@@ -12,28 +12,29 @@ WEAVIATE_URL="https://your-cluster.weaviate.cloud"
 WEAVIATE_API_KEY="your-api-key"
 ```
 
-**Vectorizer API Keys (auto-detected):**
+**External Provider Keys (auto-detected):**
 
-Set keys for providers your collections use. All are auto-detected from environment:
+Set only the keys your collections use:
+- `OPENAI_API_KEY`
+- `COHERE_API_KEY`
+- `HUGGINGFACE_API_KEY`
+- `JINAAI_API_KEY`
+- `VOYAGE_API_KEY`
+- `MISTRAL_API_KEY`
+- `NVIDIA_API_KEY`
+- `VERTEX_API_KEY`
+- `STUDIO_API_KEY`
+- `AZURE_API_KEY`
+- `ANTHROPIC_API_KEY`
+- `ANYSCALE_API_KEY`
+- `DATABRICKS_TOKEN`
+- `FRIENDLI_TOKEN`
+- `XAI_API_KEY`
+- `AWS_ACCESS_KEY`
+- `AWS_SECRET_KEY`
 
-| Provider | Environment Variable |
-|----------|---------------------|
-| OpenAI | `OPENAI_API_KEY` |
-| Cohere | `COHERE_API_KEY` |
-| HuggingFace | `HUGGINGFACE_API_KEY` |
-| Jina AI | `JINAAI_API_KEY` |
-| Voyage AI | `VOYAGE_API_KEY` |
-| Mistral | `MISTRAL_API_KEY` |
-| NVIDIA | `NVIDIA_API_KEY` |
-| Google Vertex AI | `VERTEX_API_KEY` |
-| Google AI Studio | `STUDIO_API_KEY` |
-| Azure OpenAI | `AZURE_API_KEY` |
-| Anthropic | `ANTHROPIC_API_KEY` |
-| Anyscale | `ANYSCALE_API_KEY` |
-| Databricks | `DATABRICKS_TOKEN` |
-| Friendli | `FRIENDLI_TOKEN` |
-| xAI | `XAI_API_KEY` |
-| AWS | `AWS_ACCESS_KEY`, `AWS_SECRET_KEY` |
+Provider-to-header mapping reference:
+- [Environment Requirements](./skills/cookbooks/references/environment-requirements.md)
 
 **Check if variables are set:**
 ```bash
