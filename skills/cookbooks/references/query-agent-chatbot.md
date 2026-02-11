@@ -1,190 +1,151 @@
-## Build Weaviate Query Agent Chatbot Backend
+## Build Weaviate Query Agent Chatbot (One Shot)
 
-Create a production-ready FastAPI backend for a Weaviate Query Agent chatbot with streaming support. Use `uv` for project management and follow modern Python async patterns.
+Build a full-stack Query Agent chatbot with minimal back-and-forth. Optimize for developer success.
 
-As a first step, fetch and read the Weaviate Query Agent usage instructions from [here](https://docs.weaviate.io/agents/query/usage).
-Before implementing environment configuration, read [Environment Requirements](./environment-requirements.md) in this same folder and use that mapping exactly.
+Read first:
+- Weaviate Query Agent usage: https://docs.weaviate.io/agents/query/usage
+- Env/header mapping: [Environment Requirements](./environment-requirements.md)
 
-### Project Setup with uv
+Use `environment-requirements.md` mapping exactly.
 
-1. Initialize the project:
-   ```bash
-   uv init chatbot
-   cd chatbot
-   uv venv
-   ```
+## Core Rules
 
-2. Add dependencies (uv will create/update pyproject.toml automatically):
-   ```bash
-   uv add fastapi uvicorn[standard] weaviate-client weaviate-agents pydantic-settings sse-starlette python-dotenv
-   ```
+- Use `uv` for Python project/dependency management.
+- Do not manually author `pyproject.toml` or `uv.lock`; let `uv` generate/update them.
+- Use this backend install set:
+  - `uv add fastapi 'uvicorn[standard]' weaviate-client weaviate-agents pydantic-settings sse-starlette python-dotenv`
+- Use Next.js for frontend and Vercel AI SDK (`useChat`) for chat state/stream integration.
 
-3. Create directory structure:
-   ```
-   chatbot/
-   ├── backend/
-   │   ├── app/
-   │   │   ├── __init__.py
-   │   │   ├── main.py              # FastAPI app factory with lifespan
-   │   │   ├── config.py            # Pydantic Settings for env vars
-   │   │   ├── dependencies.py      # FastAPI dependency injection
-   │   │   ├── lifespan.py          # Startup/shutdown handling (Weaviate client)
-   │   │   ├── routers/
-   │   │   │   ├── __init__.py
-   │   │   │   ├── chat.py          # POST /chat (non-streaming), POST /chat/stream
-   │   │   │   └── health.py        # Health check endpoint
-   │   │   ├── services/
-   │   │   │   ├── __init__.py
-   │   │   │   └── query_agent.py   # AsyncQueryAgent wrapper/service
-   │   │   └── models/
-   │   │       ├── __init__.py
-   │   │       └── schemas.py       # Pydantic request/response models
-   │   ├── .env.example
-   │   ├── .gitignore
-   │   └── README.md
-   └── frontend/
-   ```
+## Fast Setup Commands
 
-4. Create root files for backend:
-   - `.env.example` with all required variables (no values)
-   - `.env` (gitignored) populated from example
-   - `.gitignore` (Python standard + .env)
-   - `README.md` with setup instructions
+Project bootstrap:
 
-### Configuration (backend/app/config.py)
-
-Use Pydantic Settings with `pydantic-settings` to load from .env:
-
-Required settings:
-- WEAVIATE_URL: Weaviate Cloud cluster URL
-- WEAVIATE_API_KEY: Weaviate Cloud API key
-- Provider API keys: Use provider-specific env vars from [Environment Requirements](./environment-requirements.md) (for example `OPENAI_API_KEY`, `COHERE_API_KEY`, `ANTHROPIC_API_KEY`)
-- COLLECTIONS: Comma-separated list of collection names to query
-- DEFAULT_TIMEOUT: Query Agent timeout (default 60)
-- APP_HOST/APP_PORT: Server config (default 0.0.0.0:8000)
-
-### Weaviate Client Lifespan (backend/app/lifespan.py)
-
-Use FastAPI's lifespan context manager to initialize the async Weaviate client and AsyncQueryAgent on startup, properly closing connections on shutdown.
-
-1. Create an async context manager that:
-   - Initializes AsyncWeaviateClient using `weaviate.use_async_with_weaviate_cloud()`
-   - Creates AsyncQueryAgent with collections from config
-   - Stores the agent in `app.state`
-   - Yields control
-   - Properly closes client on shutdown
-
-### Query Agent Service (backend/app/services/query_agent.py)
-
-Create a service class that wraps `AsyncQueryAgent` with methods for:
-- `ask(query, conversation_history)` - non-streaming
-- `ask_stream(query, conversation_history)` - returns async generator yielding `ProgressMessage`, `StreamedTokens`, and final response
-
-### Dependencies (backend/app/dependencies.py)
-
-Implement dependency injection for the service:
-
-1. Create a dependency function `get_query_agent_service()` that:
-   - Retrieves the pre-initialized agent from `request.app.state`
-   - Returns a `QueryAgentService` instance
-
-### Pydantic Models (backend/app/models/schemas.py)
-
-Define these request/response models:
-
-ChatRequest:
-- message: str (the current user query)
-- conversation_history: Optional[list[ChatMessage]] (for multi-turn)
-- collections: Optional[list[str]] (runtime override of default collections)
-- stream: bool = False (whether to stream response)
-
-ChatMessage:
-- role: Literal["user", "assistant"]
-- content: str
-
-StreamResponse:
-- type: Literal["progress", "token", "final"]
-- data: Union[ProgressData, TokenData, FinalData]
-
-ProgressData: message, details
-TokenData: delta (text chunk)
-FinalData: final_answer, searches, aggregations, usage, missing_information
-
-### Chat Router (backend/app/routers/chat.py)
-
-Implement two endpoints:
-
-POST /chat
-- Accepts ChatRequest
-- If conversation_history provided, convert to weaviate ChatMessage objects
-- Calls `QueryAgentService.ask()`
-- Returns JSON with final_answer and metadata
-
-POST /chat/stream (SSE endpoint)
-- Uses EventSourceResponse from sse-starlette
-- Calls `QueryAgentService.ask_stream()`
-- Iterate over the stream yielding events:
-  - ProgressMessage → {"type": "progress", "data": {"message": ..., "details": ...}}
-  - StreamedTokens → {"type": "token", "data": {"delta": ...}}
-  - Final response → {"type": "final", "data": {...full response object...}}
-- Handle exceptions gracefully and yield error events
-
-### Main Application (backend/app/main.py)
-
-- Create FastAPI app with `lifespan` context
-- Include `chat` router and `health` router
-- Add CORS middleware (allow all origins for development, configurable via env)
-- Add health check endpoint GET /health that verifies Weaviate connection
-- Use uvicorn.run() in `if __name__ == "__main__"` block
-
-### Environment Files
-
-.env.example:
-```
-WEAVIATE_URL=https://your-cluster.weaviate.cloud
-WEAVIATE_API_KEY=your-weaviate-api-key
-OPENAI_API_KEY=your-openai-api-key
-COLLECTIONS=Product,Documentation,FAQ
-CUSTOM_SYSTEM_PROMPT=
-DEFAULT_TIMEOUT=60
-APP_HOST=0.0.0.0
-APP_PORT=8000
-CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+```bash
+uv init chatbot
+cd chatbot
+uv venv
+uv add fastapi 'uvicorn[standard]' weaviate-client weaviate-agents pydantic-settings sse-starlette python-dotenv
 ```
 
-See [Environment Requirements](./environment-requirements.md) for other provider keys and headers.
+Frontend bootstrap:
 
-.gitignore:
-Standard Python gitignore plus:
-```
-.env
-.env.local
-.venv/
+```bash
+npx create-next-app@latest frontend --ts --eslint --app --use-npm --import-alias '@/*' --tailwind --yes
+cd frontend
+npm install ai @ai-sdk/react zod
 ```
 
-### Key Implementation Details
+## Workflow Contract (Must Follow)
 
-1. **Streaming Implementation**: Use `AsyncQueryAgent` and map its output to SSE events. Ensure `text/event-stream` media type.
+1. Build backend and frontend in one pass.
+2. Create `.env.example` and `.env` template files.
+3. Before asking user to fill env, do non-secret local sanity checks that do not require real credentials (imports/compile/startup-shape checks).
+4. Ask user to fill real env values.
+5. After the user confirms, verify both backend and frontend start without errors and provide exact commands to run them in separate terminals.
 
-2. **Conversation Handling**: Convert frontend `ChatMessage` models to `weaviate.agents.classes.ChatMessage` before passing to the agent.
+Do not ask avoidable questions that you can resolve from context.
 
-3. **Service Layer**: Keep business logic in `services/query_agent.py` to keep routers clean.
+## Structure Guidance (Compact)
 
-4. **Error Handling**: Proper try/except blocks in service and router levels.
+Use a modular layout like:
 
-5. **Async Pattern**: Use `async`/`await` consistently throughout the stack.
+```text
+chatbot/
+  backend/
+    app/
+      main.py
+      config.py
+      lifespan.py
+      dependencies.py
+      routers/
+      services/
+      models/
+    .env.example
+    .env
+  frontend/
+```
 
-6. **Testing**: Include a simple test script or curl examples in README.
+Keep these boundaries:
+- routers: HTTP only
+- services: business/query-agent logic
+- models: request/response schemas
+- config/lifespan: wiring and startup/shutdown
 
-### Frontend Recommendation
+## Backend Requirements
 
-We recommend using Next.js (npx create-next-app@latest) with the Vercel AI SDK for the frontend, placed in a `frontend/` directory at the project root. The `useChat` hook handles state management, streaming, and UI updates out of the box. Learn more [here](https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat).
+- FastAPI async app with lifespan.
+- Async Weaviate client initialized in lifespan and closed on shutdown.
+- Query Agent service layer (`ask` + `ask_stream`).
+- Endpoints:
+  - `GET /health`
+  - `POST /chat`
+  - `POST /chat/stream` (SSE)
+- Pydantic settings from `.env`.
+- Conversation history mapping to Weaviate chat message format.
 
-### Running the Server
+## Frontend Requirements
 
-Document that users should:
-1. Copy .env.example to .env and fill values
-2. Run: `uv run uvicorn app.main:app --reload`
-3. Or use: `python -m app.main`
+- Next.js app in `frontend/`.
+- Tailwind is the default styling approach.
+- Minimal, sleek, and modern chat UI that can:
+  - send non-streaming request to `/chat`
+  - receive and render streaming updates from `/chat/stream`
+- Keep architecture clean and modular.
 
-The app should work out of the box once env vars are set. If encountering any issues, use web search to find solutions.
+## Env Rules
+
+Mandatory:
+- `WEAVIATE_URL`
+- `WEAVIATE_API_KEY`
+- `COLLECTIONS`
+
+External provider keys:
+- Only fill keys actually used by the target Weaviate collection setup.
+
+CORS:
+- Default `CORS_ORIGINS` should include:
+  - `http://localhost:3000`
+  - `http://127.0.0.1:3000`
+  - `http://localhost:5173`
+  - `http://127.0.0.1:5173`
+
+## Post-Env Hand-Holding (Required)
+
+After user says env is filled, provide:
+
+### Terminal 1 (Backend)
+
+```bash
+cd chatbot/backend
+uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+### Terminal 2 (Frontend)
+
+```bash
+cd chatbot/frontend
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Then:
+- Ask user to start both terminals.
+- Run smoke tests yourself against running services.
+- Report pass/fail in plain language and fix blockers.
+
+Do not offload detailed testing steps to the user unless they explicitly ask.
+
+## Troubleshooting
+
+- `OPTIONS /chat/stream 400`: fix CORS origin mismatch (`localhost` vs `127.0.0.1`).
+- Weaviate startup host errors: ensure `WEAVIATE_URL` is full `https://...` URL.
+- Frontend can open but API calls fail: verify frontend backend base URL and matching host/origin.
+- Stream UI not updating: verify SSE parsing and `text/event-stream` behavior.
+- For any other issues, refer to the official library/package documentation and use web search extensively for troubleshooting.
+
+## Done Criteria
+
+- Backend healthy.
+- `/chat` works.
+- `/chat/stream` streams progress/token/final.
+- Frontend sends and receives responses.
+- User can run both servers in separate terminals with provided commands.
