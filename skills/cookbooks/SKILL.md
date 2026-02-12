@@ -9,9 +9,14 @@ description: Use this skill when the user wants to build AI applications with We
 
 This skill provides an index of implementation guides and foundational requirements for building Weaviate-powered AI applications. Use the references to quickly scaffold full-stack applications with best practices for connection management, environment setup, and application architecture.
 
+### Weaviate Cloud Instance
+
+If the user does not have an instance yet, direct them to the cloud console to register and create a free sandbox. Create a Weaviate instance via [Weaviate Cloud](https://console.weaviate.cloud/).
+
 ## Environment Requirements
 
 Before generating backend code that initializes a Weaviate client:
+
 1. Read [Environment Requirements](references/environment-requirements.md) for the canonical env var and header mapping.
 2. Use provider-specific env var names only (for example, `OPENAI_API_KEY`).
 3. Do not introduce generic placeholders like `INFERENCE_API_KEY` or `EXTERNAL_PROVIDER_API_KEY`.
@@ -21,4 +26,13 @@ Before generating backend code that initializes a Weaviate client:
 - [Query Agent Chatbot](references/query-agent-chatbot.md): Build a full-stack Next.js + FastAPI chatbot using Weaviate Query Agent with streaming and chat history support.
 - [Multimodal RAG: Building Document Search](references/pdf-multimodal-rag.md): Build a multimodal Retrieval-Augmented Generation (RAG) system using Weaviate Embeddings multimodal model for embeddings and Qwen2.5-VL for generation.
 - [Data Explorer](references/data_explorer.md): Build a full-stack Next.js + FastAPI data explorer app including sorting, keyword search and tabular view of weaviate data.
+- [Basic RAG](references/basic_rag.md): Implement basic retrieval and generation with Weaviate. Useful for most forms of data retrieval from a Weaviate collection.
+- [Advanced RAG](references/advanced_rag.md): Improve on basic RAG by adding extra features such as re-ranking, query decomposition, query re-writing, LLM filter selection.
+- [Basic Agent](references/basic_agent.md): Build a tool-calling AI agent with structured outputs using DSPy. Covers AgentResponse signatures, RouterAgent, tool design, and sequential multi-step loops.
+- [Agentic RAG](references/agentic_rag.md): Build RAG-powered AI agents with Weaviate. Covers naive RAG tools, hierarchical RAG with LLM-created filters, vector DB memory, Weaviate Query Agent, and Elysia integration.
 
+## Interface (Optional)
+
+Use this when the user explicitly asks for a frontend for their Weaviate backend.
+
+- [Frontend Interface](references/frontend_interface.md): Build a Next.js frontend to interact with the Weaviate backend.
