@@ -67,6 +67,7 @@ TOKENIZATION_MAP = {
 
 # Vectorizer string to config mapping
 VECTORIZER_MAP = {
+    "text2vec_weaviate": lambda: Configure.Vectors.text2vec_weaviate(),
     "text2vec_openai": lambda: Configure.Vectors.text2vec_openai(),
     "text2vec_cohere": lambda: Configure.Vectors.text2vec_cohere(),
     "text2vec_huggingface": lambda: Configure.Vectors.text2vec_huggingface(),
@@ -154,7 +155,7 @@ def main(
     name: str = typer.Argument(..., help="Collection name (capitalize first letter)"),
     properties: str = typer.Option(..., "--properties", "-p", help="JSON array of property definitions"),
     description: str = typer.Option(None, "--description", "-d", help="Collection description"),
-    vectorizer: str = typer.Option(None, "--vectorizer", "-v", help=f"Vectorizer to use. Options: {', '.join(VECTORIZER_MAP.keys())}"),
+    vectorizer: str = typer.Option("text2vec_weaviate", "--vectorizer", "-v", help=f"Vectorizer to use. Options: {', '.join(VECTORIZER_MAP.keys())}"),
     replication_factor: int = typer.Option(None, "--replication-factor", "-r", help="Replication factor (default: 1)"),
     multi_tenancy: bool = typer.Option(False, "--multi-tenancy", "-m", help="Enable multi-tenancy for data isolation"),
     auto_tenant_creation: bool = typer.Option(False, "--auto-tenant-creation", "-a", help="Auto-create tenants on insert (requires --multi-tenancy)"),
