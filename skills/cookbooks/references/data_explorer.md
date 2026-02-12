@@ -1,8 +1,9 @@
 ## Build Data Explorer App (One Shot)
 
-Build a full-stack Data Explorer App for Weaviate Collections with FastAPI. 
+Build a full-stack Data Explorer App for Weaviate Collections with FastAPI.
 
 Read first:
+
 - Search patterns and basics in Weaviate: https://docs.weaviate.io/weaviate/search/basics
 - Filters in Weaviate: https://docs.weaviate.io/weaviate/search/filters
 - Env/header mapping: [Environment Requirements](./environment-requirements.md)
@@ -16,12 +17,11 @@ Use `environment-requirements.md` mapping exactly.
 - Do not manually author `pyproject.toml` or `uv.lock`; let `uv` generate/update them.
 - Use this backend install set:
   - `uv add fastapi 'uvicorn[standard]' weaviate-client weaviate-agents pydantic-settings sse-starlette python-dotenv`
-- Use Next.js for frontend 
 - Depending on user request: consider combining this app with the Query Agent Chatbot.
-    - If the user explicitly only wants a data viewer/explorer, create this app independently
-    - If the user wants a fully featured chat and data explorer, combine the apps
-    - If no explicit instructions are given, ask the user their preference before continuing
-    - See the [Combination with Other Cookbooks](#additional-functionalitycombinations-with-other-cookbooks) section for details
+  - If the user explicitly only wants a data viewer/explorer, create this app independently
+  - If the user wants a fully featured chat and data explorer, combine the apps
+  - If no explicit instructions are given, ask the user their preference before continuing
+  - See the [Combination with Other Cookbooks](#additional-functionalitycombinations-with-other-cookbooks) section for details
 
 ## Fast Setup Commands
 
@@ -34,25 +34,15 @@ uv venv
 uv add fastapi 'uvicorn[standard]' weaviate-client weaviate-agents pydantic-settings sse-starlette python-dotenv
 ```
 
-Frontend bootstrap:
-
-```bash
-npx create-next-app@latest frontend --ts --eslint --app --use-npm --import-alias '@/*' --tailwind --yes
-cd frontend
-npm install ai @ai-sdk/react zod
-```
-
-
 ## Workflow Contract (Must Follow)
 
 1. Build backend and frontend in one pass.
 2. Create `.env.example` and `.env` template files.
 3. Before asking user to fill env, do non-secret local sanity checks that do not require real credentials (imports/compile/startup-shape checks).
 4. Ask user to fill real env values.
-5. After the user confirms, verify both backend and frontend start without errors and provide exact commands to run them in separate terminals.
+5. After the user confirms, verify backend starts without errors and provide exact commands to run in the terminal.
 
 Do not ask avoidable questions that you can resolve from context.
-
 
 ## Structure Guidance (Compact)
 
@@ -71,10 +61,10 @@ chatbot/
       models/
     .env.example
     .env
-  frontend/
 ```
 
 Keep these boundaries:
+
 - routers: HTTP only
 - services: business/query-agent logic
 - models: request/response schemas
@@ -94,30 +84,19 @@ Keep these boundaries:
 - Pydantic settings from `.env`.
 - Conversation history mapping to Weaviate chat message format.
 
-## Frontend Requirements
-
-- Next.js app in `frontend/`.
-- Tailwind is the default styling approach.
-- Minimal, sleek, and modern UI that can:
-  - views Weaviate collection data in a tabular format
-  - can click on table headings to enable sorting on that property (if available)
-  - can click on individual cells to view datum in full
-- Main functionality:
-  - send GET request to `/env_check` to see if the user needs to configure any environment variables
-  - send GET request to `/collections` to retrieve available collections before accessing tables. Tables can be viewed once a collection is clicked on
-  - send GET request per-collection to view data
-- Keep architecture clean and modular.
-
 ## Env Rules
 
 Mandatory:
+
 - `WEAVIATE_URL`
 - `WEAVIATE_API_KEY`
 
 External provider keys:
+
 - Only fill keys actually used by the target Weaviate collection setup.
 
 CORS:
+
 - Default `CORS_ORIGINS` should include:
   - `http://localhost:3000`
   - `http://127.0.0.1:3000`
@@ -144,6 +123,7 @@ status.HTTP_404_NOT_FOUND # code 404
 async def read_item(item_id: str):
     return {"item_id": item_id}
 ```
+
 ```python
 @app.get("/items/")
 async def read_item(skip: int = 0, limit: int = 10):
@@ -178,7 +158,7 @@ async def health_check() -> HealthResponse:
 
 ### GET /env_check
 
-Check what environment variables the backend has access to, used to verify the user's Weaviate configuration is correct (preventing errors on the frontend). For example:
+Check what environment variables the backend has access to, used to verify the user's Weaviate configuration is correct. For example:
 
 ```python
 import os
@@ -221,11 +201,12 @@ async def collections() -> CollectionsResponse:
 ```
 
 Tip: consider expanding this endpoint to include collection descriptions and configs. `await client.collections.list_all()` returns `dict[str, _CollectionConfigSimple]` where `_CollectionConfigSimple` contains attributes:
+
 - `description`: `str`
 - `properties`: `list[Property]` where `Property` has `.name`, `.description` and `.data_type` (accessed via `.data_type[:]` to get name of data type as string)
 - `vector_config`: `dict[str, _NamedVectorConfig]` where `_NamedVectorConfig` has attribute `.vectorizer.vectorizer` (not a typo) which can be accessed via `.vectorizer.vectorizer[:]` to get the name of the vectoriser as a string.
 
-Multi-tenancy should be checked via 
+Multi-tenancy should be checked via
 
 ```python
 config = await collection.config.get()
@@ -262,7 +243,7 @@ async def get_data(
     sort_on: str = Query(default=None),
     ascending: bool = Query(default=True),
 ) -> GetDataResponse:
-    
+
     # include client management to import async client here
 
     collection = await client.collections.use(collection_name)
@@ -308,8 +289,6 @@ async def get_data(
 
     # ...existing code
 ```
-Update the frontend to be able to tab through multi-tenant collections. 
-
 
 ## Post-Env Hand-Holding (Required)
 
@@ -322,15 +301,9 @@ cd data_explorer/backend
 uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-### Terminal 2 (Frontend)
-
-```bash
-cd data_explorer/frontend
-npm run dev -- --hostname 127.0.0.1 --port 3000
-```
-
 Then:
-- Ask user to start both terminals.
+
+- Ask user to start terminal.
 - Run smoke tests yourself against running services.
 - Report pass/fail in plain language and fix blockers.
 
@@ -339,15 +312,13 @@ Do not offload detailed testing steps to the user unless they explicitly ask.
 ## Troubleshooting
 
 - Weaviate startup host errors: ensure `WEAVIATE_URL` is full `https://...` URL.
-- Frontend can open but API calls fail: verify frontend backend base URL and matching host/origin.
 - For any other issues, refer to the official library/package documentation and use web search extensively for troubleshooting.
 
 ## Done Criteria
 
 - Backend healthy.
 - All endpoints work.
-- Frontend sends and receives responses.
-- User can run both servers in separate terminals with provided commands.
+- User can run server in terminal with provided commands.
 
 ## Additional functionality/combinations with other cookbooks
 
@@ -360,3 +331,9 @@ If you combine these apps, make the appropriate steps to combine the functionali
 - The frontend should have multiple pages/tabs depending on design choices so that data exploration and chat is separated
 - Consider crossovers between functionalities, e.g. a chat button from the data viewer/collection viewer which takes the user to chat with that collection selected.
 - Make any adjustments to the structure of either backends that you deem necessary
+
+### Frontend
+
+When the user explicitly asks for a frontend, use this reference as guideline:
+
+- [Frontend Interface](frontend_interface.md): Build a Next.js frontend to interact with the Weaviate backend.

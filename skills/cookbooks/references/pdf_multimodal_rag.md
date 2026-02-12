@@ -4,18 +4,18 @@
 
 This cookbook provides instructions for implementing a Multimodal Retrieval-Augmented Generation (RAG) system over PDF document collections using ColQwen2 for embeddings and Qwen2.5-VL for generation.
 
-
-
 ## Architecture
 
 A multimodal RAG system consists of two main pipelines:
 
 ### 1. Ingestion Pipeline
+
 - Documents (PDFs, images) are processed by a multimodal late-interaction model
 - Multi-vector embeddings are generated and stored in a vector database
 - Each document page/section is represented as a collection of vectors
 
 ### 2. Query Pipeline
+
 - Text queries are embedded using the same multimodal model
 - Relevant documents are retrieved using similarity search (e.g., MaxSim)
 - Retrieved documents are passed to a Vision Language Model (VLM) with the query
@@ -24,21 +24,25 @@ A multimodal RAG system consists of two main pipelines:
 ## Prerequisites
 
 Read first:
+
 - Env/header mapping: [Environment Requirements](./environment-requirements.md)
 
 Use `environment-requirements.md` mapping exactly.
 
 ### Hardware Requirements
+
 - GPU with 5-10 GB memory (recommended) or Apple Silicon
 - Can run on CPU but will be significantly slower
 - Consider cloud options (Google Colab, AWS, etc.) if local resources are limited
 
 ### Software Requirements
+
 - Python 3.11 or higher
 - PyTorch with appropriate device support (CUDA, MPS, or CPU)
 - `uv` package manager ([installation guide](https://docs.astral.sh/uv/getting-started/installation/))
 
 **Install uv if needed:**
+
 ```bash
 # macOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -72,6 +76,7 @@ uv add "colpali-engine[interpretability]>=0.3.2,<0.4.0"
 ```
 
 **Package breakdown:**
+
 - `colpali_engine`: Provides ColQwen2 model and processor
 - `weaviate-client`: Python client for Weaviate vector database (v4.x)
 - `qwen_vl_utils`: Utilities for processing Qwen2.5-VL inputs
@@ -90,13 +95,17 @@ uv add pdf2image pillow
 ## Step 2: Prepare Your Document Dataset
 
 ### Option A: Load Existing Dataset
+
 If using a pre-existing dataset:
+
 - Use Hugging Face `datasets` library
 - Ensure dataset contains document images or can be converted to images
 - Verify image format compatibility with your embedding model
 
 ### Option B: Process Your Own Documents
+
 For custom document collections:
+
 1. Convert documents to images (if not already images)
    - PDFs: Use `pdf2image` or similar libraries
    - Office documents: Convert to PDF first, then to images
@@ -104,6 +113,7 @@ For custom document collections:
 3. Store in a format suitable for batch processing
 
 **Recommended structure:**
+
 ```python
 {
     "document_id": str,
@@ -118,6 +128,7 @@ For custom document collections:
 ### About ColQwen2
 
 ColQwen2 is a multimodal late-interaction model for document retrieval:
+
 - **License**: Apache 2.0 (permissive for commercial use)
 - **Base Model**: Built on Qwen2 vision-language model
 - **Model Size**: ~5 GB download, similar memory usage
@@ -210,6 +221,7 @@ embedder = ColQwen2Embedder(model, processor)
 ```
 
 **Notes:**
+
 - Images are embedded as multi-vectors with shape `(num_patches, 128)` where num_patches depends on image size
 - Queries are embedded as multi-vectors with shape `(num_tokens, 128)` where num_tokens is the query length
 - Reducing image resolution speeds up embedding and produces fewer vectors
@@ -219,6 +231,7 @@ embedder = ColQwen2Embedder(model, processor)
 ### Weaviate Connection
 
 **Weaviate Cloud**
+
 ```python
 import os
 import weaviate
@@ -232,7 +245,6 @@ client = weaviate.connect_to_weaviate_cloud(
     auth_credentials=weaviate.auth.AuthApiKey(WEAVIATE_API_KEY),
 )
 ```
-
 
 ### Create Collection Schema
 
@@ -267,6 +279,7 @@ collection = client.collections.create(
 ```
 
 **Key Configuration Options:**
+
 - **Collection name**: Use a descriptive name (e.g., "PDFDocuments", "TechnicalManuals")
 - **Properties**: Add all metadata you want to filter or display
   - `page_id`: Unique identifier for each page
@@ -326,6 +339,7 @@ print(f"Total documents indexed: {len(collection)}")
 ```
 
 **Performance Tips:**
+
 - **Batch size**: Weaviate automatically manages batch size with `dynamic()` mode
 - **GPU memory**: Each ColQwen2 forward pass uses ~2-3 GB, process one image at a time
 - **CPU fallback**: If GPU memory is limited, embeddings will automatically use CPU
@@ -390,12 +404,14 @@ for result in results:
 ```
 
 **Query Parameters:**
+
 - **`limit`**: Number of results (1-10 recommended, consider VLM memory limits)
 - **`target_vector`**: Use `"colqwen"` to search ColQwen2 embeddings
 - **`return_metadata`**: Include `distance=True` to get MaxSim scores
 - **Filters**: Add `.where()` for metadata filtering (see Step 8)
 
 **Understanding MaxSim Scores:**
+
 - Higher scores = better matches (typically 15-30 for good matches)
 - MaxSim computes maximum similarity between any query token and document patch
 - Late-interaction allows fine-grained matching of specific concepts
@@ -405,6 +421,7 @@ for result in results:
 ### About Qwen2.5-VL
 
 Qwen2.5-VL is a vision language model that pairs well with ColQwen2:
+
 - **License**: Apache 2.0 / Tongyi Qianwen (check model card)
 - **Model Options**:
   - `Qwen/Qwen2.5-VL-3B-Instruct`: ~3 GB, good for limited hardware
@@ -413,6 +430,7 @@ Qwen2.5-VL is a vision language model that pairs well with ColQwen2:
 - **Capabilities**: Multimodal understanding (text + images), instruction following
 
 **Alternative Options:**
+
 - API-based VLMs (GPT-4V, Claude 3, Gemini): Easier setup, usage costs
 - Other open-source VLMs (LLaVA, InternVL): Different quality/size tradeoffs
 
@@ -569,6 +587,7 @@ print(f"\nBased on {result['num_sources']} source(s)")
 ```
 
 **Memory Considerations:**
+
 - **GPU Memory**: With 3B model + ColQwen2, expect ~8-10 GB total
 - **Reduce `num_documents`**: If OOM errors occur, retrieve fewer documents (even 1 can work well)
 - **Reduce `max_tokens`**: Shorter responses use less memory
@@ -628,6 +647,7 @@ response = collection.query.hybrid(
 ```
 
 **When to use hybrid search:**
+
 - When exact keyword matches are important (e.g., searching for specific terms, IDs)
 - To combine semantic understanding (ColQwen2) with exact text matching (BM25)
 - Adjust `alpha` based on whether you prioritize semantic vs. keyword matching
@@ -684,9 +704,16 @@ for src in sources:
 ## Use Cases
 
 This architecture is suitable for:
+
 - **Academic research**: Search papers by concepts, figures, or tables
 - **Technical documentation**: Find relevant diagrams and code snippets
 - **Legal documents**: Retrieve contract clauses with visual context
 - **Medical records**: Search imaging reports and scan results
 - **E-commerce**: Visual product catalog search
 - **Education**: Interactive textbook Q&A with diagrams
+
+### Frontend
+
+When the user explicitly asks for a frontend, use this reference as guideline:
+
+- [Frontend Interface](frontend_interface.md): Build a Next.js frontend to interact with the Weaviate backend.
