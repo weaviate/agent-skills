@@ -24,7 +24,7 @@ Use `environment-requirements.md` mapping exactly.
   - If the user explicitly only wants chatbot, create this app independently
   - If the user wants a fully featured chat and data explorer, combine the apps
   - If no explicit instructions are given, ask the user their preference before continuing
-  - See the [Combination with Other Cookbooks](#additional-functionalitycombinations-with-other-cookbooks) section for details
+  - See the [Next Steps](#next-steps) section for more details
 
 ### Fast Setup Commands
 
@@ -47,7 +47,7 @@ uv add fastapi 'uvicorn[standard]' weaviate-client weaviate-agents pydantic-sett
 
 Do not ask avoidable questions that you can resolve from context.
 
-### Directory Structure Guidance
+### Directory Structure
 
 Use a modular layout like:
 
@@ -126,6 +126,7 @@ Do not offload detailed testing steps to the user unless they explicitly ask.
 
 - `OPTIONS /chat/stream 400`: fix CORS origin mismatch (`localhost` vs `127.0.0.1`).
 - Weaviate startup host errors: ensure `WEAVIATE_URL` is full `https://...` URL.
+- For any other issues, refer to the official library/package documentation using web search.
 
 ## Done Criteria
 
