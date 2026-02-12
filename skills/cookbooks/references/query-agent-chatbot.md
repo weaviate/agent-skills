@@ -60,7 +60,6 @@ chatbot/
       models/
     .env.example
     .env
-  frontend/
 ```
 
 Keep these boundaries:
@@ -144,3 +143,9 @@ If you combine these apps, make the appropriate steps to combine the functionali
 - The frontend should have multiple pages/tabs depending on design choices so that data exploration and chat is separated
 - Consider crossovers between functionalities, e.g. a chat button from the data viewer/collection viewer which takes the user to chat with that collection selected.
 - Make any adjustments to the structure of either backends that you deem necessary
+
+### Frontend
+
+When the user explicitly asks for a frontend, use this reference as guideline:
+
+- [Frontend Interface](frontend_interface.md): Build a Next.js frontend to interact with the Weaviate backend.
