@@ -2,7 +2,7 @@
 
 ## Overview
 
-This cookbook provides instructions for implementing a Multimodal Retrieval-Augmented Generation (RAG) system over PDF document collections using Weaviate Embeddings multimodal model for embeddings and Qwen2.5-VL for generation.
+This cookbook provides instructions for implementing a Multimodal Retrieval-Augmented Generation (RAG) system over PDF document collections using Weaviate Embeddings multimodal model for embeddings and Ollama with a Vision Language Model (VLM) for generation.
 
 Weaviate Embeddings handles all embedding generation server-side — no local GPU or model downloads required. Simply upload document images as base64 blobs and Weaviate generates multi-vector embeddings automatically.
 
@@ -19,18 +19,9 @@ A multimodal RAG system consists of two main pipelines:
 **Query Pipeline:**
 - Text queries are sent to Weaviate, which embeds them server-side
 - Relevant documents are retrieved using similarity search (MaxSim)
-- Retrieved document images are passed to a Vision Language Model (VLM) with the query
+- Retrieved document images are passed to a Vision Language Model (VLM) running on Ollama with the query
 - The VLM generates a natural language response based on visual and textual context
 
-### Use Cases
-
-This architecture is suitable for:
-- **Academic research**: Search papers by concepts, figures, or tables
-- **Technical documentation**: Find relevant diagrams and code snippets
-- **Legal documents**: Retrieve contract clauses with visual context
-- **Medical records**: Search imaging reports and scan results
-- **E-commerce**: Visual product catalog search
-- **Education**: Interactive textbook Q&A with diagrams
 
 ### Prerequisites
 
@@ -43,7 +34,7 @@ Use `environment-requirements.md` mapping exactly.
 - Weaviate Cloud instance (Weaviate Embeddings is cloud-only)
 - Python 3.11 or higher
 - `uv` package manager ([installation guide](https://docs.astral.sh/uv/getting-started/installation/))
-- GPU with 3-7 GB memory only needed for local VLM generation (optional — can use API-based VLMs instead)
+- [Ollama](https://ollama.com/) installed locally for VLM generation
 
 ## Workflow Instructions
 
@@ -91,8 +82,8 @@ uv add datasets
 # For PDF processing (pdf2image requires poppler to be installed!)
 uv add pdf2image pillow
 
-# For local VLM generation (optional — only if not using API-based VLMs)
-uv add torch transformers qwen_vl_utils
+# For VLM generation via Ollama
+uv add ollama
 ```
 
 ### Step 2: Prepare Your Document Dataset
@@ -221,18 +212,12 @@ def image_to_base64(image):
 Weaviate Embeddings generates embeddings server-side during import — no local model needed:
 
 ```python
-# Store images for later VLM generation (optional)
-page_images = {}
-
 collection = client.collections.get(collection_name)
 
 with collection.batch.dynamic() as batch:
     for idx, document in enumerate(your_document_dataset):
         # Convert image to base64
         img_base64 = image_to_base64(document["image"])
-
-        # Store image reference for later VLM generation
-        page_images[document["page_id"]] = document["image"]
 
         # Add object to batch — Weaviate generates embeddings automatically
         batch.add_object(
@@ -279,14 +264,16 @@ def search_documents(query_text, limit=3):
         limit: Number of results to return (default: 3)
 
     Returns:
-        List of dicts with document properties, similarity scores, and images
+        List of dicts with document properties, similarity scores, and base64 images
     """
     collection = client.collections.get(collection_name)
 
     # Search — Weaviate embeds the query server-side
+    # Include doc_page in return_properties to get the base64-encoded image blob
     response = collection.query.near_text(
         query=query_text,
         limit=limit,
+        return_properties=["page_id", "document_id", "page_number", "title", "doc_page"],
         return_metadata=MetadataQuery(distance=True),
     )
 
@@ -301,7 +288,7 @@ def search_documents(query_text, limit=3):
             "page_number": props["page_number"],
             "title": props["title"],
             "distance": obj.metadata.distance,
-            "image": page_images[props["page_id"]],
+            "image_base64": props["doc_page"],  # Already base64-encoded
         })
 
     return results
@@ -321,16 +308,7 @@ for result in results:
 - **Filters**: Add `filters=` for metadata filtering (see below)
 
 **Accessing the image field in results:**
-BLOB properties like `doc_page` are not returned by default when used as the image_field property of the multi2vec_weaviate vectorizer. If you need to access the stored image directly from search results (e.g., when `page_images` is not available), specify it explicitly with `return_properties`:
-```python
-response = collection.query.near_text(
-    query=query_text,
-    limit=limit,
-    return_properties=["page_id", "document_id", "page_number", "title", "doc_page"],
-    return_metadata=MetadataQuery(distance=True),
-)
-# Access the base64 image: obj.properties["doc_page"]
-```
+BLOB properties like `doc_page` are not returned by default when used as the `image_field` property of the `multi2vec_weaviate` vectorizer. You must request them explicitly via `return_properties` (as shown in `search_documents()` above). The returned blob is already base64-encoded and can be passed directly to Ollama without re-encoding.
 
 #### Metadata Filtering
 
@@ -386,142 +364,82 @@ response = collection.query.hybrid(
 
 ### Step 6: Extend to Full RAG with a Vision Language Model
 
-#### About Qwen2.5-VL
+#### About Ollama
 
-Qwen2.5-VL is a vision language model that can generate answers from retrieved document images:
-- **License**: Apache 2.0 / Tongyi Qianwen (check model card)
-- **Model Options**:
-  - `Qwen/Qwen2.5-VL-3B-Instruct`: ~3 GB, good for limited hardware
-  - `Qwen/Qwen2.5-VL-7B-Instruct`: ~7 GB, better quality
-  - `Qwen/Qwen2.5-VL-72B-Instruct`: ~72 GB, highest quality
+[Ollama](https://ollama.com/) makes it easy to run vision language models locally with a single command. No manual model downloads, GPU configuration, or dependency management required.
 
-**Alternative Options:**
-- API-based VLMs (GPT-4V, Claude 3, Gemini): Easier setup, usage costs, no local GPU needed
-- Other open-source VLMs (LLaVA, InternVL): Different quality/size tradeoffs
+**Recommended VLM models for Ollama:**
+- `qwen3-vl:4b`: ~4 GB, good for limited hardware
+- `qwen3-vl:8b`: ~8 GB, better quality
+- `qwen3-vl:32b`: ~32 GB, highest quality
+- `gemma3`: Google's multimodal model, available in 4B/12B/27B sizes
+- `llava`: LLaVA model, lightweight and fast
 
-#### Load Qwen2.5-VL Model
+#### Install Ollama and Pull a Model
 
-```python
-import torch
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
-from transformers.utils.import_utils import is_flash_attn_2_available
-from qwen_vl_utils import process_vision_info
+```bash
+# Install Ollama (macOS/Linux)
+curl -fsSL https://ollama.com/install.sh | sh
 
-# Detect available device
-if torch.cuda.is_available():
-    device = "cuda:0"
-elif torch.backends.mps.is_available():
-    device = "mps"
-else:
-    device = "cpu"
+# Or on macOS with Homebrew
+brew install ollama
 
-# Choose attention implementation
-if is_flash_attn_2_available():
-    attn_implementation = "flash_attention_2"
-else:
-    attn_implementation = "eager"
-
-# Load Qwen2.5-VL model
-model_name = "Qwen/Qwen2.5-VL-3B-Instruct"  # Or use 7B/72B variants
-
-qwen_model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-    model_name,
-    torch_dtype=torch.bfloat16,
-    device_map=device,
-    attn_implementation=attn_implementation,
-)
-
-# Load processor with min/max pixel settings
-min_pixels = 256 * 28 * 28
-max_pixels = 1280 * 28 * 28
-qwen_processor = AutoProcessor.from_pretrained(
-    model_name,
-    min_pixels=min_pixels,
-    max_pixels=max_pixels
-)
+# Pull a vision language model
+ollama pull qwen3-vl:4b
 ```
 
-#### Implement Qwen2.5-VL Wrapper
+Verify the model is available:
+```bash
+ollama list
+```
+
+#### Implement Ollama VLM Wrapper
 
 ```python
-class Qwen2_5_VL:
-    def __init__(self, model, processor):
-        """Initialize with loaded Qwen2.5-VL model and processor."""
-        self.model = model
-        self.processor = processor
+import ollama
 
-    def generate_answer(self, query, images, max_tokens=128):
+class OllamaVLM:
+    def __init__(self, model_name="qwen3-vl:4b"):
+        """Initialize with an Ollama vision model name.
+
+        Args:
+            model_name: Ollama model tag (must support vision)
+        """
+        self.model_name = model_name
+
+    def generate_answer(self, query, images_base64, max_tokens=128):
         """Generate text response based on query and retrieved document images.
 
         Args:
             query: String text query
-            images: List of PIL.Image objects from retrieval
+            images_base64: List of base64-encoded image strings (as returned by Weaviate)
             max_tokens: Maximum tokens to generate (default: 128)
 
         Returns:
             Generated text answer as string
         """
-        # Convert PIL images to base64 strings
-        content = []
-        for img in images:
-            buffer = BytesIO()
-            img.save(buffer, format="jpeg")
-            img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
-            content.append({
-                "type": "image",
-                "image": f"data:image;base64,{img_base64}"
-            })
-
-        # Add text query after images
-        content.append({"type": "text", "text": query})
-
-        # Format as messages
-        messages = [{"role": "user", "content": content}]
-
-        # Apply chat template
-        text = self.processor.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
+        # Call Ollama with base64 images and query
+        response = ollama.chat(
+            model=self.model_name,
+            messages=[{
+                "role": "user",
+                "content": query,
+                "images": images_base64,
+            }],
+            options={"num_predict": max_tokens},
         )
 
-        # Process vision inputs
-        image_inputs, video_inputs = process_vision_info(messages)
-        inputs = self.processor(
-            text=[text],
-            images=image_inputs,
-            videos=video_inputs,
-            padding=True,
-            return_tensors="pt",
-        )
-        inputs = inputs.to(self.model.device)
-
-        # Generate response
-        generated_ids = self.model.generate(
-            **inputs,
-            max_new_tokens=max_tokens
-        )
-
-        # Trim input tokens from output
-        generated_ids_trimmed = [
-            out_ids[len(in_ids):]
-            for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-        ]
-
-        # Decode and return
-        return self.processor.batch_decode(
-            generated_ids_trimmed,
-            skip_special_tokens=True,
-            clean_up_tokenization_spaces=False
-        )[0]
+        return response["message"]["content"]
 
 # Instantiate the VLM
-qwen_vlm = Qwen2_5_VL(qwen_model, qwen_processor)
+vlm = OllamaVLM(model_name="qwen3-vl:4b")
 ```
 
 #### Complete RAG Pipeline
 
 ```python
 def multimodal_rag(query, num_documents=3, max_tokens=128):
-    """Complete multimodal RAG pipeline using Weaviate Embeddings + Qwen2.5-VL.
+    """Complete multimodal RAG pipeline using Weaviate Embeddings + Ollama VLM.
 
     Args:
         query: Natural language question
@@ -541,12 +459,12 @@ def multimodal_rag(query, num_documents=3, max_tokens=128):
         print(f"  - {doc['title']}, Page {doc['page_number']} "
               f"(Distance: {doc['distance']:.4f})")
 
-    # Step 2: Extract images from results
-    context_images = [doc["image"] for doc in retrieved_docs]
+    # Step 2: Extract base64 images from results
+    context_images = [doc["image_base64"] for doc in retrieved_docs]
 
-    # Step 3: Generate answer using Qwen2.5-VL
+    # Step 3: Generate answer using Ollama VLM
     print(f"\nGenerating answer...")
-    answer = qwen_vlm.generate_answer(query, context_images, max_tokens=max_tokens)
+    answer = vlm.generate_answer(query, context_images, max_tokens=max_tokens)
 
     # Step 4: Return structured response
     return {
@@ -597,9 +515,9 @@ Instructions: Answer the question based on the provided document images.
 Cite sources in your answer using [Source N] notation."""
 
     # Generate answer with citations
-    answer = qwen_vlm.generate_answer(
+    answer = vlm.generate_answer(
         enhanced_query,
-        [doc["image"] for doc in retrieved_docs],
+        [doc["image_base64"] for doc in retrieved_docs],
         max_tokens=max_tokens
     )
 
@@ -628,15 +546,32 @@ WeaviateConnectionError: Failed to connect to Weaviate
 ```
 **Solution:** Verify `WEAVIATE_URL` is correct and your network can reach the Weaviate Cloud instance.
 
+### Ollama Connection Error
+```
+ConnectionError: Failed to connect to Ollama
+```
+**Solution:** Make sure Ollama is running. Start it with:
+```bash
+ollama serve
+```
+
+### Ollama Model Not Found
+```
+ollama._types.ResponseError: model 'qwen3-vl:4b' not found
+```
+**Solution:** Pull the model first:
+```bash
+ollama pull qwen3-vl:4b
+```
+
 ### Out of Memory (OOM) During VLM Generation
-**Symptoms:** CUDA/MPS out of memory errors when generating answers.
+**Symptoms:** Out of memory errors when generating answers.
 
 **Solutions:**
 - Reduce `num_documents` — retrieve fewer documents (even 1 can work well)
 - Reduce `max_tokens` — shorter responses use less memory
-- Use a smaller model variant (`Qwen2.5-VL-3B` instead of `7B`)
-- Set `device_map="auto"` for automatic CPU offloading
-- Use API-based VLMs (GPT-4V, Claude 3, Gemini) to avoid local GPU requirements entirely
+- Use a smaller model variant (`qwen3-vl:4b` instead of `8b`)
+- Use API-based VLMs (GPT-4V, Claude, Gemini) to avoid local resource requirements entirely
 
 ### BLOB Property Not Returned in Query Results
 **Symptom:** `doc_page` field is missing from query results.
@@ -670,7 +605,7 @@ The implementation is complete when:
 - [ ] Document images are converted and uploaded to a Weaviate collection with `multi2vec_weaviate` vectorizer
 - [ ] The collection uses `ModernVBERT/colmodernvbert` model with MUVERA encoding configured
 - [ ] `search_documents()` returns ranked results with similarity scores for text queries
-- [ ] Qwen2.5-VL (or an alternative VLM) generates natural language answers from retrieved document images
+- [ ] Ollama with a vision language model generates natural language answers from retrieved document images
 - [ ] The full `multimodal_rag()` pipeline retrieves documents and generates answers end-to-end
 
 ## Next Steps
@@ -679,5 +614,5 @@ The implementation is complete when:
 - **Implement hybrid search** combining vector similarity with BM25 keyword matching for better precision
 - **Add response citations** using `generate_with_citations()` to attribute answers to source documents
 - **Scale the dataset** by processing larger document collections with batch chunking and memory management
-- **Swap in API-based VLMs** (GPT, Claude, Gemini) if local GPU resources are limited
+- **Swap in API-based VLMs** (GPT, Claude, Gemini) or other Ollama vision models (`gemma3`, `llava`) as alternatives
 - **Evaluate retrieval quality** by testing queries against known-relevant documents and tuning MUVERA parameters
