@@ -4,9 +4,14 @@ This document provides setup instructions for AI agents using the Weaviate skill
 
 ## Prerequisites
 
-### 1. Environment Variables
+### 1. Weaviate Cloud Instance
+
+If the user does not have an instance yet, direct them to the cloud console to register and create a free sandbox. Create a Weaviate instance via [Weaviate Cloud](https://console.weaviate.cloud/).
+
+### 2. Environment Variables
 
 **Required:**
+
 ```bash
 WEAVIATE_URL="https://your-cluster.weaviate.cloud"
 WEAVIATE_API_KEY="your-api-key"
@@ -15,6 +20,7 @@ WEAVIATE_API_KEY="your-api-key"
 **External Provider Keys (auto-detected):**
 
 Set only the keys your collections use:
+
 - `OPENAI_API_KEY`
 - `COHERE_API_KEY`
 - `HUGGINGFACE_API_KEY`
@@ -34,15 +40,17 @@ Set only the keys your collections use:
 - `AWS_SECRET_KEY`
 
 Provider-to-header mapping reference:
+
 - [Environment Requirements](./skills/cookbooks/references/environment-requirements.md)
 
 **Check if variables are set:**
+
 ```bash
 [ -z "$WEAVIATE_URL" ] && echo "WEAVIATE_URL is NOT set" || echo "WEAVIATE_URL is set"
 [ -z "$WEAVIATE_API_KEY" ] && echo "WEAVIATE_API_KEY is NOT set" || echo "WEAVIATE_API_KEY is set"
 ```
 
-### 2. Python Runtime
+### 3. Python Runtime
 
 All scripts require Python 3.11+.
 
@@ -50,16 +58,18 @@ All scripts require Python 3.11+.
 python3 --version
 ```
 
-### 3. uv Package Manager (Recommended)
+### 4. uv Package Manager (Recommended)
 
 Scripts use [uv](https://docs.astral.sh/uv/getting-started/installation/) for dependency management.
 
 **Check if uv is installed:**
+
 ```bash
 uv --version
 ```
 
 **Install uv if needed:**
+
 ```bash
 # macOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -78,6 +88,7 @@ All scripts are in `skills/weaviate/scripts/`. Run from that directory.
 ## Available Scripts
 
 ### Query Agent - Ask Mode
+
 Generate AI-powered answers with source citations.
 
 ```bash
@@ -87,6 +98,7 @@ uv run scripts/ask.py --query "USER_QUERY" --collections "Collection1,Collection
 **When to use:** User wants a direct answer to a question.
 
 ### Query Agent - Search Mode
+
 Retrieve raw objects using natural language.
 
 ```bash
@@ -96,6 +108,7 @@ uv run scripts/query_search.py --query "USER_QUERY" --collections "Collection1,C
 **When to use:** User wants to explore/browse results across collections.
 
 ### Hybrid Search
+
 Combines vector similarity and keyword matching.
 
 ```bash
@@ -103,6 +116,7 @@ uv run scripts/hybrid_search.py --query "USER_QUERY" --collection "CollectionNam
 ```
 
 Parameters:
+
 - `--alpha`: Balance between vector (1.0) and keyword (0.0), default: 0.7
 - `--properties`: Comma-separated properties to search
 - `--target-vector`: Target vector name for named vectors
@@ -110,6 +124,7 @@ Parameters:
 **When to use:** Default choice for most searches.
 
 ### Semantic Search
+
 Pure vector similarity search.
 
 ```bash
@@ -117,12 +132,14 @@ uv run scripts/semantic_search.py --query "USER_QUERY" --collection "CollectionN
 ```
 
 Parameters:
+
 - `--distance`: Maximum distance threshold
 - `--target-vector`: Target vector name for named vectors
 
 **When to use:** Finding conceptually similar content.
 
 ### Keyword Search
+
 BM25 keyword matching.
 
 ```bash
@@ -130,11 +147,13 @@ uv run scripts/keyword_search.py --query "USER_QUERY" --collection "CollectionNa
 ```
 
 Parameters:
+
 - `--properties`: Properties to search with optional boost (e.g., `title^2,content`)
 
 **When to use:** Finding exact terms, IDs, or specific text.
 
 ### List Collections
+
 Show all available collections.
 
 ```bash
@@ -144,6 +163,7 @@ uv run scripts/list_collections.py [--json]
 **When to use:** Discovering what collections exist.
 
 ### Get Collection Details
+
 Get configuration of a specific collection.
 
 ```bash
@@ -153,6 +173,7 @@ uv run scripts/get_collection.py --name "CollectionName" [--json]
 **When to use:** Understanding collection schema and properties.
 
 ### Create Collection
+
 Create a new Weaviate collection with custom properties.
 
 ```bash
@@ -160,6 +181,7 @@ uv run scripts/create_collection.py CollectionName --properties '[{"name": "prop
 ```
 
 Parameters:
+
 - `name`: Collection name (positional argument, should start with uppercase)
 - `--properties`: JSON array of property definitions (required)
 - `--description`: Collection description
@@ -169,6 +191,7 @@ Parameters:
 - `--auto-tenant-creation`: Auto-create tenants on insert (requires `--multi-tenancy`)
 
 **Property Definition Format:**
+
 ```json
 {
   "name": "property_name",
@@ -179,6 +202,7 @@ Parameters:
 ```
 
 **Supported Data Types:**
+
 - `text`, `text[]`
 - `boolean`, `boolean[]`
 - `int`, `int[]`
@@ -191,6 +215,7 @@ Parameters:
 - `object`, `object[]`
 
 **Examples:**
+
 ```bash
 # Basic collection
 uv run scripts/create_collection.py Article \
@@ -210,6 +235,7 @@ uv run scripts/create_collection.py Article \
 **When to use:** Creating new collections for organizing data.
 
 ### Import Data
+
 Import data from CSV, JSON, or JSONL files to an existing collection.
 
 ```bash
@@ -217,6 +243,7 @@ uv run scripts/import.py data.csv --collection "CollectionName" [--mapping '{}']
 ```
 
 Parameters:
+
 - `file`: Path to CSV, JSON, or JSONL file (positional argument)
 - `--collection`: Target collection name
 - `--mapping`: Optional JSON object to map file columns/keys to collection properties (e.g., `'{"csv_col": "weaviate_prop"}'`)
@@ -224,6 +251,7 @@ Parameters:
 - `--batch-size`: Number of objects per batch (default: 100)
 
 File Formats:
+
 - **CSV**: First row must be header with column names matching collection properties
 - **JSON**: Must be an array of objects: `[{"prop1": "value1"}, {"prop2": "value2"}]`
 - **JSONL**: One JSON object per line
@@ -233,16 +261,19 @@ File Formats:
 ## Workflow Recommendations
 
 1. **Start by listing collections** if you don't know what's available:
+
    ```bash
    uv run scripts/list_collections.py
    ```
 
 2. **Get collection details** to understand the schema:
+
    ```bash
    uv run scripts/get_collection.py --name "CollectionName"
    ```
 
 3. **Import data** to a collection (if needed):
+
    ```bash
    uv run scripts/import.py data.csv --collection "CollectionName"
    ```
@@ -254,52 +285,62 @@ File Formats:
    - Conceptual similarity → `semantic_search.py`
    - Exact terms/IDs → `keyword_search.py`
 
-4. **Do not specify a vectorizer when creating collections** unless requested:
-  ```bash
-  uv run scripts/create_collection.py Article \
-    --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
-  ```
+5. **Do not specify a vectorizer when creating collections** unless requested:
+
+```bash
+uv run scripts/create_collection.py Article \
+  --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
+```
 
 ## Output Formats
 
 All scripts support:
+
 - **Markdown tables** (default): Human-readable
 - **JSON** (`--json` flag): Machine-readable
 
 ## Error Handling
 
 **Missing environment variables:**
+
 ```
 Error: WEAVIATE_URL environment variable is not set
 ```
+
 Solution: Ask us to set the required environment variables.
 
 **Connection errors:**
+
 ```
 WeaviateConnectionError: Failed to connect to Weaviate
 ```
+
 Solution: Check WEAVIATE_URL and network connectivity.
 
 **Collection not found:**
+
 ```
 Error: Collection 'CollectionName' does not exist
 ```
+
 Solution: Use `list_collections.py` to see available collections.
 
 **Authentication error:**
+
 ```
 Error: Vector search failed - authentication error
 ```
+
 Solution: Set the appropriate vectorizer API key (e.g., `OPENAI_API_KEY`).
 
 ## Dependencies
 
 All scripts use inline dependency declarations:
 
-| Package | Version | Used By |
-|---------|---------|---------|
-| `weaviate-client` | >=4.19.2 | All scripts |
-| `weaviate-agents` | >=1.2.0 | ask.py, query_search.py |
-| `typer` | >=0.21.0 | All scripts |
+| Package           | Version  | Used By                 |
+| ----------------- | -------- | ----------------------- |
+| `weaviate-client` | >=4.19.2 | All scripts             |
+| `weaviate-agents` | >=1.2.0  | ask.py, query_search.py |
+| `typer`           | >=0.21.0 | All scripts             |
 
 With `uv run`, these are automatically installed.

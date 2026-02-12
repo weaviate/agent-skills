@@ -9,6 +9,10 @@ description: Use this skill when the user wants to build AI applications with We
 
 This skill provides an index of implementation guides and foundational requirements for building Weaviate-powered AI applications. Use the references to quickly scaffold full-stack applications with best practices for connection management, environment setup, and application architecture.
 
+### Weaviate Cloud Instance
+
+If the user does not have an instance yet, direct them to the cloud console to register and create a free sandbox. Create a Weaviate instance via [Weaviate Cloud](https://console.weaviate.cloud/).
+
 ## Environment Requirements
 
 Before generating backend code that initializes a Weaviate client:
