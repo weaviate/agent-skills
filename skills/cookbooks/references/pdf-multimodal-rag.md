@@ -6,34 +6,58 @@ This cookbook provides instructions for implementing a Multimodal Retrieval-Augm
 
 Weaviate Embeddings handles all embedding generation server-side — no local GPU or model downloads required. Simply upload document images as base64 blobs and Weaviate generates multi-vector embeddings automatically.
 
-## Architecture
+### Architecture
 
 A multimodal RAG system consists of two main pipelines:
 
-### 1. Ingestion Pipeline
+**Ingestion Pipeline:**
 - Documents (PDFs, images) are converted to page images
 - Images are uploaded as base64 blobs to Weaviate
 - Weaviate Embeddings generates multi-vector embeddings server-side using `ModernVBERT/colmodernvbert`
 - Embeddings are stored in the vector index automatically
 
-### 2. Query Pipeline
+**Query Pipeline:**
 - Text queries are sent to Weaviate, which embeds them server-side
 - Relevant documents are retrieved using similarity search (MaxSim)
 - Retrieved document images are passed to a Vision Language Model (VLM) with the query
 - The VLM generates a natural language response based on visual and textual context
 
-## Prerequisites
+### Use Cases
+
+This architecture is suitable for:
+- **Academic research**: Search papers by concepts, figures, or tables
+- **Technical documentation**: Find relevant diagrams and code snippets
+- **Legal documents**: Retrieve contract clauses with visual context
+- **Medical records**: Search imaging reports and scan results
+- **E-commerce**: Visual product catalog search
+- **Education**: Interactive textbook Q&A with diagrams
+
+### Prerequisites
 
 Read first:
 - Env/header mapping: [Environment Requirements](./environment-requirements.md)
 
 Use `environment-requirements.md` mapping exactly.
 
-### Requirements
+**Requirements:**
 - Weaviate Cloud instance (Weaviate Embeddings is cloud-only)
 - Python 3.11 or higher
 - `uv` package manager ([installation guide](https://docs.astral.sh/uv/getting-started/installation/))
 - GPU with 3-7 GB memory only needed for local VLM generation (optional — can use API-based VLMs instead)
+
+## Workflow Instructions
+
+### Step 1: Setup Project and Install Dependencies
+
+#### Project Bootstrap
+
+Initialize a new project with `uv`:
+
+```bash
+uv init multimodal-rag
+cd multimodal-rag
+uv venv
+```
 
 **Install uv if needed:**
 ```bash
@@ -47,19 +71,7 @@ pip install uv
 brew install uv
 ```
 
-## Step 1: Setup Project and Install Dependencies
-
-### Project Bootstrap
-
-Initialize a new project with `uv`:
-
-```bash
-uv init multimodal-rag
-cd multimodal-rag
-uv venv
-```
-
-### Install Core Dependencies
+#### Install Core Dependencies
 
 Install required libraries using `uv`:
 
@@ -70,7 +82,7 @@ uv add weaviate-client
 **Package breakdown:**
 - `weaviate-client`: Python client for Weaviate vector database (v4.x) — Weaviate Embeddings handles all embedding generation
 
-### Additional Dependencies (Install as Needed)
+#### Additional Dependencies (Install as Needed)
 
 ```bash
 # For loading Hugging Face datasets
@@ -83,15 +95,15 @@ uv add pdf2image pillow
 uv add torch transformers qwen_vl_utils
 ```
 
-## Step 2: Prepare Your Document Dataset
+### Step 2: Prepare Your Document Dataset
 
-### Option A: Load Existing Dataset
+#### Option A: Load Existing Dataset
 If using a pre-existing dataset:
 - Use Hugging Face `datasets` library
 - Ensure dataset contains document images or can be converted to images
 - Verify image format compatibility (JPEG, PNG)
 
-### Option B: Process Your Own Documents
+#### Option B: Process Your Own Documents
 For custom document collections:
 1. Convert documents to images (if not already images)
    - PDFs: Use `pdf2image` or similar libraries
@@ -109,9 +121,9 @@ For custom document collections:
 }
 ```
 
-## Step 3: Configure Weaviate Collection
+### Step 3: Configure Weaviate Collection
 
-### Weaviate Connection
+#### Weaviate Connection
 
 ```python
 import os
@@ -127,7 +139,7 @@ client = weaviate.connect_to_weaviate_cloud(
 )
 ```
 
-### Create Collection Schema
+#### Create Collection Schema
 
 Define a collection with `multi2vec_weaviate` vectorizer for automatic multimodal embeddings:
 
@@ -182,9 +194,9 @@ vector_config=[
 ],
 ```
 
-## Step 4: Index Documents
+### Step 4: Index Documents
 
-### Convert Images to Base64
+#### Convert Images to Base64
 
 ```python
 import base64
@@ -204,7 +216,7 @@ def image_to_base64(image):
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
 ```
 
-### Batch Import
+#### Batch Import
 
 Weaviate Embeddings generates embeddings server-side during import — no local model needed:
 
@@ -250,9 +262,9 @@ print(f"Total documents indexed: {len(collection)}")
 - **Image format**: JPEG is recommended for smaller payload sizes
 - **Large datasets**: Process in chunks, delete intermediate variables to free memory
 
-## Step 5: Implement Retrieval
+### Step 5: Implement Retrieval
 
-### Basic Query Function
+#### Basic Query Function
 
 Weaviate handles query embedding automatically — just pass text:
 
@@ -320,9 +332,61 @@ response = collection.query.near_text(
 # Access the base64 image: obj.properties["doc_page"]
 ```
 
-## Step 6: Extend to Full RAG with a Vision Language Model
+#### Metadata Filtering
 
-### About Qwen2.5-VL
+Add filters to narrow search scope by document properties:
+
+```python
+import weaviate.classes.config as wc
+
+# Example: Filter by document ID
+response = collection.query.near_text(
+    query="query text",
+    limit=5,
+    filters=wc.Filter.by_property("document_id").equal("paper_123"),
+)
+
+# Example: Filter by page range
+response = collection.query.near_text(
+    query="query text",
+    limit=5,
+    filters=wc.Filter.by_property("page_number").less_than(10),
+)
+
+# Example: Combine multiple filters
+from weaviate.classes.query import Filter
+
+response = collection.query.near_text(
+    query="query text",
+    limit=5,
+    filters=(
+        Filter.by_property("document_id").equal("paper_123") &
+        Filter.by_property("page_number").less_than(10)
+    ),
+)
+```
+
+#### Hybrid Search
+
+Combine vector search with BM25 keyword search:
+
+```python
+# Hybrid search: vector + keyword (Weaviate handles embedding)
+response = collection.query.hybrid(
+    query="query text",
+    alpha=0.7,  # 0.0=keyword only, 0.5=balanced, 1.0=vector only
+    limit=5,
+)
+```
+
+**When to use hybrid search:**
+- When exact keyword matches are important (e.g., searching for specific terms, IDs)
+- To combine semantic understanding with exact text matching (BM25)
+- Adjust `alpha` based on whether you prioritize semantic vs. keyword matching
+
+### Step 6: Extend to Full RAG with a Vision Language Model
+
+#### About Qwen2.5-VL
 
 Qwen2.5-VL is a vision language model that can generate answers from retrieved document images:
 - **License**: Apache 2.0 / Tongyi Qianwen (check model card)
@@ -335,7 +399,7 @@ Qwen2.5-VL is a vision language model that can generate answers from retrieved d
 - API-based VLMs (GPT-4V, Claude 3, Gemini): Easier setup, usage costs, no local GPU needed
 - Other open-source VLMs (LLaVA, InternVL): Different quality/size tradeoffs
 
-### Load Qwen2.5-VL Model
+#### Load Qwen2.5-VL Model
 
 ```python
 import torch
@@ -377,7 +441,7 @@ qwen_processor = AutoProcessor.from_pretrained(
 )
 ```
 
-### Implement Qwen2.5-VL Wrapper
+#### Implement Qwen2.5-VL Wrapper
 
 ```python
 class Qwen2_5_VL:
@@ -453,7 +517,7 @@ class Qwen2_5_VL:
 qwen_vlm = Qwen2_5_VL(qwen_model, qwen_processor)
 ```
 
-### Complete RAG Pipeline
+#### Complete RAG Pipeline
 
 ```python
 def multimodal_rag(query, num_documents=3, max_tokens=128):
@@ -501,67 +565,7 @@ print(f"Answer: {result['answer']}")
 print(f"\nBased on {result['num_sources']} source(s)")
 ```
 
-**Memory Considerations:**
-- **Embedding**: No local GPU needed — Weaviate Embeddings runs server-side
-- **VLM Generation**: With 3B model, expect ~3-7 GB GPU memory
-- **Reduce `num_documents`**: If OOM errors occur, retrieve fewer documents (even 1 can work well)
-- **Reduce `max_tokens`**: Shorter responses use less memory
-- **Use CPU offloading**: Set `device_map="auto"` for automatic memory management
-- **API-based VLMs**: Use GPT-4V, Claude 3, or Gemini to avoid local GPU requirements entirely
-
-### Metadata Filtering
-
-Add filters to narrow search scope by document properties:
-
-```python
-import weaviate.classes.config as wc
-
-# Example: Filter by document ID
-response = collection.query.near_text(
-    query="query text",
-    limit=5,
-    filters=wc.Filter.by_property("document_id").equal("paper_123"),
-)
-
-# Example: Filter by page range
-response = collection.query.near_text(
-    query="query text",
-    limit=5,
-    filters=wc.Filter.by_property("page_number").less_than(10),
-)
-
-# Example: Combine multiple filters
-from weaviate.classes.query import Filter
-
-response = collection.query.near_text(
-    query="query text",
-    limit=5,
-    filters=(
-        Filter.by_property("document_id").equal("paper_123") &
-        Filter.by_property("page_number").less_than(10)
-    ),
-)
-```
-
-### Hybrid Search
-
-Combine vector search with BM25 keyword search:
-
-```python
-# Hybrid search: vector + keyword (Weaviate handles embedding)
-response = collection.query.hybrid(
-    query="query text",
-    alpha=0.7,  # 0.0=keyword only, 0.5=balanced, 1.0=vector only
-    limit=5,
-)
-```
-
-**When to use hybrid search:**
-- When exact keyword matches are important (e.g., searching for specific terms, IDs)
-- To combine semantic understanding with exact text matching (BM25)
-- Adjust `alpha` based on whether you prioritize semantic vs. keyword matching
-
-### Response Citation
+#### Response Citation
 
 Include source attribution in generated answers:
 
@@ -610,12 +614,70 @@ for src in sources:
     print(f"  - {src['title']}, Page {src['page_number']}")
 ```
 
-## Use Cases
+## Troubleshooting
 
-This architecture is suitable for:
-- **Academic research**: Search papers by concepts, figures, or tables
-- **Technical documentation**: Find relevant diagrams and code snippets
-- **Legal documents**: Retrieve contract clauses with visual context
-- **Medical records**: Search imaging reports and scan results
-- **E-commerce**: Visual product catalog search
-- **Education**: Interactive textbook Q&A with diagrams
+### Missing Environment Variables
+```
+Error: WEAVIATE_URL environment variable is not set
+```
+**Solution:** Set `WEAVIATE_URL` and `WEAVIATE_API_KEY` environment variables. See [Environment Requirements](./environment-requirements.md).
+
+### Connection Errors
+```
+WeaviateConnectionError: Failed to connect to Weaviate
+```
+**Solution:** Verify `WEAVIATE_URL` is correct and your network can reach the Weaviate Cloud instance.
+
+### Out of Memory (OOM) During VLM Generation
+**Symptoms:** CUDA/MPS out of memory errors when generating answers.
+
+**Solutions:**
+- Reduce `num_documents` — retrieve fewer documents (even 1 can work well)
+- Reduce `max_tokens` — shorter responses use less memory
+- Use a smaller model variant (`Qwen2.5-VL-3B` instead of `7B`)
+- Set `device_map="auto"` for automatic CPU offloading
+- Use API-based VLMs (GPT-4V, Claude 3, Gemini) to avoid local GPU requirements entirely
+
+### BLOB Property Not Returned in Query Results
+**Symptom:** `doc_page` field is missing from query results.
+
+**Solution:** BLOB properties used as `image_field` in `multi2vec_weaviate` are not returned by default. Specify them explicitly:
+```python
+response = collection.query.near_text(
+    query=query_text,
+    limit=limit,
+    return_properties=["page_id", "document_id", "page_number", "title", "doc_page"],
+)
+```
+
+### Poppler Not Installed (PDF Processing)
+```
+Exception: Unable to get page count. Is poppler installed and in PATH?
+```
+**Solution:** Install poppler for `pdf2image`:
+```bash
+# macOS
+brew install poppler
+
+# Ubuntu/Debian
+sudo apt-get install poppler-utils
+```
+
+## Done Criteria
+
+The implementation is complete when:
+- [ ] Project is initialized with `uv` and all dependencies are installed
+- [ ] Document images are converted and uploaded to a Weaviate collection with `multi2vec_weaviate` vectorizer
+- [ ] The collection uses `ModernVBERT/colmodernvbert` model with MUVERA encoding configured
+- [ ] `search_documents()` returns ranked results with similarity scores for text queries
+- [ ] Qwen2.5-VL (or an alternative VLM) generates natural language answers from retrieved document images
+- [ ] The full `multimodal_rag()` pipeline retrieves documents and generates answers end-to-end
+
+## Next Steps
+
+- **Add metadata filtering** to narrow search scope by document ID, page range, or other properties
+- **Implement hybrid search** combining vector similarity with BM25 keyword matching for better precision
+- **Add response citations** using `generate_with_citations()` to attribute answers to source documents
+- **Scale the dataset** by processing larger document collections with batch chunking and memory management
+- **Swap in API-based VLMs** (GPT, Claude, Gemini) if local GPU resources are limited
+- **Evaluate retrieval quality** by testing queries against known-relevant documents and tuning MUVERA parameters
