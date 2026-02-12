@@ -308,7 +308,7 @@ for result in results:
 - **Filters**: Add `filters=` for metadata filtering (see below)
 
 **Accessing the image field in results:**
-BLOB properties like `doc_page` are not returned by default when used as the `image_field` property of the `multi2vec_weaviate` vectorizer. You must request them explicitly via `return_properties` (as shown in `search_documents()` above). The returned blob is already base64-encoded and can be passed directly to Ollama without re-encoding.
+BLOB properties like `doc_page` are not returned by default when used as the `image_field` property of the `multi2vec_weaviate` vectorizer. You must request them explicitly via `return_properties` (as shown in `search_documents()` above). The returned blob is base64-encoded. The Ollama Python SDK's `images` key accepts raw `bytes` or path-like strings (not base64 strings), so decode with `base64.b64decode()` before passing to Ollama (as shown in `OllamaVLM.generate_answer()`).
 
 #### Metadata Filtering
 
@@ -396,6 +396,7 @@ ollama list
 #### Implement Ollama VLM Wrapper
 
 ```python
+import base64
 import ollama
 
 class OllamaVLM:
@@ -418,13 +419,16 @@ class OllamaVLM:
         Returns:
             Generated text answer as string
         """
-        # Call Ollama with base64 images and query
+        # The Ollama SDK "images" key accepts bytes or path-like strings,
+        # so decode the base64 strings from Weaviate into raw bytes
+        images_bytes = [base64.b64decode(img) for img in images_base64]
+
         response = ollama.chat(
             model=self.model_name,
             messages=[{
                 "role": "user",
                 "content": query,
-                "images": images_base64,
+                "images": images_bytes,
             }],
             options={"num_predict": max_tokens},
         )
