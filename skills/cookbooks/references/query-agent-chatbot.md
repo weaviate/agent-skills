@@ -15,6 +15,11 @@ Use `environment-requirements.md` mapping exactly.
 - Use this backend install set:
   - `uv add fastapi 'uvicorn[standard]' weaviate-client weaviate-agents pydantic-settings sse-starlette python-dotenv`
 - Use Next.js for frontend and Vercel AI SDK (`useChat`) for chat state/stream integration.
+- Depending on user request: consider combining this app with the Data Explorer.
+    - If the user explicitly only wants chatbot, create this app independently
+    - If the user wants a fully featured chat and data explorer, combine the apps
+    - If no explicit instructions are given, ask the user their preference before continuing
+    - See the [Combination with Other Cookbooks](#additional-functionalitycombinations-with-other-cookbooks) section for details
 
 ## Fast Setup Commands
 
@@ -149,3 +154,15 @@ Do not offload detailed testing steps to the user unless they explicitly ask.
 - `/chat/stream` streams progress/token/final.
 - Frontend sends and receives responses.
 - User can run both servers in separate terminals with provided commands.
+
+## Additional functionality/combinations with other cookbooks
+
+This app is a chatbot, but you can combine this app with the data explorer: [Data Explorer](./data_explorer.md)
+
+If you combine these apps, make the appropriate steps to combine the functionalities:
+
+- Create or use a directory `/routes` which separate functions for query agent chat and data exploration. Import the routers in the `main.py` file
+- Combine the names of `data_explorer` and `chatbot` so they are under the same directory
+- The frontend should have multiple pages/tabs depending on design choices so that data exploration and chat is separated
+- Consider crossovers between functionalities, e.g. a chat button from the data viewer/collection viewer which takes the user to chat with that collection selected.
+- Make any adjustments to the structure of either backends that you deem necessary
