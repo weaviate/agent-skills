@@ -103,7 +103,9 @@ def parse_property(prop_dict: dict) -> Property:
     if "name" not in prop_dict:
         raise ValueError("Property must have a 'name' field")
     if "data_type" not in prop_dict:
-        raise ValueError(f"Property '{prop_dict['name']}' must have a 'data_type' field")
+        raise ValueError(
+            f"Property '{prop_dict['name']}' must have a 'data_type' field"
+        )
 
     name = prop_dict["name"]
     data_type_str = prop_dict["data_type"].lower()
@@ -144,7 +146,8 @@ def parse_property(prop_dict: dict) -> Property:
                 f"(property '{name}' has type '{data_type_str}')"
             )
         kwargs["nested_properties"] = [
-            parse_property(nested_prop) for nested_prop in prop_dict["nested_properties"]
+            parse_property(nested_prop)
+            for nested_prop in prop_dict["nested_properties"]
         ]
 
     return Property(**kwargs)
@@ -153,12 +156,30 @@ def parse_property(prop_dict: dict) -> Property:
 @app.command()
 def main(
     name: str = typer.Argument(..., help="Collection name (capitalize first letter)"),
-    properties: str = typer.Option(..., "--properties", "-p", help="JSON array of property definitions"),
-    description: str = typer.Option(None, "--description", "-d", help="Collection description"),
-    vectorizer: str = typer.Option("text2vec_weaviate", "--vectorizer", "-v", help=f"Vectorizer to use. Options: {', '.join(VECTORIZER_MAP.keys())}"),
-    replication_factor: int = typer.Option(None, "--replication-factor", "-r", help="Replication factor (default: 1)"),
-    multi_tenancy: bool = typer.Option(False, "--multi-tenancy", "-m", help="Enable multi-tenancy for data isolation"),
-    auto_tenant_creation: bool = typer.Option(False, "--auto-tenant-creation", "-a", help="Auto-create tenants on insert (requires --multi-tenancy)"),
+    properties: str = typer.Option(
+        ..., "--properties", "-p", help="JSON array of property definitions"
+    ),
+    description: str = typer.Option(
+        None, "--description", "-d", help="Collection description"
+    ),
+    vectorizer: str = typer.Option(
+        "text2vec_weaviate",
+        "--vectorizer",
+        "-v",
+        help=f"Vectorizer to use. Options: {', '.join(VECTORIZER_MAP.keys())}",
+    ),
+    replication_factor: int = typer.Option(
+        None, "--replication-factor", "-r", help="Replication factor (default: 1)"
+    ),
+    multi_tenancy: bool = typer.Option(
+        False, "--multi-tenancy", "-m", help="Enable multi-tenancy for data isolation"
+    ),
+    auto_tenant_creation: bool = typer.Option(
+        False,
+        "--auto-tenant-creation",
+        "-a",
+        help="Auto-create tenants on insert (requires --multi-tenancy)",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
 ):
     """Create a new Weaviate collection with specified properties."""
@@ -232,8 +253,7 @@ def main(
         # Add multi-tenancy config if specified
         if multi_tenancy:
             collection_config["multi_tenancy_config"] = Configure.multi_tenancy(
-                enabled=True,
-                auto_tenant_creation=auto_tenant_creation
+                enabled=True, auto_tenant_creation=auto_tenant_creation
             )
 
         with get_client() as client:
@@ -265,8 +285,12 @@ def main(
                     for p in config.properties
                 ],
                 "multi_tenancy": {
-                    "enabled": config.multi_tenancy_config.enabled if config.multi_tenancy_config else False,
-                    "auto_tenant_creation": config.multi_tenancy_config.auto_tenant_creation if config.multi_tenancy_config else False,
+                    "enabled": config.multi_tenancy_config.enabled
+                    if config.multi_tenancy_config
+                    else False,
+                    "auto_tenant_creation": config.multi_tenancy_config.auto_tenant_creation
+                    if config.multi_tenancy_config
+                    else False,
                 },
                 "status": "created",
             }

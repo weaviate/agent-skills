@@ -61,7 +61,9 @@ def detect_file_format(file_path: Path) -> str:
         )
 
 
-def read_csv(file_path: Path, mapping: dict[str, str] | None = None) -> list[dict[str, Any]]:
+def read_csv(
+    file_path: Path, mapping: dict[str, str] | None = None
+) -> list[dict[str, Any]]:
     """
     Read data from CSV file with automatic dialect detection.
 
@@ -96,7 +98,7 @@ def read_csv(file_path: Path, mapping: dict[str, str] | None = None) -> list[dic
             f.seek(0)
             reader_base = csv.reader(f, dialect=dialect)
             first_row = next(reader_base)
-            fieldnames = [f"column_{i+1}" for i in range(len(first_row))]
+            fieldnames = [f"column_{i + 1}" for i in range(len(first_row))]
             f.seek(0)
             reader = csv.DictReader(f, fieldnames=fieldnames, dialect=dialect)
             next(reader)  # Skip first row since it's data, not header
@@ -109,7 +111,9 @@ def read_csv(file_path: Path, mapping: dict[str, str] | None = None) -> list[dic
     return data
 
 
-def read_json(file_path: Path, mapping: dict[str, str] | None = None) -> list[dict[str, Any]]:
+def read_json(
+    file_path: Path, mapping: dict[str, str] | None = None
+) -> list[dict[str, Any]]:
     """
     Read data from JSON file (expects array of objects).
 
@@ -138,7 +142,9 @@ def read_json(file_path: Path, mapping: dict[str, str] | None = None) -> list[di
     return data
 
 
-def read_jsonl(file_path: Path, mapping: dict[str, str] | None = None) -> list[dict[str, Any]]:
+def read_jsonl(
+    file_path: Path, mapping: dict[str, str] | None = None
+) -> list[dict[str, Any]]:
     """
     Read data from JSONL file (one JSON object per line).
 
@@ -209,10 +215,21 @@ def convert_types(obj: dict[str, Any]) -> dict[str, Any]:
 @app.command()
 def main(
     file: str = typer.Argument(..., help="Path to CSV, JSON, or JSONL file"),
-    collection: str = typer.Option(..., "--collection", "-c", help="Target collection name"),
-    mapping: str = typer.Option(None, "--mapping", "-m", help="JSON object mapping file columns/keys to properties"),
-    tenant: str = typer.Option(None, "--tenant", "-t", help="Tenant name for multi-tenant collections"),
-    batch_size: int = typer.Option(100, "--batch-size", "-b", help="Number of objects per batch"),
+    collection: str = typer.Option(
+        ..., "--collection", "-c", help="Target collection name"
+    ),
+    mapping: str = typer.Option(
+        None,
+        "--mapping",
+        "-m",
+        help="JSON object mapping file columns/keys to properties",
+    ),
+    tenant: str = typer.Option(
+        None, "--tenant", "-t", help="Tenant name for multi-tenant collections"
+    ),
+    batch_size: int = typer.Option(
+        100, "--batch-size", "-b", help="Number of objects per batch"
+    ),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
 ):
     """Import data from CSV, JSON, or JSONL files to a Weaviate collection."""
@@ -271,8 +288,13 @@ def main(
         with get_client() as client:
             # Check if collection exists
             if not client.collections.exists(collection):
-                print(f"Error: Collection '{collection}' does not exist", file=sys.stderr)
-                print("Use list_collections.py to see available collections", file=sys.stderr)
+                print(
+                    f"Error: Collection '{collection}' does not exist", file=sys.stderr
+                )
+                print(
+                    "Use list_collections.py to see available collections",
+                    file=sys.stderr,
+                )
                 raise typer.Exit(1)
 
             # Get collection reference
@@ -308,7 +330,10 @@ def main(
                 print(f"Using tenant: {tenant}", file=sys.stderr)
 
             # Import data in batches
-            print(f"Importing {len(data)} objects in batches of {batch_size}...", file=sys.stderr)
+            print(
+                f"Importing {len(data)} objects in batches of {batch_size}...",
+                file=sys.stderr,
+            )
 
             imported_count = 0
             failed_count = 0
@@ -326,7 +351,10 @@ def main(
 
                         # Show progress
                         if i % batch_size == 0:
-                            print(f"Progress: {i}/{len(data)} objects processed", file=sys.stderr)
+                            print(
+                                f"Progress: {i}/{len(data)} objects processed",
+                                file=sys.stderr,
+                            )
 
                     except Exception as e:
                         failed_count += 1
@@ -336,7 +364,7 @@ def main(
                             print(f"Warning: {error_msg}", file=sys.stderr)
 
             # Check for batch errors
-            if hasattr(batch, 'failed_objects') and batch.failed_objects:
+            if hasattr(batch, "failed_objects") and batch.failed_objects:
                 for failed in batch.failed_objects:
                     failed_count += 1
                     if len(errors) < 5:
