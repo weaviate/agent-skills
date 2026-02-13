@@ -1,4 +1,6 @@
-## Build Data Explorer App (One Shot)
+# Build Data Explorer App
+
+## Overview
 
 Build a full-stack Data Explorer App for Weaviate Collections with FastAPI.
 
@@ -10,20 +12,22 @@ Read first:
 
 Use `environment-requirements.md` mapping exactly.
 
-## Core Rules
+## Instructions
+
+### Core Rules
 
 - Use a virtual environment via `venv`
 - Use `uv` for Python project/dependency management.
 - Do not manually author `pyproject.toml` or `uv.lock`; let `uv` generate/update them.
 - Use this backend install set:
-  - `uv add fastapi 'uvicorn[standard]' weaviate-client weaviate-agents pydantic-settings sse-starlette python-dotenv`
-- Depending on user request: consider combining this app with the Query Agent Chatbot.
+  - `uv add fastapi 'uvicorn[standard]' weaviate-client pydantic-settings python-dotenv`
+- Depending on user request: consider combining this app with the [Query Agent Chatbot](./query-agent-chatbot.md).
   - If the user explicitly only wants a data viewer/explorer, create this app independently
   - If the user wants a fully featured chat and data explorer, combine the apps
   - If no explicit instructions are given, ask the user their preference before continuing
-  - See the [Combination with Other Cookbooks](#additional-functionalitycombinations-with-other-cookbooks) section for details
+  - See the [Next Steps](#next-steps) section for more details
 
-## Fast Setup Commands
+### Fast Setup Commands
 
 Project bootstrap:
 
@@ -31,10 +35,10 @@ Project bootstrap:
 uv init data_explorer
 cd data_explorer
 uv venv
-uv add fastapi 'uvicorn[standard]' weaviate-client weaviate-agents pydantic-settings sse-starlette python-dotenv
+uv add fastapi 'uvicorn[standard]' weaviate-client pydantic-settings python-dotenv
 ```
 
-## Workflow Contract (Must Follow)
+### Workflow Contract
 
 1. Build backend and frontend in one pass.
 2. Create `.env.example` and `.env` template files.
@@ -44,12 +48,12 @@ uv add fastapi 'uvicorn[standard]' weaviate-client weaviate-agents pydantic-sett
 
 Do not ask avoidable questions that you can resolve from context.
 
-## Structure Guidance (Compact)
+### Directory Structure
 
 Use a modular layout like:
 
 ```text
-chatbot/
+data_explorer/
   backend/
     app/
       main.py
@@ -70,7 +74,7 @@ Keep these boundaries:
 - models: request/response schemas
 - config/lifespan: wiring and startup/shutdown
 
-## Backend Requirements
+### Backend Requirements
 
 - FastAPI async app with lifespan.
 - Async Weaviate client initialized in lifespan and closed on shutdown.
@@ -84,7 +88,7 @@ Keep these boundaries:
 - Pydantic settings from `.env`.
 - Conversation history mapping to Weaviate chat message format.
 
-## Env Rules
+### Env Rules
 
 Mandatory:
 
@@ -103,7 +107,7 @@ CORS:
   - `http://localhost:5173`
   - `http://127.0.0.1:5173`
 
-## FastAPI standards
+### FastAPI standards
 
 1. Do not use hardcoded status values, use `status` from FastAPI, for example:
 
@@ -134,13 +138,13 @@ async def read_item(skip: int = 0, limit: int = 10):
 
 5. Use proper logging for API usage, not simple print statements.
 
-## FastAPI endpoints
+### FastAPI endpoints
 
 Basic structure of endpoints. Customise according to user preference or suitability. Do not follow exactly, this is a guideline only.
 
 Ensure you also set up standard FastAPI procedures, such as global error handling, logging, dependencies. Set up an async client manager that connects on startup (via lifespan) and closes gracefully on app exit, use a dependency injection to add the client to the relevant endpoints.
 
-### GET /health
+#### GET /health
 
 This is a standard health check. For example:
 
@@ -156,7 +160,7 @@ async def health_check() -> HealthResponse:
     return HealthResponse(status="healthy")
 ```
 
-### GET /env_check
+#### GET /env_check
 
 Check what environment variables the backend has access to, used to verify the user's Weaviate configuration is correct. For example:
 
@@ -215,7 +219,7 @@ config.multi_tenancy_config.enabled # bool
 
 This is not available in the `_CollectionConfigSimple`, it must be fetched from `collection.config.get()`.
 
-### GET /data/{collection_name}
+#### GET /data/{collection_name}
 
 Retrieve data from a collection, using pagination, sorting and filters.
 
@@ -290,11 +294,9 @@ async def get_data(
     # ...existing code
 ```
 
-## Post-Env Hand-Holding (Required)
+### Post-Env Hand-Holding (Required)
 
-After user says env is filled and app is created, provide:
-
-### Terminal 1 (Backend)
+After user says env is filled, provide the terminal commands to run the backend:
 
 ```bash
 cd data_explorer/backend
@@ -312,7 +314,7 @@ Do not offload detailed testing steps to the user unless they explicitly ask.
 ## Troubleshooting
 
 - Weaviate startup host errors: ensure `WEAVIATE_URL` is full `https://...` URL.
-- For any other issues, refer to the official library/package documentation and use web search extensively for troubleshooting.
+- For any other issues, refer to the official library/package documentation using web search.
 
 ## Done Criteria
 
@@ -320,17 +322,16 @@ Do not offload detailed testing steps to the user unless they explicitly ask.
 - All endpoints work.
 - User can run server in terminal with provided commands.
 
-## Additional functionality/combinations with other cookbooks
+## Next Steps
 
-This app is a data explorer, but you can combine this app with the query agent chatbot: [Query Agent Chatbot](./query-agent-chatbot.md)
+This application is currently a data explorer backend. You may optionally offer to integrate it with the [Query Agent Chatbot](./query-agent-chatbot.md) based on user preference.
 
-If you combine these apps, make the appropriate steps to combine the functionalities:
+If the user chooses to combine these two applications, implement the integration as follows:
 
 - Create or use a directory `/routes` which separate functions for query agent chat and data exploration. Import the routers in the `main.py` file
-- Combine the names of `data_explorer` and `chatbot` so they are under the same directory
-- The frontend should have multiple pages/tabs depending on design choices so that data exploration and chat is separated
+- If a frontend is requested, the frontend should have multiple pages/tabs depending on design choices so that data exploration and chat is separated
 - Consider crossovers between functionalities, e.g. a chat button from the data viewer/collection viewer which takes the user to chat with that collection selected.
-- Make any adjustments to the structure of either backends that you deem necessary
+- Run quick tests to ensure the integration is seamless and the user can use both the chatbot and data explorer without any issues.
 
 ### Frontend
 
