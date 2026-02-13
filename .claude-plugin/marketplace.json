@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "weaviate",
-      "source": ".",
+      "source": "./",
       "description": "Search, query, and manage Weaviate vector databases. Includes database operations, cookbooks for building full-stack AI applications, and CLI commands.",
       "keywords": ["weaviate", "vector-database", "agents", "rag", "search", "retrieval"]
     }
