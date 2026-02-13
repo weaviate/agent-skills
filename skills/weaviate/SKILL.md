@@ -1,6 +1,6 @@
 ---
 name: weaviate
-description: Search, query, and manage Weaviate vector database collections. Use for semantic search, hybrid search, keyword search, natural language queries with AI-generated answers, collection management, data exploration, filtered fetching, data imports from CSV/JSON/JSONL files, and collection creation.
+description: Search, query, and manage Weaviate vector database collections. Use for semantic search, hybrid search, keyword search, natural language queries with AI-generated answers, collection management, data exploration, filtered fetching, data imports from CSV/JSON/JSONL files, create example data and collection creation.
 ---
 
 # Weaviate Database Operations
@@ -42,6 +42,7 @@ Set only the keys your collections use, refer to [Environment Requirements](refe
 
 - [Fetch and Filter](references/fetch_filter.md): Use to **retrieve specific objects by ID** or **strictly filtered subsets** of data. Best for precise data retrieval rather than search.
 - [Import Data](references/import_data.md): Use to **bulk import data** into an existing collection from CSV, JSON, or JSONL files.
+- [Create Example Data](references/example_data.md): Use to create example data for immediate use of other skills, if no data is available or user requests some toy data.
 
 ## Recommendations
 
@@ -51,32 +52,38 @@ Set only the keys your collections use, refer to [Environment Requirements](refe
    uv run scripts/list_collections.py
    ```
 
-2. **Get collection details** to understand the schema:
+2. **Ask the user** if they want to **create example data** if nothing is available and the user requests it. Otherwise continue.
+
+  ```bash
+  uv run scripts/example_data.py
+  ```
+
+3. **Get collection details** to understand the schema:
 
    ```bash
    uv run scripts/get_collection.py --name "COLLECTION_NAME"
    ```
 
-3. **Explore collection data** to see values and statistics:
+4. **Explore collection data** to see values and statistics:
 
    ```bash
    uv run scripts/explore_collection.py "COLLECTION_NAME"
    ```
 
-4. **Import data** to populate a new collection (if needed):
+5. **Import data** to populate a new collection (if needed):
 
    ```bash
    uv run scripts/import.py "data.csv" --collection "CollectionName"
    ```
 
-5. **Do not specify a vectorizer when creating collections** unless requested:
+6. **Do not specify a vectorizer when creating collections** unless requested:
 
    ```bash
    uv run scripts/create_collection.py Article \
      --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
    ```
 
-6. **Choose the right search type:**
+7. **Choose the right search type:**
    - Get AI-powered answers with source citations across multiple collections → `ask.py`
    - Get raw objects from multiple collections → `query_search.py`
    - General search → `hybrid_search.py` (default)
