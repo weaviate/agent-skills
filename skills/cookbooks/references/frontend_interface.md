@@ -4,7 +4,7 @@
 
 | Item         | Value                                                                                       |
 | ------------ | ------------------------------------------------------------------------------------------- |
-| **Stack**    | Next.js (App Router), Tailwind v4, shadcn/ui, Framer Motion, react-icons                    |
+| **Stack**    | Next.js (App Router), Tailwind v4, shadcn/ui, Framer Motion, react-icons, ai-sdk            |
 | **Node**     | v25.3.0+                                                                                    |
 | **Backend**  | `NEXT_PUBLIC_BACKEND_HOST` (default: `localhost:8000`)                                      |
 | **App type** | Single-page app; main view updates in place, no full-page navigations                       |
@@ -38,15 +38,17 @@ npm i framer-motion
 
 - **Ref:** [Framer Motion](https://motion.dev/)
 
-### 4. AI SDK
+### 4. AI SDK (optional)
 
 Note: Install only when create a conversational user interface for your chatbot application. It enables the streaming of chat messagesyou need to stream responses from the backend using useChat().
+
+- **When:** Add this step only if the app needs a chat UI (e.g. query-agent or chatbot flows).
+- **Stack:** Use the [Vercel AI SDK](https://ai-sdk.dev/docs/introduction) (`ai` + `@ai-sdk/*`). Use `useChat` and SDK UI primitives for the chat view.
+- **Ref:** [AI SDK – useChat](https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat) | [Next.js App Router setup](https://ai-sdk.dev/docs/getting-started/nextjs-app-router) — follow current docs for install and wiring.
 
 ```bash
 npm i ai @ai-sdk/react zod
 ```
-
-- **Ref:** [AI SDK](https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat)
 
 ### 5. Environment
 
@@ -99,3 +101,4 @@ Use the actual backend host when not local.
 - [shadcn components](https://ui.shadcn.com/docs/components)
 - [react-icons](https://react-icons.github.io/react-icons)
 - [Framer Motion](https://motion.dev/)
+- [AI SDK](https://ai-sdk.dev/docs/introduction)
