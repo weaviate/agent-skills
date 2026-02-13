@@ -2,7 +2,8 @@
 
 # Weaviate Agent Skills
 
-Agent Skills to empower developers building AI applications with Weaviate.
+Agent Skills to help developers using AI agents with Weaviate. Agent Skills are folders of instructions, scripts, and resources that agents like Claude Code, Cursor, Github Copilot, etc... can discover and use to do things more accurately and efficiently.
+
 Works with any agent that supports the [Agent Skills](https://agentskills.io/home#adoption) format.
 
 ## Installation
@@ -18,12 +19,16 @@ claude
 # Manual: clone and point your agent to the directory
 git clone https://github.com/weaviate/agent-skills.git
 
-# For Claude Code, after cloning, run 
+# For Claude Code, after cloning, run
 cd agent-skills
 claude --plugin-dir .
 ```
 
 ## Configuration
+
+### Weaviate Cloud
+
+It is recommended to create a free cluster in the [weaviate console](https://console.weaviate.cloud/).
 
 ### Required Environment Variables
 
@@ -35,7 +40,45 @@ export WEAVIATE_API_KEY="your-api-key"
 ### External Provider Keys (Auto-Detected)
 
 For the complete env var list and header mapping, see:
+
 - [Environment Requirements](./skills/cookbooks/references/environment-requirements.md)
+
+## Available Skills
+
+<details>
+<summary><strong>Weaviate</strong></summary>
+
+Utility functions for the agent to directly interact with a Weaviate database.
+
+- Create Collections
+
+- Explore Collections (Aggregation, Metadata, Schema)
+
+- Query Collections (Keyword-, Vector-, Hybrid Search) (Support filters)
+
+- Import Data (supports multi-vector and PDF ingestion)
+
+- Query Agent
+</details>
+
+<details>
+<summary><strong>Cookbooks</strong></summary>
+
+Blueprints for complete end-to-end AI applications with state-of-the art guidelines for agentic infrastructure.
+
+- Multimodal PDF Ingestion
+
+- Data Explorer
+
+- Retrieval Augmented Generation (Basic, Advanced, Agentic)
+
+- Agents
+
+- Query Agent Chatbot
+
+- Frontend Interface (optional)
+
+</details>
 
 ## Usage
 
@@ -66,10 +109,11 @@ The skill is automatically discovered by compatible agents. Simply describe what
 
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
-- A Weaviate Cloud instance
+- A [Weaviate Cloud](https://console.weaviate.cloud/) instance
 
 ## Resources
 
+- [Agentic Architecture Ebook](https://weaviate.io/agentic-ai)
 - [Weaviate Documentation](https://docs.weaviate.io/weaviate)
 - [Agent Skills Specification](https://agentskills.io/specification)
 - [Claude Code Plugins](https://code.claude.com/docs/en/plugins)
