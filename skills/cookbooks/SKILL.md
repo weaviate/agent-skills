@@ -1,5 +1,5 @@
 ---
-name: weaviate:cookbooks
+name: weaviate-cookbooks
 description: Use this skill when the user wants to build AI applications with Weaviate. It contains a high-level index of architectural patterns, 'one-shot' blueprints, and best practices for common use cases.
 ---
 
