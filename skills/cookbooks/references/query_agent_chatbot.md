@@ -1,6 +1,8 @@
-## Build Weaviate Query Agent Chatbot (One Shot)
+# Build Weaviate Query Agent Chatbot
 
-Build a full-stack Query Agent chatbot with minimal back-and-forth. Optimize for developer success.
+## Overview
+
+Build a full-stack Query Agent chatbot with minimal back-and-forth.
 
 Read first:
 
@@ -9,7 +11,9 @@ Read first:
 
 Use `environment-requirements.md` mapping exactly.
 
-## Core Rules
+## Instructions
+
+### Core Rules
 
 - Use `uv` for Python project/dependency management.
 - Do not manually author `pyproject.toml` or `uv.lock`; let `uv` generate/update them.
@@ -20,9 +24,9 @@ Use `environment-requirements.md` mapping exactly.
   - If the user explicitly only wants chatbot, create this app independently
   - If the user wants a fully featured chat and data explorer, combine the apps
   - If no explicit instructions are given, ask the user their preference before continuing
-  - See the [Combination with Other Cookbooks](#additional-functionalitycombinations-with-other-cookbooks) section for details
+  - See the [Next Steps](#next-steps) section for more details
 
-## Fast Setup Commands
+### Fast Setup Commands
 
 Project bootstrap:
 
@@ -33,7 +37,7 @@ uv venv
 uv add fastapi 'uvicorn[standard]' weaviate-client weaviate-agents pydantic-settings sse-starlette python-dotenv
 ```
 
-## Workflow Contract (Must Follow)
+### Workflow Contract
 
 1. Build backend in one pass.
 2. Create `.env.example` and `.env` template files.
@@ -43,7 +47,7 @@ uv add fastapi 'uvicorn[standard]' weaviate-client weaviate-agents pydantic-sett
 
 Do not ask avoidable questions that you can resolve from context.
 
-## Structure Guidance (Compact)
+### Directory Structure
 
 Use a modular layout like:
 
@@ -69,7 +73,7 @@ Keep these boundaries:
 - models: request/response schemas
 - config/lifespan: wiring and startup/shutdown
 
-## Backend Requirements
+### Backend Requirements
 
 - FastAPI async app with lifespan.
 - Async Weaviate client initialized in lifespan and closed on shutdown.
@@ -81,7 +85,17 @@ Keep these boundaries:
 - Pydantic settings from `.env`.
 - Conversation history mapping to Weaviate chat message format.
 
-## Env Rules
+### Source Handling
+
+- For every ask response, normalize output into:
+  - `answer`: text from `response.final_answer` (fallback `""`)
+  - `sources`: list of `{ "collection": ..., "object_id": ... }` built from `response.sources`
+  - `source_count`: `len(sources)`
+- `POST /chat` must return `answer`, `sources`, and `source_count`.
+- `POST /chat/stream` must include the same fields in the final SSE event.
+- If no sources are available, return `sources: []` and `source_count: 0`.
+
+### Env Rules
 
 Mandatory:
 
@@ -101,11 +115,9 @@ CORS:
   - `http://localhost:5173`
   - `http://127.0.0.1:5173`
 
-## Post-Env Hand-Holding (Required)
+### Post-Env Hand-Holding (Required)
 
-After user says env is filled, provide:
-
-### Terminal 1 (Backend)
+After user says env is filled, provide the terminal commands to run the backend:
 
 ```bash
 cd chatbot/backend
@@ -124,28 +136,31 @@ Do not offload detailed testing steps to the user unless they explicitly ask.
 
 - `OPTIONS /chat/stream 400`: fix CORS origin mismatch (`localhost` vs `127.0.0.1`).
 - Weaviate startup host errors: ensure `WEAVIATE_URL` is full `https://...` URL.
+- For any other issues, refer to the official library/package documentation using web search.
 
 ## Done Criteria
 
 - Backend healthy.
 - `/chat` works.
 - `/chat/stream` streams progress/token/final.
+- `/chat` and `/chat/stream` final include `sources` and `source_count`.
 - User can run the server in the terminal with the provided commands.
 
-## Additional functionality/combinations with other cookbooks
+## Next Steps
 
-This app is a chatbot, but you can combine this app with the data explorer: [Data Explorer](./data_explorer.md)
 
-If you combine these apps, make the appropriate steps to combine the functionalities:
+This application is currently a chatbot backend. You may optionally offer to integrate it with the [Data Explorer](./data_explorer.md) based on user preference.
+
+If the user chooses to combine these two applications, implement the integration as follows:
 
 - Create or use a directory `/routes` which separate functions for query agent chat and data exploration. Import the routers in the `main.py` file
-- Combine the names of `data_explorer` and `chatbot` so they are under the same directory
-- The frontend should have multiple pages/tabs depending on design choices so that data exploration and chat is separated
+- If a frontend is requested, the frontend should have multiple pages/tabs depending on design choices so that data exploration and chat is separated
 - Consider crossovers between functionalities, e.g. a chat button from the data viewer/collection viewer which takes the user to chat with that collection selected.
-- Make any adjustments to the structure of either backends that you deem necessary
+- Run quick tests to ensure the integration is seamless and the user can use both the chatbot and data explorer without any issues.
 
 ### Frontend
 
 When the user explicitly asks for a frontend, use this reference as guideline:
 
 - [Frontend Interface](frontend_interface.md): Build a Next.js frontend to interact with the Weaviate backend.
+- Render source citations from `sources` and `source_count` in the chat response UI.

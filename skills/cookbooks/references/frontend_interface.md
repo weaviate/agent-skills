@@ -38,11 +38,17 @@ npm i framer-motion
 
 - **Ref:** [Framer Motion](https://motion.dev/)
 
-### 4. Chat interface (optional)
+### 4. AI SDK (optional)
+
+Note: Install only when create a conversational user interface for your chatbot application. It enables the streaming of chat messagesyou need to stream responses from the backend using useChat().
 
 - **When:** Add this step only if the app needs a chat UI (e.g. query-agent or chatbot flows).
 - **Stack:** Use the [Vercel AI SDK](https://ai-sdk.dev/docs/introduction) (`ai` + `@ai-sdk/*`). Use `useChat` and SDK UI primitives for the chat view.
 - **Ref:** [AI SDK – useChat](https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat) | [Next.js App Router setup](https://ai-sdk.dev/docs/getting-started/nextjs-app-router) — follow current docs for install and wiring.
+
+```bash
+npm i ai @ai-sdk/react zod
+```
 
 ### 5. Environment
 
