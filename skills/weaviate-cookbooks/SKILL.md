@@ -25,7 +25,7 @@ Before generating backend code that initializes a Weaviate client:
 
 - [Query Agent Chatbot](references/query_agent_chatbot.md): Build a full-stack chatbot using Weaviate Query Agent with streaming and chat history support.
 - [Data Explorer](references/data_explorer.md): Build a full-stack data explorer app including sorting, keyword search and tabular view of weaviate data.
-- [Multimodal RAG: Building Document Search](references/pdf_multimodal_rag.md): Build a multimodal Retrieval-Augmented Generation (RAG) system using Weaviate, ColQwen2 for embeddings and Qwen3-VL for generation.
+- [Multimodal RAG: Building Document Search](references/pdf_multimodal_rag.md): Build a multimodal Retrieval-Augmented Generation (RAG) system using Weaviate Embeddings (ModernVBERT/colmodernvbert) and Ollama with Qwen3-VL for generation.
 - [Basic RAG](references/basic_rag.md): Implement basic retrieval and generation with Weaviate. Useful for most forms of data retrieval from a Weaviate collection.
 - [Advanced RAG](references/advanced_rag.md): Improve on basic RAG by adding extra features such as re-ranking, query decomposition, query re-writing, LLM filter selection.
 - [Basic Agent](references/basic_agent.md): Build a tool-calling AI agent with structured outputs using DSPy. Covers AgentResponse signatures, RouterAgent, tool design, and sequential multi-step loops.
