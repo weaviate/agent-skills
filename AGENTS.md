@@ -77,6 +77,13 @@ pip install uv
 brew install uv
 ```
 
+### Project Structure
+
+| Skill | Path | Description |
+|-------|------|-------------|
+| **weaviate** | `skills/weaviate/` | Scripts and references for searching, querying, and managing Weaviate collections |
+| **weaviate-cookbooks** | `skills/weaviate-cookbooks/` | Implementation guides for building full-stack AI applications with Weaviate |
+
 ## Running Scripts
 
 All scripts are in `skills/weaviate/scripts/`. Run from that directory.
@@ -130,3 +137,21 @@ Weaviate cookbooks are implementation guides for building full-stack AI applicat
 ### Optional Frontend Guide
 
 - [Frontend Interface](./skills/weaviate-cookbooks/references/frontend_interface.md): Build a Next.js frontend (App Router, Tailwind v4, shadcn/ui) to interact with Weaviate backends.
+
+## Contributing
+
+For full guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+### Adding a Reference
+
+1. Create a new `.md` file in `skills/<skill-name>/references/`.
+2. Include usage, parameters, examples, and prerequisites.
+3. Link the new reference from the skill's `SKILL.md`.
+
+### Creating a New Skill
+
+1. Create directory: `mkdir -p skills/my-skill/references`
+2. Add a `SKILL.md` with YAML frontmatter (`name`, `description`) and reference links.
+3. Add reference markdown files in `references/`.
+
+Skills follow the [Agent Skills Open Standard](https://agentskills.io/).
