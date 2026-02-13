@@ -38,7 +38,17 @@ npm i framer-motion
 
 - **Ref:** [Framer Motion](https://motion.dev/)
 
-### 4. Environment
+### 4. AI SDK
+
+Note: Install only when create a conversational user interface for your chatbot application. It enables the streaming of chat messagesyou need to stream responses from the backend using useChat().
+
+```bash
+npm i ai @ai-sdk/react zod
+```
+
+- **Ref:** [AI SDK](https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat)
+
+### 5. Environment
 
 **Required:**
 

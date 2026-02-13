@@ -85,6 +85,16 @@ Keep these boundaries:
 - Pydantic settings from `.env`.
 - Conversation history mapping to Weaviate chat message format.
 
+### Source Handling
+
+- For every ask response, normalize output into:
+  - `answer`: text from `response.final_answer` (fallback `""`)
+  - `sources`: list of `{ "collection": ..., "object_id": ... }` built from `response.sources`
+  - `source_count`: `len(sources)`
+- `POST /chat` must return `answer`, `sources`, and `source_count`.
+- `POST /chat/stream` must include the same fields in the final SSE event.
+- If no sources are available, return `sources: []` and `source_count: 0`.
+
 ### Env Rules
 
 Mandatory:
@@ -133,6 +143,7 @@ Do not offload detailed testing steps to the user unless they explicitly ask.
 - Backend healthy.
 - `/chat` works.
 - `/chat/stream` streams progress/token/final.
+- `/chat` and `/chat/stream` final include `sources` and `source_count`.
 - User can run the server in the terminal with the provided commands.
 
 ## Next Steps
@@ -152,3 +163,4 @@ If the user chooses to combine these two applications, implement the integration
 When the user explicitly asks for a frontend, use this reference as guideline:
 
 - [Frontend Interface](frontend_interface.md): Build a Next.js frontend to interact with the Weaviate backend.
+- Render source citations from `sources` and `source_count` in the chat response UI.
