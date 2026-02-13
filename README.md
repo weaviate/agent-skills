@@ -1,3 +1,5 @@
+![Weaviate Agent Skills](banner.jpg)
+
 # Weaviate Agent Skills
 
 Agent Skills to empower developers building AI applications with Weaviate.
