@@ -39,10 +39,6 @@ Set only the keys your collections use:
 - `AWS_ACCESS_KEY`
 - `AWS_SECRET_KEY`
 
-Provider-to-header mapping reference:
-
-- [Environment Requirements](./skills/cookbooks/references/environment-requirements.md)
-
 **Check if variables are set:**
 
 ```bash
@@ -87,260 +83,34 @@ All scripts are in `skills/weaviate/scripts/`. Run from that directory.
 
 ## Available Scripts
 
-### Query Agent - Ask Mode
+For full parameter details, examples, and usage guidance, see the linked references.
 
-Generate AI-powered answers with source citations.
+### Search & Query
 
-```bash
-uv run scripts/ask.py --query "USER_QUERY" --collections "Collection1,Collection2" [--json]
-```
+- [Query Agent - Ask Mode](./skills/weaviate/references/ask.md): Generate AI-powered answers with source citations across multiple collections.
+- [Query Agent - Search Mode](./skills/weaviate/references/query_search.md): Retrieve raw objects using natural language queries across multiple collections.
+- [Hybrid Search](./skills/weaviate/references/hybrid_search.md): Combine vector similarity and keyword matching — the default choice for most searches.
+- [Semantic Search](./skills/weaviate/references/semantic_search.md): Pure vector similarity search for finding conceptually similar content.
+- [Keyword Search](./skills/weaviate/references/keyword_search.md): BM25 keyword matching for exact terms, IDs, or specific text patterns.
 
-**When to use:** User wants a direct answer to a question.
+### Collection Management
 
-### Query Agent - Search Mode
+- [List Collections](./skills/weaviate/references/list_collections.md): Show all available collections with their properties.
+- [Get Collection Details](./skills/weaviate/references/get_collection.md): Get detailed configuration of a specific collection including vectorizer, properties, and multi-tenancy settings.
+- [Explore Collection](./skills/weaviate/references/explore_collection.md): Get statistical insights, aggregation metrics, and sample data from a collection.
+- [Create Collection](./skills/weaviate/references/create_collection.md): Create a new collection with custom schema, optional vectorizer, and multi-tenancy support.
 
-Retrieve raw objects using natural language.
+### Data Operations
 
-```bash
-uv run scripts/query_search.py --query "USER_QUERY" --collections "Collection1,Collection2" [--limit 10] [--json]
-```
-
-**When to use:** User wants to explore/browse results across collections.
-
-### Hybrid Search
-
-Combines vector similarity and keyword matching.
-
-```bash
-uv run scripts/hybrid_search.py --query "USER_QUERY" --collection "CollectionName" [--alpha 0.7] [--limit 10] [--json]
-```
-
-Parameters:
-
-- `--alpha`: Balance between vector (1.0) and keyword (0.0), default: 0.7
-- `--properties`: Comma-separated properties to search
-- `--target-vector`: Target vector name for named vectors
-
-**When to use:** Default choice for most searches.
-
-### Semantic Search
-
-Pure vector similarity search.
-
-```bash
-uv run scripts/semantic_search.py --query "USER_QUERY" --collection "CollectionName" [--limit 10] [--distance 0.5] [--json]
-```
-
-Parameters:
-
-- `--distance`: Maximum distance threshold
-- `--target-vector`: Target vector name for named vectors
-
-**When to use:** Finding conceptually similar content.
-
-### Keyword Search
-
-BM25 keyword matching.
-
-```bash
-uv run scripts/keyword_search.py --query "USER_QUERY" --collection "CollectionName" [--limit 10] [--json]
-```
-
-Parameters:
-
-- `--properties`: Properties to search with optional boost (e.g., `title^2,content`)
-
-**When to use:** Finding exact terms, IDs, or specific text.
-
-### List Collections
-
-Show all available collections.
-
-```bash
-uv run scripts/list_collections.py [--json]
-```
-
-**When to use:** Discovering what collections exist.
-
-### Get Collection Details
-
-Get configuration of a specific collection.
-
-```bash
-uv run scripts/get_collection.py --name "CollectionName" [--json]
-```
-
-**When to use:** Understanding collection schema and properties.
-
-### Create Collection
-
-Create a new Weaviate collection with custom properties.
-
-```bash
-uv run scripts/create_collection.py CollectionName --properties '[{"name": "property1", "data_type": "text"}]' [options]
-```
-
-Parameters:
-
-- `name`: Collection name (positional argument, should start with uppercase)
-- `--properties`: JSON array of property definitions (required)
-- `--description`: Collection description
-- `--vectorizer`: Vectorizer to use (e.g., `text2vec_openai`, `text2vec_cohere`, `none`)
-- `--replication-factor`: Replication factor (default: 1)
-- `--multi-tenancy`: Enable multi-tenancy for data isolation
-- `--auto-tenant-creation`: Auto-create tenants on insert (requires `--multi-tenancy`)
-
-**Property Definition Format:**
-
-```json
-{
-  "name": "property_name",
-  "data_type": "text",
-  "description": "Optional description",
-  "tokenization": "word"
-}
-```
-
-**Supported Data Types:**
-
-- `text`, `text[]`
-- `boolean`, `boolean[]`
-- `int`, `int[]`
-- `number`, `number[]`
-- `date`, `date[]`
-- `uuid`, `uuid[]`
-- `geoCoordinates`
-- `phoneNumber`
-- `blob`
-- `object`, `object[]`
-
-**Examples:**
-
-```bash
-# Basic collection
-uv run scripts/create_collection.py Article \
-  --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
-
-# With multi-tenancy
-uv run scripts/create_collection.py MultiTenant \
-  --properties '[{"name": "content", "data_type": "text"}]' \
-  --multi-tenancy --auto-tenant-creation
-
-# With vectorizer
-uv run scripts/create_collection.py Article \
---properties '[{"name": "title", "data_type": "text"}]' \
---vectorizer "text2vec_openai"
-```
-
-**When to use:** Creating new collections for organizing data.
-
-### Import Data
-
-Import data from CSV, JSON, or JSONL files to an existing collection.
-
-```bash
-uv run scripts/import.py data.csv --collection "CollectionName" [--mapping '{}'] [--tenant "name"] [--batch-size 100] [--json]
-```
-
-Parameters:
-
-- `file`: Path to CSV, JSON, or JSONL file (positional argument)
-- `--collection`: Target collection name
-- `--mapping`: Optional JSON object to map file columns/keys to collection properties (e.g., `'{"csv_col": "weaviate_prop"}'`)
-- `--tenant`: Tenant name for multi-tenant collections (required if collection is multi-tenant)
-- `--batch-size`: Number of objects per batch (default: 100)
-
-File Formats:
-
-- **CSV**: First row must be header with column names matching collection properties
-- **JSON**: Must be an array of objects: `[{"prop1": "value1"}, {"prop2": "value2"}]`
-- **JSONL**: One JSON object per line
-
-**When to use:** Bulk importing data into a collection.
-
-## Workflow Recommendations
-
-1. **Start by listing collections** if you don't know what's available:
-
-   ```bash
-   uv run scripts/list_collections.py
-   ```
-
-2. **Get collection details** to understand the schema:
-
-   ```bash
-   uv run scripts/get_collection.py --name "CollectionName"
-   ```
-
-3. **Import data** to a collection (if needed):
-
-   ```bash
-   uv run scripts/import.py data.csv --collection "CollectionName"
-   ```
-
-4. **Choose the right search type:**
-   - Direct answer needed → `ask.py`
-   - Explore multiple collections → `query_search.py`
-   - General search → `hybrid_search.py` (default)
-   - Conceptual similarity → `semantic_search.py`
-   - Exact terms/IDs → `keyword_search.py`
-
-5. **Do not specify a vectorizer when creating collections** unless requested:
-
-```bash
-uv run scripts/create_collection.py Article \
-  --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
-```
-
-## Output Formats
-
-All scripts support:
-
-- **Markdown tables** (default): Human-readable
-- **JSON** (`--json` flag): Machine-readable
-
-## Error Handling
-
-**Missing environment variables:**
-
-```
-Error: WEAVIATE_URL environment variable is not set
-```
-
-Solution: Ask us to set the required environment variables.
-
-**Connection errors:**
-
-```
-WeaviateConnectionError: Failed to connect to Weaviate
-```
-
-Solution: Check WEAVIATE_URL and network connectivity.
-
-**Collection not found:**
-
-```
-Error: Collection 'CollectionName' does not exist
-```
-
-Solution: Use `list_collections.py` to see available collections.
-
-**Authentication error:**
-
-```
-Error: Vector search failed - authentication error
-```
-
-Solution: Set the appropriate vectorizer API key (e.g., `OPENAI_API_KEY`).
+- [Fetch and Filter](./skills/weaviate/references/fetch_filter.md): Fetch objects by UUID or with complex nested filters (AND, OR logic).
+- [Import Data](./skills/weaviate/references/import_data.md): Import data from CSV, JSON, or JSONL files with automatic type conversion and column mapping.
 
 ## Dependencies
 
-All scripts use inline dependency declarations:
+All scripts use inline dependency declarations (auto-installed via `uv run`):
 
 | Package           | Version  | Used By                 |
 | ----------------- | -------- | ----------------------- |
 | `weaviate-client` | >=4.19.2 | All scripts             |
 | `weaviate-agents` | >=1.2.0  | ask.py, query_search.py |
 | `typer`           | >=0.21.0 | All scripts             |
-
-With `uv run`, these are automatically installed.
