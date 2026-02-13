@@ -23,8 +23,8 @@ Before generating backend code that initializes a Weaviate client:
 
 ## Cookbook Index
 
-- [Query Agent Chatbot](references/query-agent-chatbot.md): Build a full-stack Next.js + FastAPI chatbot using Weaviate Query Agent with streaming and chat history support.
-- [Multimodal RAG: Building Document Search](references/pdf-multimodal-rag.md): Build a multimodal Retrieval-Augmented Generation (RAG) system using Weaviate Embeddings multimodal model for embeddings and Qwen2.5-VL for generation.
+- [Query Agent Chatbot](references/query_agent_chatbot.md): Build a full-stack Next.js + FastAPI chatbot using Weaviate Query Agent with streaming and chat history support.
+- [Multimodal RAG: Building Document Search](references/pdf_multimodal_rag.md): Build a multimodal Retrieval-Augmented Generation (RAG) system using Weaviate Embeddings multimodal model for embeddings and Qwen2.5-VL for generation.
 - [Data Explorer](references/data_explorer.md): Build a full-stack Next.js + FastAPI data explorer app including sorting, keyword search and tabular view of weaviate data.
 - [Basic RAG](references/basic_rag.md): Implement basic retrieval and generation with Weaviate. Useful for most forms of data retrieval from a Weaviate collection.
 - [Advanced RAG](references/advanced_rag.md): Improve on basic RAG by adding extra features such as re-ranking, query decomposition, query re-writing, LLM filter selection.
