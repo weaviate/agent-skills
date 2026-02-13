@@ -114,3 +114,19 @@ All scripts use inline dependency declarations (auto-installed via `uv run`):
 | `weaviate-client` | >=4.19.2 | All scripts             |
 | `weaviate-agents` | >=1.2.0  | ask.py, query_search.py |
 | `typer`           | >=0.21.0 | All scripts             |
+
+## Weaviate Cookbooks
+
+Weaviate cookbooks are implementation guides for building full-stack AI applications with Weaviate. All cookbooks are in the `skills/weaviate-cookbooks/` skill. For full details and best practices, see the linked references.
+
+- [Query Agent Chatbot](./skills/weaviate-cookbooks/references/query_agent_chatbot.md): Build a full-stack chatbot using Weaviate Query Agent with streaming and chat history support.
+- [Data Explorer](./skills/weaviate-cookbooks/references/data_explorer.md): Build a full-stack data explorer app with sorting, keyword search, and tabular data view.
+- [Basic RAG](./skills/weaviate-cookbooks/references/basic_rag.md): Implement basic retrieval and generation with Weaviate — covers vector, keyword, hybrid, and image search.
+- [Advanced RAG](./skills/weaviate-cookbooks/references/advanced_rag.md): Extend basic RAG with query rewriting, decomposition, LLM-created filters, and re-ranking.
+- [Multimodal RAG (PDF)](./skills/weaviate-cookbooks/references/pdf_multimodal_rag.md): Build a multimodal RAG system for PDF documents using ColQwen2 embeddings and Qwen2.5-VL generation.
+- [Basic Agent](./skills/weaviate-cookbooks/references/basic_agent.md): Build tool-calling AI agents with structured outputs using DSPy.
+- [Agentic RAG](./skills/weaviate-cookbooks/references/agentic_rag.md): Build RAG-powered AI agents combining retrieval with agent logic — covers naive RAG tools, hierarchical RAG, vector DB memory, and Weaviate Query Agent.
+
+### Optional Frontend Guide
+
+- [Frontend Interface](./skills/weaviate-cookbooks/references/frontend_interface.md): Build a Next.js frontend (App Router, Tailwind v4, shadcn/ui) to interact with Weaviate backends.
