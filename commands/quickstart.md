@@ -8,7 +8,7 @@ allowed-tools: Bash, AskUserQuestion, Skill
 
 Welcome the user and walk them through the full setup of the Weaviate plugin, step by step. Be friendly, patient, and thorough — assume the user has never used Weaviate before.
 
-## Step 1: Welcome & Orientation
+## Welcome & Orientation
 
 Greet the user and give a brief overview of what this plugin can do:
 
@@ -29,7 +29,7 @@ Route them accordingly:
 - Cluster but empty → Skip to Step 3
 - Cluster with data → Skip to Step 5
 
-## Step 2: Sign Up for Weaviate Cloud
+## Sign Up for Weaviate Cloud
 
 Guide the user through creating a Weaviate Cloud account:
 
@@ -42,27 +42,51 @@ Guide the user through creating a Weaviate Cloud account:
    - Click **"Create cluster"** and wait for it to be ready (usually a few minute)
 4. Once the cluster is ready, they need two environment variables:
    - **WEAVIATE_URL**: Copy the "REST Endpoint" URL shown under the "Endpoints" section in the cluster dashboard (ends with `.weaviate.cloud`)
-   - **WEAVIATE_API_KEY**: Go to **"API Keys"**  section and click "+ New key", once the Create API Key popup appears, add an API key name and select "admin" in the "Role(s)" dropdown. Click on "Create Key" and copy and save the key as you will not be able to see it again.
+   - **WEAVIATE_API_KEY**: Go to **"API Keys"**  section and click "+ New key", once the Create API Key popup appears, add an API key name and select "admin" in the "Role(s)" dropdown. Click on "Create Key" and copy it as you will not be able to see it again.
 
-Tell the user to set these two environment variables in their terminal:
+### Setting Environment Variables
+
+**Security rule**: Never ask the user to paste or type their API keys into this chat session. 
+
+Present the user with the exact steps below. Format them clearly as a numbered checklist they can follow after leaving this session:
+
+---
+
+**Step 1.** Type `/exit` in this chat to quit Claude Code.
+
+**Step 2.** In your terminal, run these two commands (replace the placeholder values with the REST Endpoint URL and API key you copied from the Weaviate Cloud dashboard):
 
 ```bash
 export WEAVIATE_URL="https://your-cluster-name.weaviate.cloud"
 export WEAVIATE_API_KEY="your-api-key-here"
 ```
 
-Recommend they add these to their shell profile (`~/.zshrc`, `~/.bashrc`, etc.) so they persist across sessions.
+These are session-scoped — they only last until you close this terminal window, which is fine for sandbox clusters.
 
-Once the user confirms they've done this, verify the environment variables are set:
+**Step 3.** Relaunch Claude Code from the **same terminal** by running `claude`. It will automatically inherit the environment variables you just set.
+
+**Step 4.** Run the quickstart again:
+
+```
+/weaviate:quickstart
+```
+
+When it asks where you are in your journey, select **"I have a cluster but it's empty"** — this will skip the signup steps and take you straight to loading data.
+
+---
+
+After presenting these steps, **stop here**. Do not continue to Step 3 or beyond — the user needs to exit and come back first.
+
+**If the user chose "I have a cluster but it's empty" or "I have a cluster with data" at the start** (meaning they already have credentials configured), verify the variables are available with a non-leaking check — do not echo actual values:
 
 ```bash
-[ -z "$WEAVIATE_URL" ] && echo "WEAVIATE_URL is NOT set" || echo "WEAVIATE_URL is set to $WEAVIATE_URL"
+[ -z "$WEAVIATE_URL" ] && echo "WEAVIATE_URL is NOT set" || echo "WEAVIATE_URL is set"
 [ -z "$WEAVIATE_API_KEY" ] && echo "WEAVIATE_API_KEY is NOT set" || echo "WEAVIATE_API_KEY is set"
 ```
 
-If either is missing, help them troubleshoot before proceeding.
+If either is missing, show the user the same 4-step checklist above and stop.
 
-## Step 3: Verify Prerequisites
+## Verify Prerequisites
 
 Check that the required tools are installed:
 
@@ -82,7 +106,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 Or suggest alternatives: `pip install uv` or `brew install uv`.
 
-## Step 4: Load Data
+## Load Data
 
 Ask the user how they want to get data into their cluster:
 
@@ -200,11 +224,11 @@ uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/create_collection.py Collec
 
 Continue to Step 5.
 
-## Step 5: Test Drive — Try Your First Commands
+## Test Drive — Try Your First Commands
 
 Now that setup is complete, walk the user through a hands-on demo of the key commands. Adapt the examples to use whatever collection they actually have.
 
-### 5a. List Collections
+### a. List Collections
 
 Show them what's in their cluster:
 
@@ -212,7 +236,7 @@ Show them what's in their cluster:
 /weaviate:collections
 ```
 
-### 5b. Explore a Collection
+### b. Explore a Collection
 
 Pick one of their collections and explore it:
 
@@ -222,7 +246,7 @@ Pick one of their collections and explore it:
 
 Point out the total object count, property metrics, and sample objects.
 
-### 5c. Search
+### c. Search
 
 Run a hybrid search using a query relevant to their data:
 
@@ -235,7 +259,7 @@ Briefly explain the three search types:
 - **Semantic** — Pure vector similarity. Great for finding conceptually related content even with different wording.
 - **Keyword** — BM25 keyword matching. Use for exact terms, IDs, or specific text patterns.
 
-### 5d. Ask a Question
+### d. Ask a Question
 
 Show them the Query Agent, which generates AI-powered answers with source citations:
 
@@ -245,7 +269,7 @@ Show them the Query Agent, which generates AI-powered answers with source citati
 
 Explain that `/weaviate:ask` gives synthesized answers with citations, while `/weaviate:query` returns raw objects — both can search across multiple collections at once by passing a comma-separated list.
 
-## Step 6: Command & Skill Reference
+## Command & Skill Reference
 
 ### Slash Commands
 
@@ -286,7 +310,7 @@ This plugin also includes two skills with deeper capabilities that go beyond wha
 - **Have data in multiple collections?** `/weaviate:ask` and `/weaviate:query` can search across multiple collections at once — just pass them as a comma-separated list.
 - **Data import only works with local files.** If your data is at a remote URL, download it first with `curl` or `wget`, then import the local file.
 
-## Step 7: What's Next?
+## What's Next?
 
 Ask the user what they'd like to do next using AskUserQuestion:
 - **"Search my data"** — Let's run some queries!
