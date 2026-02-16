@@ -21,6 +21,10 @@ If the user does not have an instance yet, direct them to the cloud console to r
 **External Provider Keys (auto-detected):**
 Set only the keys your collections use, refer to [Environment Requirements](references/environment_requirements.md) for more information.
 
+## Client Usage
+
+- [Async Client](references/async_client.md): Guide for using the Weaviate Python async client in production applications (FastAPI, async frameworks). Covers connection patterns, lifecycle management, common pitfalls, and multi-cluster setups.
+
 ## Script Index
 
 ### Search & Query
