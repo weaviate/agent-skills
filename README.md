@@ -13,13 +13,11 @@ Works with any agent that supports the [Agent Skills](https://agentskills.io/hom
 npx skills add weaviate/agent-skills
 
 # Using Claude Code Plugin Manager
-claude
-/plugin install weaviate/agent-skills
+/plugin marketplace add weaviate/agent-skills
+/plugin install weaviate@weaviate-plugins
 
 # Manual: clone and point your agent to the directory
 git clone https://github.com/weaviate/agent-skills.git
-
-# For Claude Code, after cloning, run
 cd agent-skills
 claude --plugin-dir .
 ```
@@ -131,7 +129,7 @@ The skill is automatically discovered by compatible agents. Simply describe what
     - [The Context Engineering Guide](https://weaviate.io/ebooks/the-context-engineering-guide?utm_source=github&utm_campaign=agent_skills)
     - [Agentic Architecture Ebook](https://weaviate.io/ebooks/agentic-architectures?utm_source=github&utm_campaign=agent_skills)
     - [Advanced RAG Techniques](https://weaviate.io/ebooks/advanced-rag-techniques?utm_source=github&utm_campaign=agent_skills)
+- [Weaviate Query Agent](https://docs.weaviate.io/agents/query)
 - [Weaviate Documentation](https://docs.weaviate.io/weaviate)
 - [Agent Skills Specification](https://agentskills.io/specification)
 - [Claude Code Plugins](https://code.claude.com/docs/en/plugins)
-- [Weaviate Query Agent](https://docs.weaviate.io/agents/query)
