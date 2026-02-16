@@ -6,7 +6,7 @@ This document provides setup instructions for AI agents using the Weaviate skill
 
 ### 1. Weaviate Cloud Instance
 
-If the user does not have an instance yet, direct them to the cloud console to register and create a free sandbox. Create a Weaviate instance via [Weaviate Cloud](https://console.weaviate.cloud/).
+If the user does not have an instance yet, direct them to the cloud console to register and create a free sandbox. Create a Weaviate instance via [Weaviate Cloud](https://console.weaviate.cloud/signin?utm_source=github&utm_campaign=agent_skills).
 
 ### 2. Environment Variables
 

@@ -121,7 +121,7 @@ The skill is automatically discovered by compatible agents. Simply describe what
 
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
-- A [Weaviate Cloud](https://console.weaviate.cloud/) instance
+- A [Weaviate Cloud](https://console.weaviate.cloud/signin?utm_source=github&utm_campaign=agent_skills) instance
 
 ## Resources
 

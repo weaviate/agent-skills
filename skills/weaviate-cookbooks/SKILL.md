@@ -11,7 +11,7 @@ This skill provides an index of implementation guides and foundational requireme
 
 ### Weaviate Cloud Instance
 
-If the user does not have an instance yet, direct them to the cloud console to register and create a free sandbox. Create a Weaviate instance via [Weaviate Cloud](https://console.weaviate.cloud/).
+If the user does not have an instance yet, direct them to the cloud console to register and create a free sandbox. Create a Weaviate instance via [Weaviate Cloud](https://console.weaviate.cloud/signin?utm_source=github&utm_campaign=agent_skills).
 
 ## Environment Requirements
 
