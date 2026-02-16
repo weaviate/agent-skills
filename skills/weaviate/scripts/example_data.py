@@ -141,7 +141,6 @@ def chunk_by_sentences(
 def create_ai_arxiv_collection(
     client: WeaviateClient, vectorizer: str = "text2vec_weaviate", nrows: int = 1000
 ):
-
     # check existence of collection
     if client.collections.exists("AI_Arxiv"):
         print(
@@ -186,7 +185,6 @@ def create_ai_arxiv_collection(
                 )
 
             if item and isinstance(item, dict):
-
                 chunks, span_annotations = chunk_by_sentences(
                     document=item["content"], num_sentences=15, overlap_sentences=0
                 )
@@ -236,7 +234,6 @@ def create_ai_arxiv_collection(
 def create_income_tax_returns_collection(
     client: WeaviateClient, vectorizer: str = "text2vec_weaviate", nrows: int = 1000
 ):
-
     # check existence of collection
     if client.collections.exists("Income_Tax_Returns"):
         print(
@@ -380,7 +377,6 @@ def create_income_tax_returns_collection(
 def create_product_catalog_collection(
     client: WeaviateClient, vectorizer: str = "text2vec_weaviate", nrows: int = 1000
 ):
-
     # check existence of collection
     if client.collections.exists("Product_Catalog"):
         print(
@@ -496,7 +492,6 @@ def duration_to_days(duration_str: str) -> float | None:
 def create_hair_medical_collection(
     client: WeaviateClient, vectorizer: str = "text2vec_weaviate", nrows: int = 1000
 ):
-
     # check existence of collection
     if client.collections.exists("Hair_Medical"):
         print(
@@ -536,7 +531,6 @@ def create_hair_medical_collection(
                     file=sys.stderr,
                 )
             if item and isinstance(item, dict):
-
                 batch.add_object(
                     properties={
                         "side_effects": item["Side Effects"],
@@ -575,7 +569,6 @@ def create_hair_medical_collection(
 def create_helpdesk_tickets_collection(
     client: WeaviateClient, vectorizer: str = "text2vec_weaviate", nrows: int = 1000
 ):
-
     # check existence of collection
     if client.collections.exists("Hair_Medical"):
         print(
@@ -617,7 +610,6 @@ def create_helpdesk_tickets_collection(
                 )
 
             if item and isinstance(item, dict):
-
                 batch.add_object(
                     properties={
                         "ticket_id": item["id"],
