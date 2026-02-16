@@ -71,19 +71,15 @@ VECTORIZER_MAP = {
     "text2vec_openai": lambda: Configure.Vectors.text2vec_openai(),
     "text2vec_cohere": lambda: Configure.Vectors.text2vec_cohere(),
     "text2vec_huggingface": lambda: Configure.Vectors.text2vec_huggingface(),
-    "text2vec_palm": lambda: Configure.Vectors.text2vec_palm(),
+    "text2vec_google_gemini": lambda: Configure.Vectors.text2vec_google_gemini(),
     "text2vec_jinaai": lambda: Configure.Vectors.text2vec_jinaai(),
     "text2vec_voyageai": lambda: Configure.Vectors.text2vec_voyageai(),
-    "text2vec_contextionary": lambda: Configure.Vectors.text2vec_contextionary(),
+    "text2vec_model2vec": lambda: Configure.Vectors.text2vec_model2vec(),
     "text2vec_transformers": lambda: Configure.Vectors.text2vec_transformers(),
-    "text2vec_gpt4all": lambda: Configure.Vectors.text2vec_gpt4all(),
     "text2vec_ollama": lambda: Configure.Vectors.text2vec_ollama(),
     "multi2vec_clip": lambda: Configure.Vectors.multi2vec_clip(),
     "multi2vec_bind": lambda: Configure.Vectors.multi2vec_bind(),
-    "multi2vec_palm": lambda: Configure.Vectors.multi2vec_palm(),
-    "img2vec_neural": lambda: Configure.Vectors.img2vec_neural(),
-    "ref2vec_centroid": lambda: Configure.Vectors.ref2vec_centroid(),
-    "none": lambda: Configure.Vectors.none(),
+    "none": lambda: Configure.Vectors.self_provided(),
 }
 
 
@@ -285,12 +281,16 @@ def main(
                     for p in config.properties
                 ],
                 "multi_tenancy": {
-                    "enabled": config.multi_tenancy_config.enabled
-                    if config.multi_tenancy_config
-                    else False,
-                    "auto_tenant_creation": config.multi_tenancy_config.auto_tenant_creation
-                    if config.multi_tenancy_config
-                    else False,
+                    "enabled": (
+                        config.multi_tenancy_config.enabled
+                        if config.multi_tenancy_config
+                        else False
+                    ),
+                    "auto_tenant_creation": (
+                        config.multi_tenancy_config.auto_tenant_creation
+                        if config.multi_tenancy_config
+                        else False
+                    ),
                 },
                 "status": "created",
             }
