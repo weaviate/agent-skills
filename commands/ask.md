@@ -24,7 +24,7 @@ When necessary, use AskUserQuestion to make entering arguments easier.
    - Use AskUserQuestion to prompt user to select
 3. Run the Query Agent ask script:
    ```bash
-   uv run skills/weaviate/scripts/ask.py --query "USER_QUERY" --collections "COLLECTION_1,COLLECTION_2" --json
+   uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/ask.py --query "USER_QUERY" --collections "COLLECTION_1,COLLECTION_2"
    ```
 4. Display generated answer with sources
 
