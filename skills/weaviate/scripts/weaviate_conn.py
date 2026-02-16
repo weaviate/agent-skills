@@ -44,7 +44,7 @@ API_KEY_MAP = {
 }
 
 
-def _collect_headers_and_detected_keys() -> tuple[dict[str, str], list[str]]:
+def _collect_headers_and_providers() -> tuple[dict[str, str], list[str]]:
     """
     Scan env once to build Weaviate headers and detected key names.
 
@@ -52,17 +52,17 @@ def _collect_headers_and_detected_keys() -> tuple[dict[str, str], list[str]]:
         Tuple of (headers, detected_env_var_names)
     """
     headers: dict[str, str] = {}
-    detected_keys: list[str] = []
+    detected_providers: list[str] = []
 
     for env_var, header_name in API_KEY_MAP.items():
         value = os.environ.get(env_var, "").strip()
         if not value:
             continue
 
-        detected_keys.append(env_var)
+        detected_providers.append(env_var)
         headers[header_name] = value
 
-    return headers, detected_keys
+    return headers, detected_providers
 
 
 def validate_env(require_weaviate: bool = True) -> tuple[str, str]:
@@ -104,7 +104,7 @@ def get_headers() -> dict[str, str] | None:
     Returns:
         Dict of headers if any API keys found, None otherwise
     """
-    headers, _ = _collect_headers_and_detected_keys()
+    headers, _ = _collect_headers_and_providers()
     return headers if headers else None
 
 
@@ -115,8 +115,8 @@ def get_detected_providers() -> list[str]:
     Returns:
         List of env var names (e.g., ["OPENAI_API_KEY", "COHERE_API_KEY"])
     """
-    _, detected_keys = _collect_headers_and_detected_keys()
-    return sorted(detected_keys)
+    _, detected_providers = _collect_headers_and_providers()
+    return sorted(detected_providers)
 
 
 @contextmanager
@@ -153,15 +153,15 @@ def get_client(
 
     # Auto-detect headers if not provided
     if headers is None:
-        headers, detected_keys = _collect_headers_and_detected_keys()
+        headers, detected_providers = _collect_headers_and_providers()
         headers = headers or None
     else:
-        detected_keys = None
+        detected_providers = None
 
     if verbose:
-        detected = sorted(detected_keys) if detected_keys is not None else []
+        detected = sorted(detected_providers) if detected_providers is not None else []
         if detected:
-            print(f"Detected API keys: {', '.join(detected)}", file=sys.stderr)
+            print(f"Detected providers: {', '.join(detected)}", file=sys.stderr)
         print("Connecting to Weaviate...", file=sys.stderr)
 
     client = weaviate.connect_to_weaviate_cloud(
@@ -204,15 +204,15 @@ def connect_client(
         api_key = api_key or env_api_key
 
     if headers is None:
-        headers, detected_keys = _collect_headers_and_detected_keys()
+        headers, detected_providers = _collect_headers_and_providers()
         headers = headers or None
     else:
-        detected_keys = None
+        detected_providers = None
 
     if verbose:
-        detected = sorted(detected_keys) if detected_keys is not None else []
+        detected = sorted(detected_providers) if detected_providers is not None else []
         if detected:
-            print(f"Detected API keys: {', '.join(detected)}", file=sys.stderr)
+            print(f"Detected providers: {', '.join(detected)}", file=sys.stderr)
         print("Connecting to Weaviate...", file=sys.stderr)
 
     client = weaviate.connect_to_weaviate_cloud(
