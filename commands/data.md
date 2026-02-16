@@ -20,11 +20,11 @@ Create example data in a specific domain and upload to a Weaviate collection.
 
 1. Run the create example data script:
    ```bash
-   uv run skills/weaviate/scripts/example_data.py
+   uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/example_data.py
    ```
 2. Confirm the collection exists
    ```bash
-   uv run skills/weaviate/scripts/get_collection.py --name "COLLECTION_NAME" --json
+   uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/get_collection.py --name "COLLECTION_NAME"
    ```
    
 **Domain Datasets:**

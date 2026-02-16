@@ -19,12 +19,12 @@ Fetch specific objects by ID or filter them using complex logic (AND/OR). Always
 
 1.  **Fetch by ID:**
     ```bash
-    uv run skills/weaviate/scripts/fetch_filter.py "COLLECTION_NAME" --id "UUID" --json
+    uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/fetch_filter.py "COLLECTION_NAME" --id "UUID"
     ```
 
 2.  **Fetch with Filters:**
     ```bash
-    uv run skills/weaviate/scripts/fetch_filter.py "COLLECTION_NAME" --filters 'JSON_STRING' --limit 10 --json
+    uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/fetch_filter.py "COLLECTION_NAME" --filters 'JSON_STRING' --limit 10
     ```
 
 ### Filter Syntax

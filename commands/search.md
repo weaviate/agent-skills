@@ -27,17 +27,17 @@ When necessary, use AskUserQuestion to make entering arguments easier.
 
 ### Hybrid (default)
 ```bash
-uv run skills/weaviate/scripts/hybrid_search.py --query "USER_QUERY" --collection "COLLECTION_NAME" --alpha 0.7 --limit 10 --json
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/hybrid_search.py --query "USER_QUERY" --collection "COLLECTION_NAME" --alpha 0.7 --limit 10
 ```
 
 ### Semantic
 ```bash
-uv run skills/weaviate/scripts/semantic_search.py --query "USER_QUERY" --collection "COLLECTION_NAME" --limit 10 --json
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/semantic_search.py --query "USER_QUERY" --collection "COLLECTION_NAME" --limit 10
 ```
 
 ### Keyword
 ```bash
-uv run skills/weaviate/scripts/keyword_search.py --query "USER_QUERY" --collection "COLLECTION_NAME" --limit 10 --json
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/keyword_search.py --query "USER_QUERY" --collection "COLLECTION_NAME" --limit 10
 ```
 
 ## Examples

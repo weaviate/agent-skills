@@ -23,7 +23,7 @@ When no arguments are provided:
 
 1. Run the list collections script:
    ```bash
-   uv run skills/weaviate/scripts/list_collections.py --json
+   uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/list_collections.py
    ```
 2. Display collection names with descriptions and properties
 
@@ -34,7 +34,7 @@ When a collection name is provided:
 1. Parse the name argument
 2. Run the get collection script:
    ```bash
-   uv run skills/weaviate/scripts/get_collection.py --name "COLLECTION_NAME" --json
+   uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/get_collection.py --name "COLLECTION_NAME"
    ```
 3. Display detailed schema including:
    - Description

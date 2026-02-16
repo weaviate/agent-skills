@@ -20,7 +20,7 @@ Explore data within a Weaviate collection, providing statistical metrics for pro
 1. Parse the collection name and optional limit arguments.
 2. Run the explore collection script:
    ```bash
-   uv run skills/weaviate/scripts/explore_collection.py "COLLECTION_NAME" --limit 5 --json
+   uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/explore_collection.py "COLLECTION_NAME" --limit 5
    ```
 3. Display the results, including:
    - Total object count
