@@ -8,15 +8,22 @@ Works with any agent that supports the [Agent Skills](https://agentskills.io/hom
 
 ## Installation
 
-```bash
-# Using npx skills (Cursor, Claude Code, Gemini CLI, etc.)
-npx skills add weaviate/agent-skills
+### Using npx skills (Cursor, Claude Code, Gemini CLI, etc.)
 
-# Using Claude Code Plugin Manager
+```bash
+npx skills add weaviate/agent-skills
+```
+
+### Using Claude Code Plugin Manager
+
+```bash
 /plugin marketplace add weaviate/agent-skills
 /plugin install weaviate@weaviate-plugins
+```
 
-# Manual: clone and point your agent to the directory
+### Manual: clone and point your agent to the directory
+
+```bash
 git clone https://github.com/weaviate/agent-skills.git
 cd agent-skills
 claude --plugin-dir .
@@ -39,7 +46,7 @@ export WEAVIATE_API_KEY="your-api-key"
 
 For the complete env var list and header mapping, see:
 
-- [Environment Requirements](./skills/cookbooks/references/environment-requirements.md)
+- [Environment Requirements](skills/weaviate/references/environment_requirements.md)
 
 ## Available Skills
 
@@ -121,7 +128,7 @@ The skill is automatically discovered by compatible agents. Simply describe what
 
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
-- A [Weaviate Cloud](https://console.weaviate.cloud/) instance
+- A [Weaviate Cloud](https://console.weaviate.cloud/signin?utm_source=github&utm_campaign=agent_skills) instance
 
 ## Resources
 
