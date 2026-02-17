@@ -5,7 +5,7 @@ For advanced strategies, [see here](./advanced_rag.md).
 
 
 Read first:
-- Env/header mapping: [Environment Requirements](./environment-requirements.md)
+- Env/header mapping: [Environment Requirements](./environment_requirements.md)
 
 Docs to reference if needed:
 - Search patterns and basics in Weaviate: https://docs.weaviate.io/weaviate/search/basics
