@@ -79,14 +79,10 @@ brew install uv
 
 ### Project Structure
 
-| Skill | Path | Description |
-|-------|------|-------------|
-| **weaviate** | `skills/weaviate/` | Scripts and references for searching, querying, and managing Weaviate collections |
-| **weaviate-cookbooks** | `skills/weaviate-cookbooks/` | Implementation guides for building full-stack AI applications with Weaviate |
-
-### Client Usage
-
-For production applications using async frameworks (FastAPI, etc.), see the [Async Client Guide](./skills/weaviate/references/async_client.md) for connection patterns, lifecycle management, and common pitfalls.
+| Skill                  | Path                         | Description                                                                       |
+| ---------------------- | ---------------------------- | --------------------------------------------------------------------------------- |
+| **weaviate**           | `skills/weaviate/`           | Scripts and references for searching, querying, and managing Weaviate collections |
+| **weaviate-cookbooks** | `skills/weaviate-cookbooks/` | Implementation guides for building full-stack AI applications with Weaviate       |
 
 ## Running Scripts
 

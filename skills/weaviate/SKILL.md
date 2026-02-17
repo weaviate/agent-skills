@@ -21,10 +21,6 @@ If the user does not have an instance yet, direct them to the cloud console to r
 **External Provider Keys (auto-detected):**
 Set only the keys your collections use, refer to [Environment Requirements](references/environment_requirements.md) for more information.
 
-## Client Usage
-
-- [Async Client](references/async_client.md): Guide for using the Weaviate Python async client in production applications (FastAPI, async frameworks). Covers connection patterns, lifecycle management, common pitfalls, and multi-cluster setups.
-
 ## Script Index
 
 ### Search & Query
@@ -58,9 +54,9 @@ Set only the keys your collections use, refer to [Environment Requirements](refe
 
 2. **Ask the user** if they want to **create example data** if nothing is available and the user requests it. Otherwise continue.
 
-  ```bash
-  uv run scripts/example_data.py
-  ```
+```bash
+uv run scripts/example_data.py
+```
 
 3. **Get collection details** to understand the schema:
 
