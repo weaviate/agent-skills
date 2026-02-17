@@ -7,9 +7,9 @@ Build a full-stack Query Agent chatbot with minimal back-and-forth.
 Read first:
 
 - Weaviate Query Agent usage: https://docs.weaviate.io/agents/query/usage
-- Env/header mapping: [Environment Requirements](./environment_requirements.md)
+- Env/header mapping: [Environment Requirements](./environment-requirements.md)
 
-Use `environment_requirements.md` mapping exactly.
+Use `environment-requirements.md` mapping exactly.
 
 ## Instructions
 

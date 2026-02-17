@@ -8,9 +8,9 @@ Read first:
 
 - Search patterns and basics in Weaviate: https://docs.weaviate.io/weaviate/search/basics
 - Filters in Weaviate: https://docs.weaviate.io/weaviate/search/filters
-- Env/header mapping: [Environment Requirements](./environment_requirements.md)
+- Env/header mapping: [Environment Requirements](./environment-requirements.md)
 
-Use `environment_requirements.md` mapping exactly.
+Use `environment-requirements.md` mapping exactly.
 
 ## Instructions
 

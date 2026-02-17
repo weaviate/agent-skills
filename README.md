@@ -8,22 +8,15 @@ Works with any agent that supports the [Agent Skills](https://agentskills.io/hom
 
 ## Installation
 
-### Using npx skills (Cursor, Claude Code, Gemini CLI, etc.)
-
 ```bash
+# Using npx skills (Cursor, Claude Code, Gemini CLI, etc.)
 npx skills add weaviate/agent-skills
-```
 
-### Using Claude Code Plugin Manager
-
-```bash
+# Using Claude Code Plugin Manager
 /plugin marketplace add weaviate/agent-skills
 /plugin install weaviate@weaviate-plugins
-```
 
-### Manual: clone and point your agent to the directory
-
-```bash
+# Manual: clone and point your agent to the directory
 git clone https://github.com/weaviate/agent-skills.git
 cd agent-skills
 claude --plugin-dir .
@@ -46,7 +39,7 @@ export WEAVIATE_API_KEY="your-api-key"
 
 For the complete env var list and header mapping, see:
 
-- [Environment Requirements](./skills/cookbooks/references/environment_requirements.md)
+- [Environment Requirements](./skills/cookbooks/references/environment-requirements.md)
 
 ## Available Skills
 

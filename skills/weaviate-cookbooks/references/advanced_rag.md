@@ -4,7 +4,7 @@ Build advanced RAG functionality with Weaviate.
 
 Read first:
 - Basic RAG cookbook, important to start from this base. MUST READ: [Basic RAG Cookbook](./basic_rag.md)
-- Env/header mapping: [Environment Requirements](./environment_requirements.md)
+- Env/header mapping: [Environment Requirements](./environment-requirements.md)
 
 Docs to reference if needed:
 - Search patterns and basics in Weaviate: https://docs.weaviate.io/weaviate/search/basics

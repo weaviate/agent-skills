@@ -4,7 +4,7 @@ Build RAG-powered AI agents with Weaviate.
 
 Read first:
 - Basic Agent cookbook, important to start from this base. MUST READ: [Basic Agent Cookbook](./basic_agent.md)
-- Env/header mapping: [Environment Requirements](./environment_requirements.md)
+- Env/header mapping: [Environment Requirements](./environment-requirements.md)
 
 Docs to reference if needed:
 - Search patterns and basics in Weaviate: https://docs.weaviate.io/weaviate/search/basics
