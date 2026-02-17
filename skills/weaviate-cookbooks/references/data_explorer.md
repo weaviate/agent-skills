@@ -21,7 +21,7 @@ Use `environment-requirements.md` mapping exactly.
 - Do not manually author `pyproject.toml` or `uv.lock`; let `uv` generate/update them.
 - Use this backend install set:
   - `uv add fastapi 'uvicorn[standard]' weaviate-client pydantic-settings python-dotenv`
-- Depending on user request: consider combining this app with the [Query Agent Chatbot](./query_agent_chatbot.md).
+- Depending on user request: consider combining this app with the [Query Agent Chatbot](./query-agent-chatbot.md).
   - If the user explicitly only wants a data viewer/explorer, create this app independently
   - If the user wants a fully featured chat and data explorer, combine the apps
   - If no explicit instructions are given, ask the user their preference before continuing
@@ -324,7 +324,7 @@ Do not offload detailed testing steps to the user unless they explicitly ask.
 
 ## Next Steps
 
-This application is currently a data explorer backend. You may optionally offer to integrate it with the [Query Agent Chatbot](./query_agent_chatbot.md) based on user preference.
+This application is currently a data explorer backend. You may optionally offer to integrate it with the [Query Agent Chatbot](./query-agent-chatbot.md) based on user preference.
 
 If the user chooses to combine these two applications, implement the integration as follows:
 
