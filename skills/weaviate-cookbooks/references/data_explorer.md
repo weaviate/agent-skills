@@ -5,11 +5,8 @@
 Build a full-stack Data Explorer App for Weaviate Collections with FastAPI.
 
 Read first:
-
 - Search patterns and basics in Weaviate: https://docs.weaviate.io/weaviate/search/basics
 - Filters in Weaviate: https://docs.weaviate.io/weaviate/search/filters
-- Project setup and secret safety: [Project Setup Contract](./project_setup.md)
-- Env/header mapping: [Environment Requirements](./environment_requirements.md)
 
 ## Instructions
 

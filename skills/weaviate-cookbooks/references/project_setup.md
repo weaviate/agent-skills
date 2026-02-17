@@ -35,7 +35,7 @@ secrets/
 
 ### `.env`
 
-- Use the canonical template in `environment_requirements.md`.
+- Use the canonical template as provided in [environment_requirements.md](environment_requirements.md).
 - Keep real `.env` values local only.
 
 ## Git Baseline

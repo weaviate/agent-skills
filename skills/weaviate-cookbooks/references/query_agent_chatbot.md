@@ -5,10 +5,7 @@
 Build a full-stack Query Agent chatbot with minimal back-and-forth.
 
 Read first:
-
 - Weaviate Query Agent usage: https://docs.weaviate.io/agents/query/usage
-- Project setup and secret safety: [Project Setup Contract](./project_setup.md)
-- Env/header mapping: [Environment Requirements](./environment_requirements.md)
 
 ## Instructions
 
@@ -78,6 +75,7 @@ Keep these boundaries:
 - FastAPI async app with lifespan.
 - Async Weaviate client initialized in lifespan and closed on shutdown.
 - Query Agent service layer (`ask` + `ask_stream`).
+- For async FastAPI backends, use `AsyncQueryAgent` (not `QueryAgent`) so `await agent.ask(...)` and `async for ... in agent.ask_stream(...)` work correctly.
 - Endpoints:
   - `GET /health`
   - `POST /chat`

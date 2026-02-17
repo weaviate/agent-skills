@@ -23,11 +23,6 @@ A multimodal RAG system consists of two main pipelines:
 - The VLM generates a natural language response based on visual and textual context
 
 
-### Prerequisites
-
-Read first:
-- Project setup and secret safety: [Project Setup Contract](./project_setup.md)
-- Env/header mapping: [Environment Requirements](./environment_requirements.md)
 
 **Requirements:**
 - Weaviate Cloud instance (Weaviate Embeddings is cloud-only)

@@ -4,9 +4,6 @@ Build a tool-calling AI agent with structured outputs using DSPy.
 For RAG tools, memory, and framework integrations, [see here](./agentic_rag.md).
 
 
-Read first:
-- Project setup and secret safety: [Project Setup Contract](./project_setup.md)
-- Env/header mapping: [Environment Requirements](./environment_requirements.md)
 
 Docs to reference if needed:
 - DSPy signatures: https://dspy.ai/learn/programming/signatures/

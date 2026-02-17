@@ -13,9 +13,14 @@ This skill provides an index of implementation guides and foundational requireme
 
 If the user does not have an instance yet, direct them to the cloud console to register and create a free sandbox. Create a Weaviate instance via [Weaviate Cloud](https://console.weaviate.cloud/).
 
-## Foundation Flow
+## Before Building Any Cookbook
 
-Each cookbook reference includes a `Read first` section, when executing a cookbook, follow that section exactly for project setup, env handling, and provider key naming.
+Follow these shared guidelines before generating any cookbook app:
+
+- [Project Setup Contract](references/project_setup.md)
+- [Environment Requirements](references/environment_requirements.md)
+
+Then proceed to the specific cookbook reference below.
 
 ## Cookbook Index
 
