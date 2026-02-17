@@ -46,7 +46,7 @@ export WEAVIATE_API_KEY="your-api-key"
 
 For the complete env var list and header mapping, see:
 
-- [Environment Requirements](./skills/cookbooks/references/environment-requirements.md)
+- [Environment Requirements](skills/weaviate/references/environment_requirements.md)
 
 ## Available Skills
 
