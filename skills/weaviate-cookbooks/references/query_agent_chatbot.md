@@ -7,9 +7,8 @@ Build a full-stack Query Agent chatbot with minimal back-and-forth.
 Read first:
 
 - Weaviate Query Agent usage: https://docs.weaviate.io/agents/query/usage
-- Env/header mapping: [Environment Requirements](./environment-requirements.md)
-
-Use `environment-requirements.md` mapping exactly.
+- Project setup and secret safety: [Project Setup Contract](./project_setup.md)
+- Env/header mapping: [Environment Requirements](./environment_requirements.md)
 
 ## Instructions
 
@@ -40,9 +39,11 @@ uv add fastapi 'uvicorn[standard]' weaviate-client weaviate-agents pydantic-sett
 ### Workflow Contract
 
 1. Build backend in one pass.
-2. Create `.env.example` and `.env` template files.
+2. Create `.env` from the canonical template in `environment_requirements.md`, then add app-specific fields (for example, `COLLECTIONS`).
 3. Before asking user to fill env, do non-secret local sanity checks that do not require real credentials (imports/compile/startup-shape checks).
-4. Ask user to fill real env values.
+4. Ask user to fill real env values:
+   - Mandatory: `WEAVIATE_URL`, `WEAVIATE_API_KEY`, `COLLECTIONS`
+   - Optional: only provider keys required by their collection setup
 5. After the user confirms, verify backend starts without errors and provide exact commands to run it in terminal.
 
 Do not ask avoidable questions that you can resolve from context.
@@ -62,8 +63,7 @@ chatbot/
       routers/
       services/
       models/
-    .env.example
-    .env
+    .env  # local file, never committed
 ```
 
 Keep these boundaries:
@@ -82,7 +82,7 @@ Keep these boundaries:
   - `GET /health`
   - `POST /chat`
   - `POST /chat/stream` (SSE)
-- Pydantic settings from `.env`.
+- Pydantic settings should read from process environment; local `.env` loading is optional for local development.
 - Conversation history mapping to Weaviate chat message format.
 
 ### Source Handling
@@ -98,14 +98,13 @@ Keep these boundaries:
 ### Env Rules
 
 Mandatory:
-
 - `WEAVIATE_URL`
 - `WEAVIATE_API_KEY`
 - `COLLECTIONS`
 
 External provider keys:
-
-- Only fill keys actually used by the target Weaviate collection setup.
+- Include every provider key needed by the target collections.
+- Leave unused provider keys empty/commented.
 
 CORS:
 
@@ -117,7 +116,7 @@ CORS:
 
 ### Post-Env Hand-Holding (Required)
 
-After user says env is filled, provide the terminal commands to run the backend:
+After user says required env values are set, provide the terminal commands to run the backend:
 
 ```bash
 cd chatbot/backend

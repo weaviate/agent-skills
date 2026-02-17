@@ -26,9 +26,8 @@ A multimodal RAG system consists of two main pipelines:
 ### Prerequisites
 
 Read first:
-- Env/header mapping: [Environment Requirements](./environment-requirements.md)
-
-Use `environment-requirements.md` mapping exactly.
+- Project setup and secret safety: [Project Setup Contract](./project_setup.md)
+- Env/header mapping: [Environment Requirements](./environment_requirements.md)
 
 **Requirements:**
 - Weaviate Cloud instance (Weaviate Embeddings is cloud-only)
@@ -542,7 +541,7 @@ for src in sources:
 ```
 Error: WEAVIATE_URL environment variable is not set
 ```
-**Solution:** Set `WEAVIATE_URL` and `WEAVIATE_API_KEY` environment variables. See [Environment Requirements](./environment-requirements.md).
+**Solution:** Set `WEAVIATE_URL` and `WEAVIATE_API_KEY` environment variables. See `environment_requirements.md`.
 
 ### Connection Errors
 ```

@@ -5,7 +5,8 @@ For advanced strategies, [see here](./advanced_rag.md).
 
 
 Read first:
-- Env/header mapping: [Environment Requirements](./environment-requirements.md)
+- Project setup and secret safety: [Project Setup Contract](./project_setup.md)
+- Env/header mapping: [Environment Requirements](./environment_requirements.md)
 
 Docs to reference if needed:
 - Search patterns and basics in Weaviate: https://docs.weaviate.io/weaviate/search/basics
@@ -32,7 +33,7 @@ Mandatory:
 - `WEAVIATE_API_KEY`
 
 External provider keys:
-- Only fill keys actually used by the target Weaviate collection setup.
+- Fill only keys actually used by the target Weaviate collection setup.
 
 
 ## Weaviate Client
@@ -50,7 +51,7 @@ client = connect_to_weaviate_cloud(
 )
 ```
 
-If the user's collections requires API keys for their vectorisers, they must add them to the `.env`.
+If the user's collections require vectorizer provider keys, set the matching keys listed in `environment_requirements.md`.
 
 Clients must be closed after completion. Wrap in `try/finally` blocks with `client.close()` (and `client.connect()` to reconnect if needed).
 

@@ -13,13 +13,9 @@ This skill provides an index of implementation guides and foundational requireme
 
 If the user does not have an instance yet, direct them to the cloud console to register and create a free sandbox. Create a Weaviate instance via [Weaviate Cloud](https://console.weaviate.cloud/).
 
-## Environment Requirements
+## Foundation Flow
 
-Before generating backend code that initializes a Weaviate client:
-
-1. Read [Environment Requirements](references/environment-requirements.md) for the canonical env var and header mapping.
-2. Use provider-specific env var names only (for example, `OPENAI_API_KEY`).
-3. Do not introduce generic placeholders like `INFERENCE_API_KEY` or `EXTERNAL_PROVIDER_API_KEY`.
+Each cookbook reference includes a `Read first` section, when executing a cookbook, follow that section exactly for project setup, env handling, and provider key naming.
 
 ## Cookbook Index
 

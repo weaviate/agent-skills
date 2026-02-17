@@ -4,7 +4,8 @@ Build advanced RAG functionality with Weaviate.
 
 Read first:
 - Basic RAG cookbook, important to start from this base. MUST READ: [Basic RAG Cookbook](./basic_rag.md)
-- Env/header mapping: [Environment Requirements](./environment-requirements.md)
+- Project setup and secret safety: [Project Setup Contract](./project_setup.md)
+- Env/header mapping: [Environment Requirements](./environment_requirements.md)
 
 Docs to reference if needed:
 - Search patterns and basics in Weaviate: https://docs.weaviate.io/weaviate/search/basics
@@ -38,7 +39,7 @@ Mandatory:
 - `WEAVIATE_API_KEY`
 
 External provider keys:
-- Only fill keys actually used by the target Weaviate collection setup.
+- Fill only keys actually used by the target Weaviate collection setup.
 
 ## Advanced RAG overview
 
