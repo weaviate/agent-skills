@@ -8,15 +8,22 @@ Works with any agent that supports the [Agent Skills](https://agentskills.io/hom
 
 ## Installation
 
-```bash
-# Using npx skills (Cursor, Claude Code, Gemini CLI, etc.)
-npx skills add weaviate/agent-skills
+### Using npx skills (Cursor, Claude Code, Gemini CLI, etc.)
 
-# Using Claude Code Plugin Manager
+```bash
+npx skills add weaviate/agent-skills
+```
+
+### Using Claude Code Plugin Manager
+
+```bash
 /plugin marketplace add weaviate/agent-skills
 /plugin install weaviate@weaviate-plugins
+```
 
-# Manual: clone and point your agent to the directory
+### Manual: clone and point your agent to the directory
+
+```bash
 git clone https://github.com/weaviate/agent-skills.git
 cd agent-skills
 claude --plugin-dir .
