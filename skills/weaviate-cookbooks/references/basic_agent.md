@@ -4,8 +4,6 @@ Build a tool-calling AI agent with structured outputs using DSPy.
 For RAG tools, memory, and framework integrations, [see here](./agentic_rag.md).
 
 
-Read first:
-- Env/header mapping: [Environment Requirements](./environment-requirements.md)
 
 Docs to reference if needed:
 - DSPy signatures: https://dspy.ai/learn/programming/signatures/
@@ -22,12 +20,15 @@ Docs to reference if needed:
 
 ## Env Rules
 
-Mandatory:
+Mandatory (for Weaviate cookbook implementations):
 - An LLM provider API key (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`)
-
-Optional (if using Weaviate-based tools):
 - `WEAVIATE_URL`
 - `WEAVIATE_API_KEY`
+
+Optional:
+- Matching provider keys listed in `environment_requirements.md`
+
+If the user explicitly requests a non-Weaviate agent, `WEAVIATE_URL` and `WEAVIATE_API_KEY` can be omitted.
 
 ## Agent Response Signature
 

@@ -5,12 +5,8 @@
 Build a full-stack Data Explorer App for Weaviate Collections with FastAPI.
 
 Read first:
-
 - Search patterns and basics in Weaviate: https://docs.weaviate.io/weaviate/search/basics
 - Filters in Weaviate: https://docs.weaviate.io/weaviate/search/filters
-- Env/header mapping: [Environment Requirements](./environment-requirements.md)
-
-Use `environment-requirements.md` mapping exactly.
 
 ## Instructions
 
@@ -21,7 +17,7 @@ Use `environment-requirements.md` mapping exactly.
 - Do not manually author `pyproject.toml` or `uv.lock`; let `uv` generate/update them.
 - Use this backend install set:
   - `uv add fastapi 'uvicorn[standard]' weaviate-client pydantic-settings python-dotenv`
-- Depending on user request: consider combining this app with the [Query Agent Chatbot](./query-agent-chatbot.md).
+- Depending on user request: consider combining this app with the [Query Agent Chatbot](./query_agent_chatbot.md).
   - If the user explicitly only wants a data viewer/explorer, create this app independently
   - If the user wants a fully featured chat and data explorer, combine the apps
   - If no explicit instructions are given, ask the user their preference before continuing
@@ -41,9 +37,11 @@ uv add fastapi 'uvicorn[standard]' weaviate-client pydantic-settings python-dote
 ### Workflow Contract
 
 1. Build backend and frontend in one pass.
-2. Create `.env.example` and `.env` template files.
+2. Create `.env` from the canonical template in `environment_requirements.md`, then add app-specific fields (for example, `CORS_ORIGINS`).
 3. Before asking user to fill env, do non-secret local sanity checks that do not require real credentials (imports/compile/startup-shape checks).
-4. Ask user to fill real env values.
+4. Ask user to fill real env values:
+   - Mandatory: `WEAVIATE_URL`, `WEAVIATE_API_KEY`
+   - Optional: only provider keys required by their collection setup
 5. After the user confirms, verify backend starts without errors and provide exact commands to run in the terminal.
 
 Do not ask avoidable questions that you can resolve from context.
@@ -63,8 +61,7 @@ data_explorer/
       routers/
       services/
       models/
-    .env.example
-    .env
+    .env  # local file, never committed
 ```
 
 Keep these boundaries:
@@ -85,19 +82,18 @@ Keep these boundaries:
   - `GET /env_check`: returns what API keys are missing (if any) for verification on app start
   - `GET /collections`: return available collections
   - `GET /data/{collection_name}?xx=xx&yy=yy`: return data with optional arguments (more later), and pagination
-- Pydantic settings from `.env`.
+- Pydantic settings should read from process environment; local `.env` loading is optional for local development.
 - Conversation history mapping to Weaviate chat message format.
 
 ### Env Rules
 
 Mandatory:
-
 - `WEAVIATE_URL`
 - `WEAVIATE_API_KEY`
 
 External provider keys:
-
-- Only fill keys actually used by the target Weaviate collection setup.
+- Include every provider key needed by the target collections.
+- Leave unused provider keys empty/commented.
 
 CORS:
 
@@ -296,7 +292,7 @@ async def get_data(
 
 ### Post-Env Hand-Holding (Required)
 
-After user says env is filled, provide the terminal commands to run the backend:
+After user says required env values are set, provide the terminal commands to run the backend:
 
 ```bash
 cd data_explorer/backend
@@ -324,7 +320,7 @@ Do not offload detailed testing steps to the user unless they explicitly ask.
 
 ## Next Steps
 
-This application is currently a data explorer backend. You may optionally offer to integrate it with the [Query Agent Chatbot](./query-agent-chatbot.md) based on user preference.
+This application is currently a data explorer backend. You may optionally offer to integrate it with the [Query Agent Chatbot](./query_agent_chatbot.md) based on user preference.
 
 If the user chooses to combine these two applications, implement the integration as follows:
 
