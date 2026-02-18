@@ -20,7 +20,7 @@ Docs to reference if needed:
 
 ## Env Rules
 
-Mandatory (for Weaviate cookbook implementations):
+Mandatory:
 - An LLM provider API key (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`)
 - `WEAVIATE_URL`
 - `WEAVIATE_API_KEY`
