@@ -29,6 +29,14 @@ cd agent-skills
 claude --plugin-dir .
 ```
 
+## Quickstart
+
+New to Weaviate? Run the interactive onboarding to set up your environment variables, import your own or sample data, and explore the full functionality of the available skills/commands:
+
+```bash
+/weaviate:quickstart
+```
+
 ## Configuration
 
 ### Weaviate Cloud
@@ -90,6 +98,9 @@ Blueprints for complete end-to-end AI applications with state-of-the art guideli
 ### Commands (Claude Code Plugin)
 
 ```bash
+# Interactive onboarding
+/weaviate:quickstart
+
 # Ask a question and get an AI-generated answer with source citations
 /weaviate:ask query "What are the benefits of vector databases?" collections "Documentation"
 

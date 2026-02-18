@@ -11,7 +11,7 @@ Set up a safe default project layout that prevents accidental secret leaks and k
 1. Create project directory.
 2. Initialize git immediately.
 3. Create `.gitignore` before any local `.env` file.
-4. Create `.env` from `environment_requirements.md`.
+4. Create `.env` from [environment_requirements.md](environment_requirements.md).
 5. Ask user to fill required values (`WEAVIATE_URL`, `WEAVIATE_API_KEY`) and only the optional keys they need.
 
 ## Required Files
@@ -23,6 +23,12 @@ Set up a safe default project layout that prevents accidental secret leaks and k
 __pycache__/
 *.py[cod]
 .venv/
+
+# Node
+node_modules/
+.next/
+out/
+dist/
 
 # Local env files (never commit secrets)
 .env
@@ -56,8 +62,8 @@ For projects developed with Claude Code, add deny rules for local secret files:
 {
   "permissions": {
     "deny": [
-      "Read(.env)",
-      "Read(.env.*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
       "Read(./**/.env)",
       "Read(./**/.env.*)",
       "Read(./secrets/**)"
