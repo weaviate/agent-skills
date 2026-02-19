@@ -29,6 +29,9 @@ uv run scripts/create_collection.py CollectionName --properties '[...]' [--descr
   "data_type": "text",
   "description": "Optional description",
   "tokenization": "word",
+  "index_filterable": true,
+  "index_searchable": true,
+  "index_range_filters": false,
   "nested_properties": []
 }
 ```
@@ -37,6 +40,9 @@ uv run scripts/create_collection.py CollectionName --properties '[...]' [--descr
 - `data_type` (required): One of the supported data types below
 - `description` (optional): Human-readable description
 - `tokenization` (optional): For text types — `word`, `lowercase`, `whitespace`, or `field`
+- `index_filterable` (optional): Enable roaring-bitmap filter index for `where` clauses. Default `true` for all types except `blob`, `geoCoordinates`, `object`, `object[]`, `phoneNumber`
+- `index_searchable` (optional): Enable BM25/inverted index for keyword and hybrid search. Only applies to `text` and `text[]`. Default `true`
+- `index_range_filters` (optional): Enable range-comparison index (`>`, `<`, `>=`, `<=`, `between`) for `int`, `int[]`, `number`, `number[]`, `date`, `date[]`. Default `false` — **set to `true` for any numeric or date field you plan to range-filter**
 - `nested_properties` (optional): For `object` / `object[]` types — array of nested property definitions
 
 ## Supported Data Types
@@ -58,13 +64,15 @@ uv run scripts/create_collection.py Article \
   --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
 ```
 
-Collection with various data types:
+Collection with various data types and recommended index flags:
 
 ```bash
 uv run scripts/create_collection.py Product \
   --properties '[
     {"name": "name", "data_type": "text"},
-    {"name": "price", "data_type": "number"},
+    {"name": "sku", "data_type": "text", "index_searchable": false},
+    {"name": "price", "data_type": "number", "index_range_filters": true},
+    {"name": "created_at", "data_type": "date", "index_range_filters": true},
     {"name": "in_stock", "data_type": "boolean"},
     {"name": "tags", "data_type": "text[]"}
   ]'

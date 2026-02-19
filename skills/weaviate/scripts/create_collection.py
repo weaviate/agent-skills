@@ -57,6 +57,9 @@ DATA_TYPE_MAP = {
     "object[]": DataType.OBJECT_ARRAY,
 }
 
+# Types that support index_range_filters (enabled by default for better range query performance)
+RANGE_FILTER_TYPES = {"int", "int[]", "number", "number[]", "date", "date[]"}
+
 # Tokenization string to enum mapping
 TOKENIZATION_MAP = {
     "word": Tokenization.WORD,
@@ -123,6 +126,15 @@ def parse_property(prop_dict: dict) -> Property:
     # Add optional fields
     if "description" in prop_dict:
         kwargs["description"] = prop_dict["description"]
+
+    if "index_filterable" in prop_dict:
+        kwargs["index_filterable"] = bool(prop_dict["index_filterable"])
+
+    if "index_searchable" in prop_dict:
+        kwargs["index_searchable"] = bool(prop_dict["index_searchable"])
+
+    if "index_range_filters" in prop_dict:
+        kwargs["index_range_filters"] = bool(prop_dict["index_range_filters"])
 
     # Handle tokenization for text types
     if "tokenization" in prop_dict:
