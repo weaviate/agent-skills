@@ -161,11 +161,17 @@ def create_ai_arxiv_collection(
             Property(name="categories", data_type=DataType.TEXT),
             Property(name="comment", data_type=DataType.TEXT),
             Property(name="primary_category", data_type=DataType.TEXT),
-            Property(name="published", data_type=DataType.DATE),
-            Property(name="updated", data_type=DataType.DATE),
+            Property(
+                name="published", data_type=DataType.DATE, index_range_filters=True
+            ),
+            Property(name="updated", data_type=DataType.DATE, index_range_filters=True),
             Property(name="chunk", data_type=DataType.TEXT),
-            Property(name="chunk_start", data_type=DataType.NUMBER),
-            Property(name="chunk_end", data_type=DataType.NUMBER),
+            Property(
+                name="chunk_start", data_type=DataType.NUMBER, index_range_filters=True
+            ),
+            Property(
+                name="chunk_end", data_type=DataType.NUMBER, index_range_filters=True
+            ),
         ],
         vector_config=VECTORIZER_MAP[vectorizer](),
         inverted_index_config=Configure.inverted_index(index_null_state=True),
@@ -257,22 +263,44 @@ def create_income_tax_returns_collection(
             Property(name="area", data_type=DataType.TEXT),
             Property(name="city", data_type=DataType.TEXT),
             Property(name="state", data_type=DataType.TEXT),
-            Property(name="pincode", data_type=DataType.NUMBER),
+            Property(
+                name="pincode", data_type=DataType.NUMBER, index_range_filters=True
+            ),
             Property(name="state_code", data_type=DataType.TEXT),
             Property(name="country_code", data_type=DataType.TEXT),
             Property(name="entity", data_type=DataType.TEXT),
             Property(name="form", data_type=DataType.TEXT),
-            Property(name="assessment_year_start", data_type=DataType.DATE),
-            Property(name="assessment_year_end", data_type=DataType.DATE),
-            Property(name="filing_datetime", data_type=DataType.DATE),
+            Property(
+                name="assessment_year_start",
+                data_type=DataType.DATE,
+                index_range_filters=True,
+            ),
+            Property(
+                name="assessment_year_end",
+                data_type=DataType.DATE,
+                index_range_filters=True,
+            ),
+            Property(
+                name="filing_datetime",
+                data_type=DataType.DATE,
+                index_range_filters=True,
+            ),
             Property(name="late_filing", data_type=DataType.BOOL),
             Property(name="signatory", data_type=DataType.TEXT),
-            Property(name="loss", data_type=DataType.NUMBER),
-            Property(name="income", data_type=DataType.NUMBER),
-            Property(name="tax", data_type=DataType.NUMBER),
-            Property(name="cess", data_type=DataType.NUMBER),
-            Property(name="interest", data_type=DataType.NUMBER),
-            Property(name="total_payable", data_type=DataType.NUMBER),
+            Property(name="loss", data_type=DataType.NUMBER, index_range_filters=True),
+            Property(
+                name="income", data_type=DataType.NUMBER, index_range_filters=True
+            ),
+            Property(name="tax", data_type=DataType.NUMBER, index_range_filters=True),
+            Property(name="cess", data_type=DataType.NUMBER, index_range_filters=True),
+            Property(
+                name="interest", data_type=DataType.NUMBER, index_range_filters=True
+            ),
+            Property(
+                name="total_payable",
+                data_type=DataType.NUMBER,
+                index_range_filters=True,
+            ),
         ],
         vector_config=VECTORIZER_MAP[vectorizer](),
         inverted_index_config=Configure.inverted_index(index_null_state=True),
@@ -393,9 +421,13 @@ def create_product_catalog_collection(
             Property(name="size", data_type=DataType.TEXT),
             Property(name="pack_type", data_type=DataType.TEXT),
             Property(name="organic_status", data_type=DataType.TEXT),
-            Property(name="weight_kg", data_type=DataType.NUMBER),
+            Property(
+                name="weight_kg", data_type=DataType.NUMBER, index_range_filters=True
+            ),
             Property(name="brand", data_type=DataType.TEXT),
-            Property(name="price_usd", data_type=DataType.NUMBER),
+            Property(
+                name="price_usd", data_type=DataType.NUMBER, index_range_filters=True
+            ),
             Property(name="category", data_type=DataType.TEXT),
             Property(name="subcategory", data_type=DataType.TEXT),
             Property(name="subsubcategory", data_type=DataType.TEXT),
@@ -505,7 +537,11 @@ def create_hair_medical_collection(
         "Hair_Medical",
         properties=[
             Property(name="side_effects", data_type=DataType.TEXT),
-            Property(name="avg_duration_days", data_type=DataType.NUMBER),
+            Property(
+                name="avg_duration_days",
+                data_type=DataType.NUMBER,
+                index_range_filters=True,
+            ),
             Property(name="symptoms", data_type=DataType.TEXT),
             Property(name="medication_description", data_type=DataType.TEXT),
             Property(name="hair_disease", data_type=DataType.TEXT),
@@ -570,9 +606,9 @@ def create_helpdesk_tickets_collection(
     client: WeaviateClient, vectorizer: str = "text2vec_weaviate", nrows: int = 1000
 ):
     # check existence of collection
-    if client.collections.exists("Hair_Medical"):
+    if client.collections.exists("IT_Support_Tickets"):
         print(
-            f"Collection 'Hair_Medical' already exists. Cannot create. Returning.",
+            f"Collection 'IT_Support_Tickets' already exists. Cannot create. Returning.",
             file=sys.stderr,
         )
         return
@@ -586,7 +622,9 @@ def create_helpdesk_tickets_collection(
             Property(name="description", data_type=DataType.TEXT),
             Property(name="priority", data_type=DataType.TEXT),
             Property(name="category", data_type=DataType.TEXT),
-            Property(name="createdAt", data_type=DataType.DATE),
+            Property(
+                name="createdAt", data_type=DataType.DATE, index_range_filters=True
+            ),
             Property(name="requesterEmail", data_type=DataType.TEXT),
         ],
         vector_config=VECTORIZER_MAP[vectorizer](),
