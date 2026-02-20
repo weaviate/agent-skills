@@ -79,10 +79,10 @@ brew install uv
 
 ### Project Structure
 
-| Skill | Path | Description |
-|-------|------|-------------|
-| **weaviate** | `skills/weaviate/` | Scripts and references for searching, querying, and managing Weaviate collections |
-| **weaviate-cookbooks** | `skills/weaviate-cookbooks/` | Implementation guides for building full-stack AI applications with Weaviate |
+| Skill                  | Path                         | Description                                                                       |
+| ---------------------- | ---------------------------- | --------------------------------------------------------------------------------- |
+| **weaviate**           | `skills/weaviate/`           | Scripts and references for searching, querying, and managing Weaviate collections |
+| **weaviate-cookbooks** | `skills/weaviate-cookbooks/` | Implementation guides for building full-stack AI applications with Weaviate       |
 
 ## Running Scripts
 

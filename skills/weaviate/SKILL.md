@@ -54,9 +54,9 @@ Set only the keys your collections use, refer to [Environment Requirements](refe
 
 2. **Ask the user** if they want to **create example data** if nothing is available and the user requests it. Otherwise continue.
 
-  ```bash
-  uv run scripts/example_data.py
-  ```
+   ```bash
+   uv run scripts/example_data.py
+   ```
 
 3. **Get collection details** to understand the schema:
 

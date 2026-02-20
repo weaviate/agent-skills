@@ -37,3 +37,7 @@ Then proceed to the specific cookbook reference below.
 Use this when the user explicitly asks for a frontend for their Weaviate backend.
 
 - [Frontend Interface](references/frontend_interface.md): Build a Next.js frontend to interact with the Weaviate backend.
+
+## Client Usage
+
+- [Async Client](references/async_client.md): Guide for using the Weaviate Python async client in production applications (FastAPI, async frameworks). Covers connection patterns, lifecycle management, common pitfalls, and multi-cluster setups.
