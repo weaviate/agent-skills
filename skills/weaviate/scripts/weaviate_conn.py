@@ -21,6 +21,7 @@ from typing import Generator
 import weaviate
 from weaviate.classes.init import Auth
 from weaviate.client import WeaviateClient
+from weaviate.classes.init import AdditionalConfig, Timeout
 
 # Canonical environment variable to Weaviate header mapping
 API_KEY_MAP = {
@@ -168,6 +169,9 @@ def get_client(
         cluster_url=url,
         auth_credentials=Auth.api_key(api_key),
         headers=headers,
+        additional_config=AdditionalConfig(
+            timeout=Timeout(init=30, query=60, insert=120)
+        ),
     )
 
     try:

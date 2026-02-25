@@ -14,7 +14,7 @@ uv run scripts/create_collection.py CollectionName --properties '[...]' [--descr
 |-----------|------|----------|---------|-------------|
 | `name` | — | Yes (positional) | — | Collection name (auto-capitalized per GraphQL convention) |
 | `--properties` | `-p` | Yes | — | JSON array of property definitions |
-| `--description` | `-d` | No | — | Collection description |
+| `--description` | `-d` | No | — | Collection description — **strongly recommended**. Weaviate agents (Query Agent, Personalization Agent) read this to understand what the collection contains and decide which collection to query |
 | `--vectorizer` | `-v` | No | `text2vec_weaviate` | Vectorizer module to use |
 | `--replication-factor` | `-r` | No | — | Replication factor (defers to server default when not set) |
 | `--multi-tenancy` | `-m` | No | `false` | Enable multi-tenancy for data isolation |
@@ -38,7 +38,7 @@ uv run scripts/create_collection.py CollectionName --properties '[...]' [--descr
 
 - `name` (required): Property name
 - `data_type` (required): One of the supported data types below
-- `description` (optional): Human-readable description
+- `description` (optional): Human-readable description — **strongly recommended**. The Query Agent reads property descriptions to understand your schema, choose the right collection, and construct accurate queries. Good descriptions include units, formats, and valid values (e.g., `"Price in US dollars (USD)"`, `"ISO two-character country code"`, `"Date the paper was published on arXiv"`)
 - `tokenization` (optional): For text types — `word`, `lowercase`, `whitespace`, or `field`
 - `index_filterable` (optional): Enable roaring-bitmap filter index for `where` clauses. Default `true` for all types except `blob`, `geoCoordinates`, `object`, `object[]`, `phoneNumber`
 - `index_searchable` (optional): Enable BM25/inverted index for keyword and hybrid search. Only applies to `text` and `text[]`. Default `true`
@@ -61,29 +61,34 @@ Basic collection:
 
 ```bash
 uv run scripts/create_collection.py Article \
-  --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
-```
-
-Collection with various data types and recommended index flags:
-
-```bash
-uv run scripts/create_collection.py Product \
+  --description "News articles with title and full body text." \
   --properties '[
-    {"name": "name", "data_type": "text"},
-    {"name": "sku", "data_type": "text", "index_searchable": false},
-    {"name": "price", "data_type": "number", "index_range_filters": true},
-    {"name": "created_at", "data_type": "date", "index_range_filters": true},
-    {"name": "in_stock", "data_type": "boolean"},
-    {"name": "tags", "data_type": "text[]"}
+    {"name": "title", "data_type": "text", "description": "Title of the article"},
+    {"name": "body", "data_type": "text", "description": "Full text body of the article"}
   ]'
 ```
 
-With description and explicit vectorizer:
+Collection with various data types, descriptions, and recommended index flags:
+
+```bash
+uv run scripts/create_collection.py Product \
+  --description "E-commerce product catalog with pricing, brand, stock status, and tags." \
+  --properties '[
+    {"name": "name", "data_type": "text", "description": "Name or title of the product"},
+    {"name": "sku", "data_type": "text", "index_searchable": false, "description": "Stock-keeping unit identifier"},
+    {"name": "price", "data_type": "number", "index_range_filters": true, "description": "Product price in US dollars (USD)"},
+    {"name": "created_at", "data_type": "date", "index_range_filters": true, "description": "Date the product was added to the catalog"},
+    {"name": "in_stock", "data_type": "boolean", "description": "Whether the product is currently in stock"},
+    {"name": "tags", "data_type": "text[]", "description": "List of descriptive tags for the product"}
+  ]'
+```
+
+With explicit vectorizer:
 
 ```bash
 uv run scripts/create_collection.py Article \
-  --description "News articles collection" \
-  --properties '[{"name": "title", "data_type": "text"}]' \
+  --description "News articles with title and full body text." \
+  --properties '[{"name": "title", "data_type": "text", "description": "Title of the article"}]' \
   --vectorizer "text2vec_openai"
 ```
 

@@ -165,10 +165,16 @@ def parse_property(prop_dict: dict) -> Property:
 def main(
     name: str = typer.Argument(..., help="Collection name (capitalize first letter)"),
     properties: str = typer.Option(
-        ..., "--properties", "-p", help="JSON array of property definitions"
+        ...,
+        "--properties",
+        "-p",
+        help="JSON array of property definitions. Add a 'description' field to each property — the Query Agent uses these to understand your schema and construct accurate queries.",
     ),
     description: str = typer.Option(
-        None, "--description", "-d", help="Collection description"
+        None,
+        "--description",
+        "-d",
+        help="Collection description. Weaviate agents read this to understand what the collection contains and decide which collection to query.",
     ),
     vectorizer: str = typer.Option(
         "text2vec_weaviate",
@@ -311,6 +317,21 @@ def main(
                 print(json.dumps(result, indent=2, default=str))
             else:
                 print(f"\n✓ Collection '{name}' created successfully!\n")
+                if not result["description"]:
+                    print(
+                        "Tip: No collection description provided. "
+                        "Weaviate agents read the collection description to understand what data it contains and decide which collection to query.",
+                        file=sys.stderr,
+                    )
+                props_without_desc = [
+                    p["name"] for p in result["properties"] if not p.get("description")
+                ]
+                if props_without_desc:
+                    print(
+                        f"Tip: {len(props_without_desc)} propert{'y has' if len(props_without_desc) == 1 else 'ies have'} no description. "
+                        f"Adding descriptions helps the Query Agent understand your schema and construct accurate queries.",
+                        file=sys.stderr,
+                    )
                 print(f"**Description:** {config.description or 'N/A'}")
 
                 # Display multi-tenancy status
