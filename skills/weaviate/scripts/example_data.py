@@ -152,25 +152,78 @@ def create_ai_arxiv_collection(
     print(f"Creating collection 'AI_Arxiv'...", file=sys.stderr)
     collection = client.collections.create(
         "AI_Arxiv",
+        description="AI and machine learning research papers from arXiv, chunked by sentences for semantic search.",
         properties=[
-            Property(name="paper_id", data_type=DataType.TEXT, index_searchable=False),
-            Property(name="title", data_type=DataType.TEXT),
-            Property(name="summary", data_type=DataType.TEXT),
-            Property(name="source", data_type=DataType.TEXT, index_searchable=False),
-            Property(name="authors", data_type=DataType.TEXT),
-            Property(name="categories", data_type=DataType.TEXT),
-            Property(name="comment", data_type=DataType.TEXT),
-            Property(name="primary_category", data_type=DataType.TEXT),
             Property(
-                name="published", data_type=DataType.DATE, index_range_filters=True
-            ),
-            Property(name="updated", data_type=DataType.DATE, index_range_filters=True),
-            Property(name="chunk", data_type=DataType.TEXT),
-            Property(
-                name="chunk_start", data_type=DataType.NUMBER, index_range_filters=True
+                name="paper_id",
+                data_type=DataType.TEXT,
+                index_searchable=False,
+                description="Unique arXiv paper identifier (e.g., '2301.07041')",
             ),
             Property(
-                name="chunk_end", data_type=DataType.NUMBER, index_range_filters=True
+                name="title",
+                data_type=DataType.TEXT,
+                description="Title of the research paper",
+            ),
+            Property(
+                name="summary",
+                data_type=DataType.TEXT,
+                description="Abstract or summary of the research paper",
+            ),
+            Property(
+                name="source",
+                data_type=DataType.TEXT,
+                index_searchable=False,
+                description="URL or source link to the original arXiv paper",
+            ),
+            Property(
+                name="authors",
+                data_type=DataType.TEXT,
+                description="Comma-separated list of paper authors",
+            ),
+            Property(
+                name="categories",
+                data_type=DataType.TEXT,
+                description="arXiv subject categories (e.g., 'cs.LG', 'stat.ML')",
+            ),
+            Property(
+                name="comment",
+                data_type=DataType.TEXT,
+                description="Additional comments or notes from the authors",
+            ),
+            Property(
+                name="primary_category",
+                data_type=DataType.TEXT,
+                description="Primary arXiv subject category for the paper",
+            ),
+            Property(
+                name="published",
+                data_type=DataType.DATE,
+                index_range_filters=True,
+                description="Date the paper was first published on arXiv",
+            ),
+            Property(
+                name="updated",
+                data_type=DataType.DATE,
+                index_range_filters=True,
+                description="Date the paper was last updated on arXiv",
+            ),
+            Property(
+                name="chunk",
+                data_type=DataType.TEXT,
+                description="Text chunk from the paper body used for semantic search",
+            ),
+            Property(
+                name="chunk_start",
+                data_type=DataType.NUMBER,
+                index_range_filters=True,
+                description="Character offset where this chunk starts in the original document",
+            ),
+            Property(
+                name="chunk_end",
+                data_type=DataType.NUMBER,
+                index_range_filters=True,
+                description="Character offset where this chunk ends in the original document",
             ),
         ],
         vector_config=VECTORIZER_MAP[vectorizer](),
@@ -251,55 +304,133 @@ def create_income_tax_returns_collection(
     print(f"Creating collection 'Income_Tax_Returns'...", file=sys.stderr)
     collection = client.collections.create(
         "Income_Tax_Returns",
+        description="Indian income tax return filings with taxpayer details, financials, and filing metadata.",
         properties=[
-            Property(name="pan", data_type=DataType.TEXT, index_searchable=False),
+            Property(
+                name="pan",
+                data_type=DataType.TEXT,
+                index_searchable=False,
+                description="Permanent Account Number (PAN) — unique tax identifier for the taxpayer",
+            ),
             Property(
                 name="acknowledgement_number",
                 data_type=DataType.TEXT,
                 index_searchable=False,
+                description="Government-issued acknowledgement number for the filed return",
             ),
-            Property(name="name", data_type=DataType.TEXT),
-            Property(name="address", data_type=DataType.TEXT, index_searchable=False),
-            Property(name="area", data_type=DataType.TEXT),
-            Property(name="city", data_type=DataType.TEXT),
-            Property(name="state", data_type=DataType.TEXT),
             Property(
-                name="pincode", data_type=DataType.NUMBER, index_range_filters=True
+                name="name",
+                data_type=DataType.TEXT,
+                description="Full legal name of the taxpayer",
             ),
-            Property(name="state_code", data_type=DataType.TEXT),
-            Property(name="country_code", data_type=DataType.TEXT),
-            Property(name="entity", data_type=DataType.TEXT),
-            Property(name="form", data_type=DataType.TEXT),
+            Property(
+                name="address",
+                data_type=DataType.TEXT,
+                index_searchable=False,
+                description="Street address of the taxpayer",
+            ),
+            Property(
+                name="area",
+                data_type=DataType.TEXT,
+                description="Area or locality name within the city",
+            ),
+            Property(
+                name="city", data_type=DataType.TEXT, description="City of residence"
+            ),
+            Property(
+                name="state",
+                data_type=DataType.TEXT,
+                description="State or province of residence",
+            ),
+            Property(
+                name="pincode",
+                data_type=DataType.NUMBER,
+                index_range_filters=True,
+                description="Postal PIN code for the taxpayer's address",
+            ),
+            Property(
+                name="state_code",
+                data_type=DataType.TEXT,
+                description="Two-character state code",
+            ),
+            Property(
+                name="country_code",
+                data_type=DataType.TEXT,
+                description="ISO two-character country code (e.g., 'IN' for India)",
+            ),
+            Property(
+                name="entity",
+                data_type=DataType.TEXT,
+                description="Type of taxpayer entity (e.g., 'Individual', 'Company', 'HUF')",
+            ),
+            Property(
+                name="form",
+                data_type=DataType.TEXT,
+                description="Tax form type used for filing (e.g., 'ITR-1', 'ITR-2')",
+            ),
             Property(
                 name="assessment_year_start",
                 data_type=DataType.DATE,
                 index_range_filters=True,
+                description="Start date of the tax assessment year",
             ),
             Property(
                 name="assessment_year_end",
                 data_type=DataType.DATE,
                 index_range_filters=True,
+                description="End date of the tax assessment year",
             ),
             Property(
                 name="filing_datetime",
                 data_type=DataType.DATE,
                 index_range_filters=True,
+                description="Date and time when the return was filed",
             ),
-            Property(name="late_filing", data_type=DataType.BOOL),
-            Property(name="signatory", data_type=DataType.TEXT),
-            Property(name="loss", data_type=DataType.NUMBER, index_range_filters=True),
             Property(
-                name="income", data_type=DataType.NUMBER, index_range_filters=True
+                name="late_filing",
+                data_type=DataType.BOOL,
+                description="Whether the return was filed after the due date",
             ),
-            Property(name="tax", data_type=DataType.NUMBER, index_range_filters=True),
-            Property(name="cess", data_type=DataType.NUMBER, index_range_filters=True),
             Property(
-                name="interest", data_type=DataType.NUMBER, index_range_filters=True
+                name="signatory",
+                data_type=DataType.TEXT,
+                description="Name of the authorized signatory on the return",
+            ),
+            Property(
+                name="loss",
+                data_type=DataType.NUMBER,
+                index_range_filters=True,
+                description="Total loss amount in Indian Rupees (INR)",
+            ),
+            Property(
+                name="income",
+                data_type=DataType.NUMBER,
+                index_range_filters=True,
+                description="Total taxable income in Indian Rupees (INR)",
+            ),
+            Property(
+                name="tax",
+                data_type=DataType.NUMBER,
+                index_range_filters=True,
+                description="Total tax payable in Indian Rupees (INR)",
+            ),
+            Property(
+                name="cess",
+                data_type=DataType.NUMBER,
+                index_range_filters=True,
+                description="Health and education cess amount in Indian Rupees (INR)",
+            ),
+            Property(
+                name="interest",
+                data_type=DataType.NUMBER,
+                index_range_filters=True,
+                description="Interest payable or receivable in Indian Rupees (INR)",
             ),
             Property(
                 name="total_payable",
                 data_type=DataType.NUMBER,
                 index_range_filters=True,
+                description="Total amount payable including tax, cess, and interest in Indian Rupees (INR)",
             ),
         ],
         vector_config=VECTORIZER_MAP[vectorizer](),
@@ -416,21 +547,60 @@ def create_product_catalog_collection(
     print(f"Creating collection 'Product_Catalog'...", file=sys.stderr)
     collection = client.collections.create(
         "Product_Catalog",
+        description="E-commerce product catalog with pricing, brand, weight, and three-level category hierarchy.",
         properties=[
-            Property(name="product_name", data_type=DataType.TEXT),
-            Property(name="size", data_type=DataType.TEXT),
-            Property(name="pack_type", data_type=DataType.TEXT),
-            Property(name="organic_status", data_type=DataType.TEXT),
             Property(
-                name="weight_kg", data_type=DataType.NUMBER, index_range_filters=True
+                name="product_name",
+                data_type=DataType.TEXT,
+                description="Name or title of the product",
             ),
-            Property(name="brand", data_type=DataType.TEXT),
             Property(
-                name="price_usd", data_type=DataType.NUMBER, index_range_filters=True
+                name="size",
+                data_type=DataType.TEXT,
+                description="Size specification of the product (e.g., 'Small', '250g', '1L')",
             ),
-            Property(name="category", data_type=DataType.TEXT),
-            Property(name="subcategory", data_type=DataType.TEXT),
-            Property(name="subsubcategory", data_type=DataType.TEXT),
+            Property(
+                name="pack_type",
+                data_type=DataType.TEXT,
+                description="Type of packaging (e.g., 'Box', 'Bag', 'Bottle')",
+            ),
+            Property(
+                name="organic_status",
+                data_type=DataType.TEXT,
+                description="Organic certification status of the product (e.g., 'Organic', 'Conventional')",
+            ),
+            Property(
+                name="weight_kg",
+                data_type=DataType.NUMBER,
+                index_range_filters=True,
+                description="Product weight in kilograms",
+            ),
+            Property(
+                name="brand",
+                data_type=DataType.TEXT,
+                description="Brand name of the product",
+            ),
+            Property(
+                name="price_usd",
+                data_type=DataType.NUMBER,
+                index_range_filters=True,
+                description="Product price in US dollars (USD)",
+            ),
+            Property(
+                name="category",
+                data_type=DataType.TEXT,
+                description="Top-level product category (L1)",
+            ),
+            Property(
+                name="subcategory",
+                data_type=DataType.TEXT,
+                description="Second-level product subcategory (L2)",
+            ),
+            Property(
+                name="subsubcategory",
+                data_type=DataType.TEXT,
+                description="Third-level product subcategory (L3)",
+            ),
         ],
         vector_config=VECTORIZER_MAP[vectorizer](),
         inverted_index_config=Configure.inverted_index(index_null_state=True),
@@ -535,19 +705,49 @@ def create_hair_medical_collection(
     print(f"Creating collection 'Hair_Medical'...", file=sys.stderr)
     collection = client.collections.create(
         "Hair_Medical",
+        description="Hair disease diagnoses with associated symptoms, medications, side effects, severity, and treatment duration.",
         properties=[
-            Property(name="side_effects", data_type=DataType.TEXT),
+            Property(
+                name="side_effects",
+                data_type=DataType.TEXT,
+                description="Known side effects of the prescribed medication",
+            ),
             Property(
                 name="avg_duration_days",
                 data_type=DataType.NUMBER,
                 index_range_filters=True,
+                description="Average treatment duration in days",
             ),
-            Property(name="symptoms", data_type=DataType.TEXT),
-            Property(name="medication_description", data_type=DataType.TEXT),
-            Property(name="hair_disease", data_type=DataType.TEXT),
-            Property(name="medication", data_type=DataType.TEXT),
-            Property(name="disease_description", data_type=DataType.TEXT),
-            Property(name="disease_severity", data_type=DataType.TEXT),
+            Property(
+                name="symptoms",
+                data_type=DataType.TEXT,
+                description="Symptoms associated with the hair disease",
+            ),
+            Property(
+                name="medication_description",
+                data_type=DataType.TEXT,
+                description="Description and mechanism of action of the medication",
+            ),
+            Property(
+                name="hair_disease",
+                data_type=DataType.TEXT,
+                description="Name of the hair disease or condition being treated",
+            ),
+            Property(
+                name="medication",
+                data_type=DataType.TEXT,
+                description="Name of the prescribed medication",
+            ),
+            Property(
+                name="disease_description",
+                data_type=DataType.TEXT,
+                description="Detailed description of the hair disease or condition",
+            ),
+            Property(
+                name="disease_severity",
+                data_type=DataType.TEXT,
+                description="Severity level of the disease (e.g., 'Mild', 'Moderate', 'Severe')",
+            ),
         ],
         vector_config=VECTORIZER_MAP[vectorizer](),
         inverted_index_config=Configure.inverted_index(index_null_state=True),
@@ -616,16 +816,45 @@ def create_helpdesk_tickets_collection(
     print(f"Creating collection 'IT_Support_Tickets'...", file=sys.stderr)
     collection = client.collections.create(
         "IT_Support_Tickets",
+        description="Synthetic IT helpdesk support tickets with subject, description, priority, category, and requester details.",
         properties=[
-            Property(name="ticket_id", data_type=DataType.TEXT, index_searchable=False),
-            Property(name="subject", data_type=DataType.TEXT),
-            Property(name="description", data_type=DataType.TEXT),
-            Property(name="priority", data_type=DataType.TEXT),
-            Property(name="category", data_type=DataType.TEXT),
             Property(
-                name="createdAt", data_type=DataType.DATE, index_range_filters=True
+                name="ticket_id",
+                data_type=DataType.TEXT,
+                index_searchable=False,
+                description="Unique identifier for the support ticket",
             ),
-            Property(name="requesterEmail", data_type=DataType.TEXT),
+            Property(
+                name="subject",
+                data_type=DataType.TEXT,
+                description="Short subject line summarizing the IT issue",
+            ),
+            Property(
+                name="description",
+                data_type=DataType.TEXT,
+                description="Detailed description of the IT support issue reported by the requester",
+            ),
+            Property(
+                name="priority",
+                data_type=DataType.TEXT,
+                description="Priority level of the ticket (e.g., 'Low', 'Medium', 'High', 'Critical')",
+            ),
+            Property(
+                name="category",
+                data_type=DataType.TEXT,
+                description="Category of the IT issue (e.g., 'Hardware', 'Software', 'Network', 'Access')",
+            ),
+            Property(
+                name="createdAt",
+                data_type=DataType.DATE,
+                index_range_filters=True,
+                description="Date and time when the ticket was created",
+            ),
+            Property(
+                name="requesterEmail",
+                data_type=DataType.TEXT,
+                description="Email address of the person who submitted the ticket",
+            ),
         ],
         vector_config=VECTORIZER_MAP[vectorizer](),
         inverted_index_config=Configure.inverted_index(index_null_state=True),
