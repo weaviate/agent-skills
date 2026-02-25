@@ -596,6 +596,21 @@ brew install poppler
 sudo apt-get install poppler-utils
 ```
 
+### TypeError: unexpected keyword argument 'image_fields'
+```
+TypeError: _MultiVectors.multi2vec_weaviate() got an unexpected keyword argument 'image_fields'
+```
+**Cause:** The parameter is singular, not a list.
+
+**Solution:** Use `image_field` (singular) instead of `image_fields`:
+```python
+Configure.MultiVectors.multi2vec_weaviate(
+    name="doc_vector",
+    image_field="doc_page",
+    ...
+)
+```
+
 ## Done Criteria
 
 The implementation is complete when:
