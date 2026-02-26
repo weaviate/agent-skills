@@ -1,0 +1,11 @@
+{
+  "name": "weaviate",
+  "description": "Weaviate plugin for Cursor. Search, query, and manage database collections directly from your editor. Includes practical cookbooks to help you build full-stack AI applications powered by Weaviate.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Weaviate",
+    "email": "grow@weaviate.io"
+  },
+  "keywords": ["weaviate", "vector-database", "agents", "rag", "search", "retrieval"],
+  "logo": "assets/logo.svg"
+}
