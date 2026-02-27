@@ -1,4 +1,4 @@
-![Weaviate Agent Skills](banner.jpg)
+![Weaviate Agent Skills](assets/banner.jpg)
 
 # Weaviate Agent Skills
 
