@@ -289,6 +289,11 @@ def convert_types(obj: dict[str, Any]) -> dict[str, Any]:
             result[key] = value
             continue
 
+        # Skip type coercion for reserved fields (they'll be dropped or renamed)
+        if key in _RESERVED_FIELDS:
+            result[key] = value
+            continue
+
         # Try to convert string values
         # Check for boolean
         if value.lower() in ("true", "false"):

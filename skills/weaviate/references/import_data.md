@@ -22,7 +22,7 @@ uv run scripts/import.py "document.pdf" --collection "CollectionName" [--image-f
 | `--tenant` | `-t` | No | — | Tenant name for multi-tenant collections (required if collection has multi-tenancy enabled) |
 | `--batch-size` | `-b` | No | `100` | Number of objects per batch |
 | `--image-field` | `-i` | No | `doc_page` | BLOB property name to store base64 page images (PDF imports only) |
-| `--skip-fields` | — | No | — | Comma-separated field names to exclude from import (e.g. `'id,created_at'`) |
+| `--skip-fields` | — | No | — | Comma-separated field names to exclude from import (e.g. `vector`) |
 | `--json` | — | No | `false` | Output in JSON format |
 
 ## File Formats
@@ -67,7 +67,9 @@ Applies to CSV, JSON, and JSONL imports only. The script automatically converts 
 
 ## Reserved Fields
 
-`id` and `_additional` are reserved by Weaviate and cannot be used as property names. If your data contains these keys the import will fail. Use `--skip-fields` to drop them or `--mapping` to rename them:
+`id` and `_additional` are reserved by Weaviate and cannot be used as property names. If your data contains these keys the import will fail. Use `--skip-fields` to drop them or `--mapping` to rename them. 
+
+**IMPORTANT NOTE:** Renaming must **always** be preferred over dropping when the field contains meaningful data. e.g. renaming `id` to `object_id` or `product_id` (based on the data).
 
 ```bash
 # Drop the id field entirely
