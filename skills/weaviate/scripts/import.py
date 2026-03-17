@@ -23,10 +23,15 @@ Environment Variables:
 import base64
 import csv
 import json
+import re
 import sys
 from io import BytesIO
 from pathlib import Path
 from typing import Any
+
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}$")
+_RESERVED_FIELDS = {"id", "_additional"}
 
 from pdf2image import convert_from_path
 
@@ -296,6 +301,11 @@ def convert_types(obj: dict[str, Any]) -> dict[str, Any]:
                 result[key] = float(value)
             except ValueError:
                 result[key] = value
+        # Normalize date strings to RFC3339
+        elif _DATE_RE.match(value):
+            result[key] = f"{value}T00:00:00Z"
+        elif _DATETIME_RE.match(value):
+            result[key] = value.replace(" ", "T") + "Z"
         else:
             result[key] = value
 
@@ -326,6 +336,11 @@ def main(
         "-i",
         help="BLOB property name to store base64 page images (PDF imports only)",
     ),
+    skip_fields: str = typer.Option(
+        None,
+        "--skip-fields",
+        help="Comma-separated field names to exclude from import (e.g. 'id,created_at')",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
 ):
     """Import data from CSV, JSON, JSONL, or PDF files to a Weaviate collection."""
@@ -346,6 +361,11 @@ def main(
             except json.JSONDecodeError as e:
                 print(f"Error: Invalid JSON in mapping: {e}", file=sys.stderr)
                 raise typer.Exit(1)
+
+        # Parse skip_fields
+        skip_set: set[str] = (
+            {f.strip() for f in skip_fields.split(",")} if skip_fields else set()
+        )
 
         # Validate batch size
         if batch_size < 1:
@@ -381,6 +401,18 @@ def main(
             raise typer.Exit(1)
 
         print(f"Loaded {len(data)} objects from file", file=sys.stderr)
+
+        # Warn about reserved Weaviate fields before connecting
+        if file_format != "pdf" and data:
+            reserved_found = set(data[0].keys()) & _RESERVED_FIELDS - skip_set
+            if reserved_found:
+                print(
+                    f"Warning: Reserved Weaviate field(s) detected in data: "
+                    f"{', '.join(sorted(reserved_found))}. "
+                    f"These will cause import failures. "
+                    f"Use --skip-fields to exclude or --mapping to rename them.",
+                    file=sys.stderr,
+                )
 
         # Connect to Weaviate
         with get_client() as client:
@@ -454,8 +486,14 @@ def main(
             with coll.batch.dynamic() as batch:
                 for i, obj in enumerate(data, 1):
                     try:
-                        # Convert types for better data quality
+                        # Convert types and drop skipped fields
                         converted_obj = convert_types(obj)
+                        if skip_set:
+                            converted_obj = {
+                                k: v
+                                for k, v in converted_obj.items()
+                                if k not in skip_set
+                            }
 
                         # Add object to batch
                         batch.add_object(properties=converted_obj)
@@ -472,17 +510,15 @@ def main(
                         failed_count += 1
                         error_msg = f"Object {i}: {str(e)}"
                         errors.append(error_msg)
-                        if len(errors) <= 5:  # Only show first 5 errors
+                        if len(errors) <= 5:
                             print(f"Warning: {error_msg}", file=sys.stderr)
 
-            # Check for batch errors
-            if hasattr(batch, "failed_objects") and batch.failed_objects:
-                for failed in batch.failed_objects:
-                    failed_count += 1
-                    if len(errors) < 5:
-                        errors.append(f"Batch error: {failed}")
+            # Check for server-side failures
+            for failed_obj in coll.batch.failed_objects:
+                failed_count += 1
+                if len(errors) < 10:
+                    errors.append(f"Batch error: {failed_obj.message}")
 
-            # Calculate success count
             success_count = imported_count - failed_count
 
             result = {
