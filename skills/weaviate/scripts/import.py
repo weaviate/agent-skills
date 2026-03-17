@@ -3,13 +3,16 @@
 # dependencies = [
 #   "weaviate-client>=4.19.2",
 #   "typer>=0.21.0",
+#   "pdf2image>=1.17.0",
+#   "pillow>=10.0.0",
 # ]
 # ///
 """
-Import data from CSV, JSON, or JSONL files to a Weaviate collection.
+Import data from CSV, JSON, JSONL, or PDF files to a Weaviate collection.
 
 Usage:
     uv run import.py data.csv --collection "CollectionName" [options]
+    uv run import.py document.pdf --collection "CollectionName" [options]
 
 Environment Variables:
     WEAVIATE_URL: Weaviate Cloud cluster URL
@@ -17,15 +20,19 @@ Environment Variables:
     + Any provider API keys (OPENAI_API_KEY, COHERE_API_KEY, etc.) - auto-detected
 """
 
+import base64
 import csv
 import json
 import sys
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 
+from pdf2image import convert_from_path
+
 import typer
 import weaviate
-from weaviate.classes.data import DataObject
+from weaviate.classes.config import Configure, DataType, Property
 
 # Import shared connection utilities (local to this skill)
 from weaviate_conn import get_client
@@ -54,10 +61,12 @@ def detect_file_format(file_path: Path) -> str:
         return "json"
     elif extension == ".jsonl":
         return "jsonl"
+    elif extension == ".pdf":
+        return "pdf"
     else:
         raise ValueError(
             f"Unsupported file format: {extension}. "
-            f"Supported formats: .csv, .json, .jsonl"
+            f"Supported formats: .csv, .json, .jsonl, .pdf"
         )
 
 
@@ -173,6 +182,87 @@ def read_jsonl(
     return data
 
 
+def read_pdf(file_path: Path, image_field: str = "doc_page") -> list[dict[str, Any]]:
+    """
+    Convert each page of a PDF to a base64-encoded JPEG and return as objects.
+
+    Each page becomes one Weaviate object with the base64 image stored in
+    `image_field`, plus `page_number` and `file_name` metadata properties.
+
+    Args:
+        file_path: Path to the PDF file
+        image_field: Name of the BLOB property to store the base64 image
+
+    Returns:
+        List of dicts with image_field, page_number, and file_name keys
+
+    Raises:
+        RuntimeError: If poppler is not installed
+    """
+    try:
+        pages = convert_from_path(str(file_path))
+    except Exception as e:
+        if "poppler" in str(e).lower() or "pdftoppm" in str(e).lower():
+            raise RuntimeError(
+                f"Poppler is not installed or not in PATH. "
+                f"Install it with:\n"
+                f"  macOS:         brew install poppler\n"
+                f"  Ubuntu/Debian: sudo apt-get install poppler-utils\n"
+                f"Original error: {e}"
+            )
+        raise
+
+    data = []
+    for page_num, page_img in enumerate(pages, 1):
+        buffer = BytesIO()
+        page_img.save(buffer, format="JPEG")
+        img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        data.append(
+            {
+                image_field: img_base64,
+                "page_number": page_num,
+                "file_name": file_path.stem,
+            }
+        )
+    return data
+
+
+def create_pdf_collection(
+    client: weaviate.WeaviateClient, name: str, image_field: str
+) -> None:
+    """
+    Create a Weaviate collection with the standard multimodal PDF schema.
+
+    Properties: image_field (BLOB), page_number (INT), file_name (TEXT)
+    Vectorizer: multi2vec_weaviate with ModernVBERT/colmodernvbert + MUVERA encoding
+
+    Args:
+        client: Connected Weaviate client
+        name: Collection name
+        image_field: Name of the BLOB property to store base64 page images
+    """
+    client.collections.create(
+        name=name,
+        properties=[
+            Property(name=image_field, data_type=DataType.BLOB),
+            Property(name="page_number", data_type=DataType.INT),
+            Property(name="file_name", data_type=DataType.TEXT),
+        ],
+        vector_config=[
+            Configure.MultiVectors.multi2vec_weaviate(
+                name="doc_vector",
+                image_field=image_field,
+                model="ModernVBERT/colmodernvbert",
+                encoding=Configure.VectorIndex.MultiVector.Encoding.muvera(
+                    ksim=4,
+                    dprojections=16,
+                    repetitions=20,
+                ),
+            )
+        ],
+    )
+
+
 def convert_types(obj: dict[str, Any]) -> dict[str, Any]:
     """
     Convert string values to appropriate types where possible.
@@ -214,7 +304,7 @@ def convert_types(obj: dict[str, Any]) -> dict[str, Any]:
 
 @app.command()
 def main(
-    file: str = typer.Argument(..., help="Path to CSV, JSON, or JSONL file"),
+    file: str = typer.Argument(..., help="Path to CSV, JSON, JSONL, or PDF file"),
     collection: str = typer.Option(
         ..., "--collection", "-c", help="Target collection name"
     ),
@@ -230,9 +320,15 @@ def main(
     batch_size: int = typer.Option(
         100, "--batch-size", "-b", help="Number of objects per batch"
     ),
+    image_field: str = typer.Option(
+        "doc_page",
+        "--image-field",
+        "-i",
+        help="BLOB property name to store base64 page images (PDF imports only)",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
 ):
-    """Import data from CSV, JSON, or JSONL files to a Weaviate collection."""
+    """Import data from CSV, JSON, JSONL, or PDF files to a Weaviate collection."""
     try:
         # Validate file path
         file_path = Path(file)
@@ -274,6 +370,8 @@ def main(
                 data = read_json(file_path, mapping_dict)
             elif file_format == "jsonl":
                 data = read_jsonl(file_path, mapping_dict)
+            elif file_format == "pdf":
+                data = read_pdf(file_path, image_field)
         except Exception as e:
             print(f"Error reading file: {e}", file=sys.stderr)
             raise typer.Exit(1)
@@ -286,16 +384,30 @@ def main(
 
         # Connect to Weaviate
         with get_client() as client:
-            # Check if collection exists
-            if not client.collections.exists(collection):
+            if file_format == "pdf":
+                # PDF always creates a new collection
+                if client.collections.exists(collection):
+                    print(
+                        f"Error: Collection '{collection}' already exists. "
+                        f"Use a different name.",
+                        file=sys.stderr,
+                    )
+                    raise typer.Exit(1)
                 print(
-                    f"Error: Collection '{collection}' does not exist", file=sys.stderr
-                )
-                print(
-                    "Use list_collections.py to see available collections",
+                    f"Creating collection '{collection}' with multimodal PDF schema...",
                     file=sys.stderr,
                 )
-                raise typer.Exit(1)
+                create_pdf_collection(client, collection, image_field)
+                print(f"Collection '{collection}' created.", file=sys.stderr)
+            else:
+                # CSV/JSON/JSONL require an existing collection
+                if not client.collections.exists(collection):
+                    print(
+                        f"Error: Collection '{collection}' does not exist. "
+                        f"Read `weaviate` skill's `create_collection.md` reference to create it first.",
+                        file=sys.stderr,
+                    )
+                    raise typer.Exit(1)
 
             # Get collection reference
             coll = client.collections.get(collection)
@@ -382,6 +494,8 @@ def main(
                 "file": str(file_path),
                 "format": file_format,
             }
+            if file_format == "pdf":
+                result["image_field"] = image_field
 
             if errors:
                 result["errors"] = errors[:10]  # Limit errors in output

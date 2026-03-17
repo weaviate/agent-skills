@@ -1,22 +1,27 @@
 # Import Data
 
-Import data from CSV, JSON, or JSONL files into an existing Weaviate collection with automatic type conversion and column mapping.
+Import data from CSV, JSON, JSONL, or PDF files into a Weaviate collection with automatic type conversion and column mapping. PDF files are converted page-by-page to base64-encoded JPEG images — the collection is always created fresh with the standard multimodal schema. CSV/JSON/JSONL import into an existing collection.
 
 ## Usage
 
 ```bash
+# CSV/JSON/JSONL — collection must already exist
 uv run scripts/import.py "data.csv" --collection "CollectionName" [--mapping '{}'] [--tenant "name"] [--batch-size 100] [--json]
+
+# PDF — collection is created automatically 
+uv run scripts/import.py "document.pdf" --collection "CollectionName" [--image-field "doc_page"] [--batch-size 100] [--json]
 ```
 
 ## Parameters
 
 | Parameter | Flag | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `file` | — | Yes (positional) | — | Path to CSV, JSON, or JSONL file |
-| `--collection` | `-c` | Yes | — | Target collection name (must already exist) |
-| `--mapping` | `-m` | No | — | JSON object mapping file columns/keys to collection properties |
+| `file` | — | Yes (positional) | — | Path to CSV, JSON, JSONL, or PDF file |
+| `--collection` | `-c` | Yes | — | Target collection name (must already exist for CSV/JSON/JSONL; must not exist for PDF — created automatically) |
+| `--mapping` | `-m` | No | — | JSON object mapping file columns/keys to collection properties (CSV/JSON/JSONL only) |
 | `--tenant` | `-t` | No | — | Tenant name for multi-tenant collections (required if collection has multi-tenancy enabled) |
 | `--batch-size` | `-b` | No | `100` | Number of objects per batch |
+| `--image-field` | `-i` | No | `doc_page` | BLOB property name to store base64 page images (PDF imports only) |
 | `--json` | — | No | `false` | Output in JSON format |
 
 ## File Formats
@@ -38,9 +43,19 @@ uv run scripts/import.py "data.csv" --collection "CollectionName" [--mapping '{}
 - One JSON object per line
 - Each object's keys must match collection property names
 
+### PDF
+
+- Each page is converted to a JPEG image and base64-encoded
+- Each page becomes one Weaviate object with these properties:
+  - `doc_page` (or `--image-field` value): base64-encoded JPEG image of the page
+  - `page_number`: 1-indexed page number (int)
+  - `file_name`: PDF filename without extension (text)
+- The collection is **always created automatically** with `multi2vec_weaviate` (`ModernVBERT/colmodernvbert` + MUVERA encoding). The collection must not already exist — delete it first if you need to re-import.
+- Requires `poppler` to be installed on the system (for Mac, simply run `brew install poppler`)
+
 ## Automatic Type Conversion
 
-The import script automatically converts string values:
+Applies to CSV, JSON, and JSONL imports only. The script automatically converts string values:
 
 - `"true"` / `"false"` → boolean
 - Digit strings → int
@@ -79,5 +94,17 @@ Import JSON with custom batch size:
 
 ```bash
 uv run scripts/import.py products.json --collection "Products" --batch-size 500
+```
+
+Import a PDF (collection is created automatically):
+
+```bash
+uv run scripts/import.py paper.pdf --collection "PDFDocuments"
+```
+
+Import a PDF with a custom image field name:
+
+```bash
+uv run scripts/import.py paper.pdf --collection "PDFDocuments" --image-field "page_image"
 ```
 
