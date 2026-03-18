@@ -186,7 +186,9 @@ def read_jsonl(
                 raise ValueError(f"Invalid JSON on line {line_num}: {e}")
 
 
-def read_pdf(file_path: Path, image_field: str = "doc_page") -> Iterator[dict[str, Any]]:
+def read_pdf(
+    file_path: Path, image_field: str = "doc_page"
+) -> Iterator[dict[str, Any]]:
     """
     Convert each page of a PDF to a base64-encoded JPEG and yield as objects.
 
@@ -300,8 +302,10 @@ def convert_types(
         if not isinstance(value, str):
             if target_type == DataType.DATE_ARRAY and isinstance(value, list):
                 result[key] = [
-                    f"{d}T00:00:00Z" if isinstance(d, str) and _DATE_RE.match(d)
-                    else d.replace(" ", "T") + "Z" if isinstance(d, str) and _DATETIME_RE.match(d)
+                    f"{d}T00:00:00Z"
+                    if isinstance(d, str) and _DATE_RE.match(d)
+                    else d.replace(" ", "T") + "Z"
+                    if isinstance(d, str) and _DATETIME_RE.match(d)
                     else d
                     for d in value
                 ]
