@@ -22,9 +22,11 @@ Environment Variables:
 
 import base64
 import csv
+import itertools
 import json
 import re
 import sys
+from collections.abc import Iterator
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -80,18 +82,19 @@ def detect_file_format(file_path: Path) -> str:
 
 def read_csv(
     file_path: Path, mapping: dict[str, str] | None = None
-) -> list[dict[str, Any]]:
+) -> Iterator[dict[str, Any]]:
     """
     Read data from CSV file with automatic dialect detection.
+
+    Yields rows one at a time — suitable for large files.
 
     Args:
         file_path: Path to CSV file
         mapping: Optional column name mapping
 
-    Returns:
-        List of dictionaries with data
+    Yields:
+        Row dictionaries with data
     """
-    data = []
     with open(file_path, "r", encoding="utf-8") as f:
         # Read a sample to detect the CSV dialect
         sample = f.read(8192)
@@ -119,8 +122,7 @@ def read_csv(
             # Apply mapping if provided
             if mapping:
                 row = {mapping.get(k, k): v for k, v in row.items()}
-            data.append(row)
-    return data
+            yield row
 
 
 def read_json(
@@ -156,18 +158,19 @@ def read_json(
 
 def read_jsonl(
     file_path: Path, mapping: dict[str, str] | None = None
-) -> list[dict[str, Any]]:
+) -> Iterator[dict[str, Any]]:
     """
     Read data from JSONL file (one JSON object per line).
+
+    Yields objects one at a time — suitable for large files.
 
     Args:
         file_path: Path to JSONL file
         mapping: Optional key name mapping
 
-    Returns:
-        List of dictionaries with data
+    Yields:
+        Object dictionaries with data
     """
-    data = []
     with open(file_path, "r", encoding="utf-8") as f:
         for line_num, line in enumerate(f, 1):
             line = line.strip()
@@ -178,26 +181,25 @@ def read_jsonl(
                 # Apply mapping if provided
                 if mapping:
                     obj = {mapping.get(k, k): v for k, v in obj.items()}
-                data.append(obj)
+                yield obj
             except json.JSONDecodeError as e:
                 raise ValueError(f"Invalid JSON on line {line_num}: {e}")
 
-    return data
 
-
-def read_pdf(file_path: Path, image_field: str = "doc_page") -> list[dict[str, Any]]:
+def read_pdf(file_path: Path, image_field: str = "doc_page") -> Iterator[dict[str, Any]]:
     """
-    Convert each page of a PDF to a base64-encoded JPEG and return as objects.
+    Convert each page of a PDF to a base64-encoded JPEG and yield as objects.
 
     Each page becomes one Weaviate object with the base64 image stored in
     `image_field`, plus `page_number` and `file_name` metadata properties.
+    Page images are freed from memory after encoding.
 
     Args:
         file_path: Path to the PDF file
         image_field: Name of the BLOB property to store the base64 image
 
-    Returns:
-        List of dicts with image_field, page_number, and file_name keys
+    Yields:
+        Dicts with image_field, page_number, and file_name keys
 
     Raises:
         RuntimeError: If poppler is not installed
@@ -215,19 +217,15 @@ def read_pdf(file_path: Path, image_field: str = "doc_page") -> list[dict[str, A
             )
         raise
 
-    data = []
     for page_num, page_img in enumerate(pages, 1):
         buffer = BytesIO()
         page_img.save(buffer, format="JPEG")
         img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
-        data.append(
-            {
-                image_field: img_base64,
-                "page_number": page_num,
-                "file_name": file_path.stem,
-            }
-        )
-    return data
+        yield {
+            image_field: img_base64,
+            "page_number": page_num,
+            "file_name": file_path.stem,
+        }
 
 
 def create_pdf_collection(
@@ -294,6 +292,9 @@ def convert_types(
             result[key] = value
             continue
 
+        # String value: cast based on schema
+        target_type = prop_types.get(key)
+
         # Non-string values already have the right native type, with one exception:
         # date[] lists from JSON/JSONL may contain bare date strings needing RFC3339
         if not isinstance(value, str):
@@ -307,9 +308,6 @@ def convert_types(
             else:
                 result[key] = value
             continue
-
-        # String value: cast based on schema
-        target_type = prop_types.get(key)
 
         if target_type in (DataType.INT, DataType.INT_ARRAY):
             try:
@@ -434,6 +432,7 @@ def main(
                 data = read_csv(file_path, mapping_dict)
             elif file_format == "json":
                 data = read_json(file_path, mapping_dict)
+                print(f"Loaded {len(data)} objects from file", file=sys.stderr)
             elif file_format == "jsonl":
                 data = read_jsonl(file_path, mapping_dict)
             elif file_format == "pdf":
@@ -442,15 +441,14 @@ def main(
             print(f"Error reading file: {e}", file=sys.stderr)
             raise typer.Exit(1)
 
-        if not data:
+        # Peek at the first item to validate non-empty and check reserved fields
+        data = iter(data)
+        first = next(data, None)
+        if first is None:
             print("Error: No data found in file", file=sys.stderr)
             raise typer.Exit(1)
-
-        print(f"Loaded {len(data)} objects from file", file=sys.stderr)
-
-        # Warn about reserved Weaviate fields before connecting
-        if file_format != "pdf" and data:
-            reserved_found = set(data[0].keys()) & _RESERVED_FIELDS - skip_set
+        if file_format != "pdf":
+            reserved_found = set(first.keys()) & _RESERVED_FIELDS - skip_set
             if reserved_found:
                 print(
                     f"Warning: Reserved Weaviate field(s) detected in data: "
@@ -459,6 +457,7 @@ def main(
                     f"Use --skip-fields to exclude or --mapping to rename them.",
                     file=sys.stderr,
                 )
+        data = itertools.chain([first], data)
 
         # Connect to Weaviate
         with get_client() as client:
@@ -523,17 +522,16 @@ def main(
                 print(f"Using tenant: {tenant}", file=sys.stderr)
 
             # Import data in batches
-            print(
-                f"Importing {len(data)} objects in batches of {batch_size}...",
-                file=sys.stderr,
-            )
+            print(f"Importing objects in batches of {batch_size}...", file=sys.stderr)
 
+            total_count = 0
             imported_count = 0
             failed_count = 0
             errors = []
 
             with coll.batch.dynamic() as batch:
                 for i, obj in enumerate(data, 1):
+                    total_count += 1
                     try:
                         # Convert types guided by schema, then drop skipped fields
                         converted_obj = convert_types(obj, prop_types)
@@ -551,7 +549,7 @@ def main(
                         # Show progress
                         if i % batch_size == 0:
                             print(
-                                f"Progress: {i}/{len(data)} objects processed",
+                                f"Progress: {i} objects processed",
                                 file=sys.stderr,
                             )
 
@@ -573,7 +571,7 @@ def main(
             result = {
                 "collection": collection,
                 "tenant": tenant,
-                "total_objects": len(data),
+                "total_objects": total_count,
                 "imported": success_count,
                 "failed": failed_count,
                 "file": str(file_path),
@@ -592,7 +590,7 @@ def main(
                 print(f"\n**Collection:** {collection}")
                 if tenant:
                     print(f"**Tenant:** {tenant}")
-                print(f"**Total Objects:** {len(data)}")
+                print(f"**Total Objects:** {total_count}")
                 print(f"**Successfully Imported:** {success_count}")
                 if failed_count > 0:
                     print(f"**Failed:** {failed_count}")

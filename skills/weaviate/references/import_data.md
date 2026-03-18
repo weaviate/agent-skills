@@ -37,11 +37,13 @@ uv run scripts/import.py "document.pdf" --collection "CollectionName" [--image-f
 
 - Must be an array of objects: `[{"prop1": "value1"}, {"prop2": "value2"}]`
 - Keys must match collection property names
+- The entire file is loaded into memory — for large datasets, always prefer JSONL
 
 ### JSONL
 
 - One JSON object per line
 - Each object's keys must match collection property names
+- Streamed line-by-line — preferred format for large datasets
 
 ### PDF
 
