@@ -42,6 +42,19 @@ from weaviate.classes.config import Configure, DataType, Property
 # Import shared connection utilities (local to this skill)
 from weaviate_conn import get_client
 
+# Types that are JSON-encoded strings in CSV (arrays, nested objects, geo, phone)
+_JSON_ENCODED_TYPES = {
+    DataType.TEXT_ARRAY,
+    DataType.INT_ARRAY,
+    DataType.NUMBER_ARRAY,
+    DataType.BOOL_ARRAY,
+    DataType.UUID_ARRAY,
+    DataType.OBJECT,
+    DataType.OBJECT_ARRAY,
+    DataType.GEO_COORDINATES,
+    DataType.PHONE_NUMBER,
+}
+
 app = typer.Typer()
 
 
@@ -268,49 +281,83 @@ def create_pdf_collection(
     )
 
 
-def convert_types(obj: dict[str, Any]) -> dict[str, Any]:
+def convert_types(
+    obj: dict[str, Any],
+    prop_types: dict[str, DataType],
+) -> dict[str, Any]:
     """
-    Convert string values to appropriate types where possible.
+    Prepare an object for insertion using the collection schema to guide conversion.
+
+    Non-string values (JSON/JSONL native types) pass through unchanged. String values
+    are cast to the type declared in prop_types. Fields not in the schema pass through
+    as-is. Reserved fields always pass through unchanged.
 
     Args:
-        obj: Dictionary with potentially string values
+        obj: Raw object from the file
+        prop_types: Map of property name → DataType from the collection schema
 
     Returns:
-        Dictionary with converted types
+        Object ready for batch insertion
     """
     result = {}
     for key, value in obj.items():
         if value is None or value == "":
-            # Skip None and empty strings
             continue
 
-        # If already not a string, keep as is
-        if not isinstance(value, str):
-            result[key] = value
-            continue
-
-        # Skip type coercion for reserved fields (they'll be dropped or renamed)
+        # Reserved fields pass through as-is (will be dropped or renamed by caller)
         if key in _RESERVED_FIELDS:
             result[key] = value
             continue
 
-        # Try to convert string values
-        # Check for boolean
-        if value.lower() in ("true", "false"):
-            result[key] = value.lower() == "true"
-        # Check for numbers
-        elif value.isdigit():
-            result[key] = int(value)
-        elif value.replace(".", "", 1).replace("-", "", 1).isdigit():
+        # Non-string values already have the right native type
+        if not isinstance(value, str):
+            result[key] = value
+            continue
+
+        # String value: cast based on schema
+        target_type = prop_types.get(key)
+
+        if target_type in (DataType.INT, DataType.INT_ARRAY):
+            try:
+                result[key] = int(value)
+            except (ValueError, TypeError):
+                result[key] = value
+        elif target_type in (DataType.NUMBER, DataType.NUMBER_ARRAY):
             try:
                 result[key] = float(value)
-            except ValueError:
+            except (ValueError, TypeError):
                 result[key] = value
-        # Normalize date strings to RFC3339
-        elif _DATE_RE.match(value):
-            result[key] = f"{value}T00:00:00Z"
-        elif _DATETIME_RE.match(value):
-            result[key] = value.replace(" ", "T") + "Z"
+        elif target_type in (DataType.BOOL, DataType.BOOL_ARRAY):
+            if value.lower() in ("true", "false"):
+                result[key] = value.lower() == "true"
+            else:
+                result[key] = value
+        elif target_type == DataType.DATE:
+            if _DATE_RE.match(value):
+                result[key] = f"{value}T00:00:00Z"
+            elif _DATETIME_RE.match(value):
+                result[key] = value.replace(" ", "T") + "Z"
+            else:
+                result[key] = value
+        elif target_type == DataType.DATE_ARRAY:
+            try:
+                parsed = json.loads(value)
+                result[key] = [
+                    f"{d}T00:00:00Z"
+                    if isinstance(d, str) and _DATE_RE.match(d)
+                    else d.replace(" ", "T") + "Z"
+                    if isinstance(d, str) and _DATETIME_RE.match(d)
+                    else d
+                    for d in parsed
+                ]
+            except (ValueError, TypeError):
+                result[key] = value
+        elif target_type in _JSON_ENCODED_TYPES:
+            # Arrays, objects, geoCoordinates, phoneNumber are JSON-encoded in CSV cells
+            try:
+                result[key] = json.loads(value)
+            except (ValueError, TypeError):
+                result[key] = value
         else:
             result[key] = value
 
@@ -449,8 +496,11 @@ def main(
             # Get collection reference
             coll = client.collections.get(collection)
 
-            # Check if collection is multi-tenant
+            # Fetch schema — used for multi-tenancy check and type-safe coercion
             config = coll.config.get()
+            prop_types: dict[str, DataType] = {
+                p.name: p.data_type for p in config.properties
+            }
             is_multi_tenant = (
                 config.multi_tenancy_config.enabled
                 if config.multi_tenancy_config
@@ -491,8 +541,8 @@ def main(
             with coll.batch.dynamic() as batch:
                 for i, obj in enumerate(data, 1):
                     try:
-                        # Convert types and drop skipped fields
-                        converted_obj = convert_types(obj)
+                        # Convert types guided by schema, then drop skipped fields
+                        converted_obj = convert_types(obj, prop_types)
                         if skip_set:
                             converted_obj = {
                                 k: v

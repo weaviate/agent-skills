@@ -54,29 +54,41 @@ uv run scripts/import.py "document.pdf" --collection "CollectionName" [--image-f
 - The collection is **always created automatically** with `multi2vec_weaviate` (`ModernVBERT/colmodernvbert` + MUVERA encoding). The collection must not already exist — delete it first if you need to re-import.
 - Requires `poppler` to be installed on the system (for Mac, simply run `brew install poppler`)
 
-## Automatic Type Conversion
+## Type Conversion
 
-Applies to CSV, JSON, and JSONL imports only. The script automatically converts string values:
+For CSV, JSON, and JSONL imports the script uses the collection schema to guide conversion. Non-string values (JSON/JSONL native types) pass through unchanged. String values are cast based on the declared property type:
 
-- `"true"` / `"false"` → boolean
-- Digit strings → int
-- Decimal strings → float
-- `"YYYY-MM-DD"` → RFC3339 (`"YYYY-MM-DDT00:00:00Z"`) — required for Weaviate `date` properties
-- `"YYYY-MM-DD HH:MM:SS"` / `"YYYY-MM-DDTHH:MM:SS"` → RFC3339 with `Z` suffix
-- `None` and empty strings are skipped
+| Schema type | Conversion |
+|---|---|
+| `int` / `int[]` | `int(value)` — falls back to string if it fails |
+| `number` / `number[]` | `float(value)` — falls back to string if it fails |
+| `boolean` / `boolean[]` | `"true"`/`"false"` → bool — falls back to string |
+| `date` / `date[]` | `"YYYY-MM-DD"` → `"YYYY-MM-DDT00:00:00Z"`, `"YYYY-MM-DD HH:MM:SS"` → RFC3339 with `Z` |
+| `text[]`, `int[]`, `number[]`, `boolean[]`, `date[]`, `uuid[]`, `object`, `object[]`, `geoCoordinates`, `phoneNumber` | JSON/JSONL: native lists/dicts pass through unchanged. CSV: cell is parsed with `json.loads()` — falls back to string if it fails |
+| `text`, `uuid`, `blob`, or unknown | kept as string |
+
+`None` and empty strings are always skipped.
 
 ## Reserved Fields
 
-`id` and `_additional` are reserved by Weaviate and cannot be used as property names. If your data contains these keys the import will fail. Use `--skip-fields` to drop them or `--mapping` to rename them. 
+`id` and `_additional` are reserved by Weaviate and cannot be used as property names (even for nested properties). If your data contains these keys the import will fail. Use `--skip-fields` to drop them or `--mapping` to rename them. 
 
 **IMPORTANT NOTE:** Renaming must **always** be preferred over dropping when the field contains meaningful data. e.g. renaming `id` to `object_id` or `product_id` (based on the data).
 
+`--mapping` and `--skip-fields` support dot notation for nested object fields (e.g. `author.id`).
+
 ```bash
-# Drop the id field entirely
+# Drop the top-level id field entirely
 uv run scripts/import.py data.json --collection "Articles" --skip-fields "id"
 
-# Rename id to source_id
+# Rename top-level id to source_id
 uv run scripts/import.py data.json --collection "Articles" --mapping '{"id": "source_id"}'
+
+# Rename a nested id field inside an object property (e.g. author.id → author.author_id)
+uv run scripts/import.py data.json --collection "Articles" --mapping '{"author.id": "author.author_id"}'
+
+# Drop a nested id field
+uv run scripts/import.py data.json --collection "Articles" --skip-fields "author.id"
 ```
 
 ## Output
