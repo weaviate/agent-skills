@@ -42,18 +42,8 @@ from weaviate.classes.config import Configure, DataType, Property
 # Import shared connection utilities (local to this skill)
 from weaviate_conn import get_client
 
-# Types that are JSON-encoded strings in CSV (arrays, nested objects, geo, phone)
-_JSON_ENCODED_TYPES = {
-    DataType.TEXT_ARRAY,
-    DataType.INT_ARRAY,
-    DataType.NUMBER_ARRAY,
-    DataType.BOOL_ARRAY,
-    DataType.UUID_ARRAY,
-    DataType.OBJECT,
-    DataType.OBJECT_ARRAY,
-    DataType.GEO_COORDINATES,
-    DataType.PHONE_NUMBER,
-}
+# Types whose string values must never be JSON-parsed (already correct as strings)
+_KEEP_AS_STRING = {DataType.TEXT, DataType.UUID, DataType.BLOB}
 
 app = typer.Typer()
 
@@ -117,18 +107,13 @@ def read_csv(
             dialect = csv.excel
             has_header = True
 
-        # Read the CSV with detected dialect
-        if has_header:
-            reader = csv.DictReader(f, dialect=dialect)
-        else:
-            # If no header detected, use default field names
-            f.seek(0)
-            reader_base = csv.reader(f, dialect=dialect)
-            first_row = next(reader_base)
-            fieldnames = [f"column_{i + 1}" for i in range(len(first_row))]
-            f.seek(0)
-            reader = csv.DictReader(f, fieldnames=fieldnames, dialect=dialect)
-            next(reader)  # Skip first row since it's data, not header
+        if not has_header:
+            raise ValueError(
+                "CSV file does not appear to have a header row. "
+                "Add a header row with column names matching the collection property names."
+            )
+
+        reader = csv.DictReader(f, dialect=dialect)
 
         for row in reader:
             # Apply mapping if provided
@@ -309,9 +294,18 @@ def convert_types(
             result[key] = value
             continue
 
-        # Non-string values already have the right native type
+        # Non-string values already have the right native type, with one exception:
+        # date[] lists from JSON/JSONL may contain bare date strings needing RFC3339
         if not isinstance(value, str):
-            result[key] = value
+            if target_type == DataType.DATE_ARRAY and isinstance(value, list):
+                result[key] = [
+                    f"{d}T00:00:00Z" if isinstance(d, str) and _DATE_RE.match(d)
+                    else d.replace(" ", "T") + "Z" if isinstance(d, str) and _DATETIME_RE.match(d)
+                    else d
+                    for d in value
+                ]
+            else:
+                result[key] = value
             continue
 
         # String value: cast based on schema
@@ -352,13 +346,13 @@ def convert_types(
                 ]
             except (ValueError, TypeError):
                 result[key] = value
-        elif target_type in _JSON_ENCODED_TYPES:
-            # Arrays, objects, geoCoordinates, phoneNumber are JSON-encoded in CSV cells
+        elif target_type is not None and target_type not in _KEEP_AS_STRING:
             try:
                 result[key] = json.loads(value)
             except (ValueError, TypeError):
                 result[key] = value
         else:
+            # text, uuid, blob, or field not in schema — keep as string
             result[key] = value
 
     return result

@@ -29,10 +29,9 @@ uv run scripts/import.py "document.pdf" --collection "CollectionName" [--image-f
 
 ### CSV
 
-- First row used as header (auto-detected via `csv.Sniffer`)
-- Delimiter and quoting auto-detected
-- Falls back to generated column names if no header detected
-- Columns mapped to collection properties by name (case-sensitive)
+- First row must be a header — column names must match collection property names (case-sensitive)
+- Delimiter and quoting auto-detected via `csv.Sniffer`
+- Files without a header row are rejected with a clear error
 
 ### JSON
 
@@ -65,13 +64,15 @@ For CSV, JSON, and JSONL imports the script uses the collection schema to guide 
 | `boolean` / `boolean[]` | `"true"`/`"false"` → bool — falls back to string |
 | `date` / `date[]` | `"YYYY-MM-DD"` → `"YYYY-MM-DDT00:00:00Z"`, `"YYYY-MM-DD HH:MM:SS"` → RFC3339 with `Z` |
 | `text[]`, `int[]`, `number[]`, `boolean[]`, `date[]`, `uuid[]`, `object`, `object[]`, `geoCoordinates`, `phoneNumber` | JSON/JSONL: native lists/dicts pass through unchanged. CSV: cell is parsed with `json.loads()` — falls back to string if it fails |
-| `text`, `uuid`, `blob`, or unknown | kept as string |
+| `text`, `uuid` | kept as string |
+| `blob` | kept as string — must already be base64-encoded in the source data |
+| field not in schema | kept as string |
 
 `None` and empty strings are always skipped.
 
 ## Reserved Fields
 
-`id` and `_additional` are reserved by Weaviate and cannot be used as property names (even for nested properties). If your data contains these keys the import will fail. Use `--skip-fields` to drop them or `--mapping` to rename them. 
+`id` and `_additional` are reserved by Weaviate and cannot be used as property names (even for nested properties). If your data contains these keys/columns the import will fail. Use `--skip-fields` to drop them or `--mapping` to rename them. 
 
 **IMPORTANT NOTE:** Renaming must **always** be preferred over dropping when the field contains meaningful data. e.g. renaming `id` to `object_id` or `product_id` (based on the data).
 
