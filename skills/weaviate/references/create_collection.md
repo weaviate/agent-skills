@@ -55,6 +55,57 @@ Aliases: `bool` → `boolean`, `bool[]` → `boolean[]`
 
 `text2vec_weaviate`, `text2vec_openai`, `text2vec_cohere`, `text2vec_huggingface`, `text2vec_palm`, `text2vec_jinaai`, `text2vec_voyageai`, `text2vec_contextionary`, `text2vec_transformers`, `text2vec_gpt4all`, `text2vec_ollama`, `multi2vec_clip`, `multi2vec_bind`, `multi2vec_palm`, `img2vec_neural`, `ref2vec_centroid`, `none`
 
+## Inferring Schema from Data Files
+
+Before creating a collection, inspect a few rows from the source file to understand field names and value types. Use the commands below — they read only the first 3 objects and are safe on large files.
+
+**CSV:**
+```bash
+python3 -c "
+import csv, json
+with open('data.csv') as f:
+    rows = list(csv.DictReader(f))[:3]
+print(json.dumps(rows, indent=2))
+"
+```
+
+**JSON:**
+```bash
+python3 -c "
+import json
+print(json.dumps(json.load(open('data.json'))[:3], indent=2))
+"
+```
+
+**JSONL:**
+```bash
+python3 -c "
+import json
+lines = []
+with open('data.jsonl') as f:
+    for line in f:
+        if len(lines) >= 3: break
+        if line.strip(): lines.append(json.loads(line))
+print(json.dumps(lines, indent=2))
+"
+```
+
+From the sample, map each field to a Weaviate data type:
+
+| Value looks like | data_type |
+|---|---|
+| `"hello"`, any text | `text` |
+| `123`, `"123"` | `int` |
+| `1.5`, `"1.5"` | `number` |
+| `true`/`false` | `boolean` |
+| `"2024-01-15"`, `"2024-01-15T10:30:00Z"` | `date` |
+| UUID-shaped string | `uuid` |
+| List of strings | `text[]` |
+| List of numbers | `int[]` or `number[]` |
+| Nested object | `object` |
+
+**Important:** `id`, `_id`, and `_additional` are reserved by Weaviate — never use them as property names. If they appear in your data, use `--skip-fields` or `--mapping` in `import.py` to handle them.
+
 ## Examples
 
 Basic collection:

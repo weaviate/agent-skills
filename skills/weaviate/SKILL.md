@@ -1,6 +1,6 @@
 ---
 name: weaviate
-description: Search, query, and manage Weaviate vector database collections. Use for semantic search, hybrid search, keyword search, natural language queries with AI-generated answers, collection management, data exploration, filtered fetching, data imports from CSV/JSON/JSONL files, create example data and collection creation.
+description: Search, query, and manage Weaviate vector database collections. Use for semantic search, hybrid search, keyword search, natural language queries with AI-generated answers, collection management, data exploration, filtered fetching, data imports from PDF/CSV/JSON/JSONL files, create example data and collection creation.
 ---
 
 # Weaviate Database Operations
@@ -41,7 +41,7 @@ Set only the keys your collections use, refer to [Environment Requirements](refe
 ### Data Operations
 
 - [Fetch and Filter](references/fetch_filter.md): Use to **retrieve specific objects by ID** or **strictly filtered subsets** of data. Best for precise data retrieval rather than search.
-- [Import Data](references/import_data.md): Use to **bulk import data** into an existing collection from CSV, JSON, or JSONL files.
+- [Import Data](references/import_data.md): Use to **bulk import data** into an existing collection from PDF, CSV, JSON, or JSONL files.
 - [Create Example Data](references/example_data.md): Use to create example data for immediate use of other skills, if no data is available or user requests some toy data.
 
 ## Recommendations

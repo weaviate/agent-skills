@@ -12,7 +12,7 @@
       "name": "weaviate",
       "source": "./",
       "description": "Search, query, and manage Weaviate vector databases. Includes database operations, cookbooks for building full-stack AI applications, and CLI commands.",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "keywords": ["weaviate", "vector-database", "agents", "rag", "search", "retrieval"]
     }
   ]
