@@ -360,9 +360,58 @@ def convert_types(
     return result
 
 
+def import_objects(
+    coll: Any,
+    data: Iterator[dict[str, Any]],
+    prop_types: dict[str, DataType],
+    skip_set: set[str],
+    batch_size: int,
+) -> tuple[int, int, int, list[str]]:
+    """
+    Batch-insert objects from *data* into *coll*.
+
+    Returns:
+        (total_count, imported_count, failed_count, errors)
+    """
+    total_count = 0
+    imported_count = 0
+    failed_count = 0
+    errors: list[str] = []
+
+    with coll.batch.dynamic() as batch:
+        for i, obj in enumerate(data, 1):
+            total_count += 1
+            try:
+                converted_obj = convert_types(obj, prop_types)
+                if skip_set:
+                    converted_obj = {
+                        k: v for k, v in converted_obj.items() if k not in skip_set
+                    }
+                batch.add_object(properties=converted_obj)
+                imported_count += 1
+
+                if i % batch_size == 0:
+                    print(f"Progress: {i} objects processed", file=sys.stderr)
+
+            except Exception as e:
+                failed_count += 1
+                error_msg = f"Object {i}: {str(e)}"
+                errors.append(error_msg)
+                if len(errors) <= 5:
+                    print(f"Warning: {error_msg}", file=sys.stderr)
+
+    # Check for server-side failures
+    for failed_obj in coll.batch.failed_objects:
+        failed_count += 1
+        if len(errors) < 10:
+            errors.append(f"Batch error: {failed_obj.message}")
+
+    return total_count, imported_count, failed_count, errors
+
+
 @app.command()
 def main(
-    file: str = typer.Argument(..., help="Path to CSV, JSON, JSONL, or PDF file"),
+    files: list[str] = typer.Argument(..., help="One or more CSV, JSON, JSONL, or PDF files"),
     collection: str = typer.Option(
         ..., "--collection", "-c", help="Target collection name"
     ),
@@ -393,11 +442,14 @@ def main(
 ):
     """Import data from CSV, JSON, JSONL, or PDF files to a Weaviate collection."""
     try:
-        # Validate file path
-        file_path = Path(file)
-        if not file_path.exists():
-            print(f"Error: File not found: {file}", file=sys.stderr)
-            raise typer.Exit(1)
+        # Validate all file paths up front
+        file_paths: list[Path] = []
+        for f in files:
+            fp = Path(f)
+            if not fp.exists():
+                print(f"Error: File not found: {f}", file=sys.stderr)
+                raise typer.Exit(1)
+            file_paths.append(fp)
 
         # Parse mapping if provided
         mapping_dict = None
@@ -420,68 +472,40 @@ def main(
             print("Error: Batch size must be at least 1", file=sys.stderr)
             raise typer.Exit(1)
 
-        # Detect file format
+        # Detect formats and validate consistency: all files must be the same format
         try:
-            file_format = detect_file_format(file_path)
+            formats = [detect_file_format(fp) for fp in file_paths]
         except ValueError as e:
             print(f"Error: {e}", file=sys.stderr)
             raise typer.Exit(1)
 
-        print(f"Detected file format: {file_format.upper()}", file=sys.stderr)
-        print(f"Reading file: {file_path}", file=sys.stderr)
-
-        # Read data based on format
-        try:
-            if file_format == "csv":
-                data = read_csv(file_path, mapping_dict)
-            elif file_format == "json":
-                data = read_json(file_path, mapping_dict)
-                print(f"Loaded {len(data)} objects from file", file=sys.stderr)
-            elif file_format == "jsonl":
-                data = read_jsonl(file_path, mapping_dict)
-            elif file_format == "pdf":
-                data = read_pdf(file_path, image_field)
-        except Exception as e:
-            print(f"Error reading file: {e}", file=sys.stderr)
+        if len(set(formats)) > 1:
+            print(
+                f"Error: All files must be the same format. "
+                f"Got: {', '.join(f'{fp} ({fmt})' for fp, fmt in zip(file_paths, formats))}",
+                file=sys.stderr,
+            )
             raise typer.Exit(1)
 
-        # Peek at the first item to validate non-empty and check reserved fields
-        data = iter(data)
-        first = next(data, None)
-        if first is None:
-            print("Error: No data found in file", file=sys.stderr)
-            raise typer.Exit(1)
-        if file_format != "pdf":
-            reserved_found = set(first.keys()) & _RESERVED_FIELDS - skip_set
-            if reserved_found:
-                print(
-                    f"Warning: Reserved Weaviate field(s) detected in data: "
-                    f"{', '.join(sorted(reserved_found))}. "
-                    f"These will cause import failures. "
-                    f"Use --skip-fields to exclude or --mapping to rename them.",
-                    file=sys.stderr,
-                )
-        data = itertools.chain([first], data)
+        file_format = formats[0]
 
-        # Connect to Weaviate
+        # Connect to Weaviate once for all files
         with get_client() as client:
+            # Ensure collection exists (create for PDF if absent; require for others)
             if file_format == "pdf":
-                # PDF always creates a new collection
-                if client.collections.exists(collection):
+                if not client.collections.exists(collection):
                     print(
-                        f"Error: Collection '{collection}' already exists. "
-                        f"Use a different name.",
+                        f"Creating collection '{collection}' with multimodal PDF schema...",
                         file=sys.stderr,
                     )
-                    raise typer.Exit(1)
-                print(
-                    f"Creating collection '{collection}' with multimodal PDF schema...",
-                    file=sys.stderr,
-                )
-                create_pdf_collection(client, collection, image_field)
-                print(f"Collection '{collection}' created.", file=sys.stderr)
+                    create_pdf_collection(client, collection, image_field)
+                    print(f"Collection '{collection}' created.", file=sys.stderr)
+                else:
+                    print(
+                        f"Collection '{collection}' exists — appending pages to it.",
+                        file=sys.stderr,
+                    )
             else:
-                # CSV/JSON/JSONL require an existing collection
                 if not client.collections.exists(collection):
                     print(
                         f"Error: Collection '{collection}' does not exist. "
@@ -490,10 +514,8 @@ def main(
                     )
                     raise typer.Exit(1)
 
-            # Get collection reference
+            # Fetch schema once — used for multi-tenancy check and type-safe coercion
             coll = client.collections.get(collection)
-
-            # Fetch schema — used for multi-tenancy check and type-safe coercion
             config = coll.config.get()
             prop_types: dict[str, DataType] = {
                 p.name: p.data_type for p in config.properties
@@ -520,72 +542,85 @@ def main(
                 )
                 tenant = None
 
-            # Get tenant-specific collection if needed
             if tenant:
                 coll = coll.with_tenant(tenant)
                 print(f"Using tenant: {tenant}", file=sys.stderr)
 
-            # Import data in batches
-            print(f"Importing objects in batches of {batch_size}...", file=sys.stderr)
+            # Process each file
+            grand_total = grand_imported = grand_failed = 0
+            all_errors: list[str] = []
+            file_results = []
 
-            total_count = 0
-            imported_count = 0
-            failed_count = 0
-            errors = []
+            for file_path in file_paths:
+                print(
+                    f"\n[{file_format.upper()}] {file_path}",
+                    file=sys.stderr,
+                )
 
-            with coll.batch.dynamic() as batch:
-                for i, obj in enumerate(data, 1):
-                    total_count += 1
-                    try:
-                        # Convert types guided by schema, then drop skipped fields
-                        converted_obj = convert_types(obj, prop_types)
-                        if skip_set:
-                            converted_obj = {
-                                k: v
-                                for k, v in converted_obj.items()
-                                if k not in skip_set
-                            }
+                try:
+                    if file_format == "csv":
+                        data: Iterator[dict[str, Any]] = read_csv(file_path, mapping_dict)
+                    elif file_format == "json":
+                        data = iter(read_json(file_path, mapping_dict))
+                    elif file_format == "jsonl":
+                        data = read_jsonl(file_path, mapping_dict)
+                    elif file_format == "pdf":
+                        data = read_pdf(file_path, image_field)
+                except Exception as e:
+                    print(f"Error reading file: {e}", file=sys.stderr)
+                    raise typer.Exit(1)
 
-                        # Add object to batch
-                        batch.add_object(properties=converted_obj)
-                        imported_count += 1
+                # Peek: validate non-empty and warn on reserved fields
+                first = next(data, None)
+                if first is None:
+                    print(f"Warning: No data found in {file_path}, skipping.", file=sys.stderr)
+                    continue
+                if file_format != "pdf":
+                    reserved_found = set(first.keys()) & _RESERVED_FIELDS - skip_set
+                    if reserved_found:
+                        print(
+                            f"Warning: Reserved Weaviate field(s) detected in data: "
+                            f"{', '.join(sorted(reserved_found))}. "
+                            f"These will cause import failures. "
+                            f"Use --skip-fields to exclude or --mapping to rename them.",
+                            file=sys.stderr,
+                        )
+                data = itertools.chain([first], data)
 
-                        # Show progress
-                        if i % batch_size == 0:
-                            print(
-                                f"Progress: {i} objects processed",
-                                file=sys.stderr,
-                            )
+                print(f"Importing objects in batches of {batch_size}...", file=sys.stderr)
+                total, imported, failed, errors = import_objects(
+                    coll, data, prop_types, skip_set, batch_size
+                )
+                success = imported - failed
+                grand_total += total
+                grand_imported += imported
+                grand_failed += failed
+                all_errors.extend(errors)
+                file_results.append(
+                    {
+                        "file": str(file_path),
+                        "format": file_format,
+                        "total_objects": total,
+                        "imported": success,
+                        "failed": failed,
+                        **({"errors": errors[:10]} if errors else {}),
+                    }
+                )
 
-                    except Exception as e:
-                        failed_count += 1
-                        error_msg = f"Object {i}: {str(e)}"
-                        errors.append(error_msg)
-                        if len(errors) <= 5:
-                            print(f"Warning: {error_msg}", file=sys.stderr)
-
-            # Check for server-side failures
-            for failed_obj in coll.batch.failed_objects:
-                failed_count += 1
-                if len(errors) < 10:
-                    errors.append(f"Batch error: {failed_obj.message}")
-
-            success_count = imported_count - failed_count
+            grand_success = grand_imported - grand_failed
 
             result = {
                 "collection": collection,
                 "tenant": tenant,
-                "total_objects": total_count,
-                "imported": success_count,
-                "failed": failed_count,
-                "file": str(file_path),
-                "format": file_format,
+                "total_objects": grand_total,
+                "imported": grand_success,
+                "failed": grand_failed,
+                "files": file_results,
             }
             if file_format == "pdf":
                 result["image_field"] = image_field
-
-            if errors:
-                result["errors"] = errors[:10]  # Limit errors in output
+            if all_errors:
+                result["errors"] = all_errors[:10]
 
             if json_output:
                 print(json.dumps(result, indent=2))
@@ -594,17 +629,18 @@ def main(
                 print(f"\n**Collection:** {collection}")
                 if tenant:
                     print(f"**Tenant:** {tenant}")
-                print(f"**Total Objects:** {total_count}")
-                print(f"**Successfully Imported:** {success_count}")
-                if failed_count > 0:
-                    print(f"**Failed:** {failed_count}")
-                    if errors:
+                if len(file_paths) > 1:
+                    print(f"**Files Processed:** {len(file_results)}")
+                print(f"**Total Objects:** {grand_total}")
+                print(f"**Successfully Imported:** {grand_success}")
+                if grand_failed > 0:
+                    print(f"**Failed:** {grand_failed}")
+                    if all_errors:
                         print(f"\n**Sample Errors:**")
-                        for error in errors[:5]:
+                        for error in all_errors[:5]:
                             print(f"  - {error}")
 
-            # Exit with error code if any imports failed
-            if failed_count > 0:
+            if grand_failed > 0:
                 raise typer.Exit(1)
 
     except weaviate.exceptions.WeaviateConnectionError as e:
