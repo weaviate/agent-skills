@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # /// script
 # dependencies = [
-#   "weaviate-client>=4.19.2",
-#   "typer>=0.21.0",
+#   "weaviate-client==4.19.2",
+#   "typer==0.21.0",
 #   "pdf2image>=1.17.0",
 #   "pillow>=10.0.0",
 # ]
