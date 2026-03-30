@@ -35,8 +35,6 @@ _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}$")
 _RESERVED_FIELDS = {"id", "_additional"}
 
-from pdf2image import convert_from_path
-
 import typer
 import weaviate
 from weaviate.classes.config import Configure, DataType, Property
@@ -217,6 +215,8 @@ def read_pdf(
         RuntimeError: If poppler is not installed
     """
     try:
+        from pdf2image import convert_from_path
+
         pages = convert_from_path(str(file_path))
     except Exception as e:
         if "poppler" in str(e).lower() or "pdftoppm" in str(e).lower():
@@ -431,11 +431,13 @@ def import_objects(
                         print(f"Warning: {error_msg}", file=sys.stderr)
 
     # Check for server-side failures
+    server_failed = 0
     for failed_obj in coll.batch.failed_objects:
-        failed_count += 1
+        server_failed += 1
         if len(errors) < 10:
             errors.append(f"Batch error: {failed_obj.message}")
 
+    failed_count += server_failed
     return total_count, imported_count, failed_count, errors
 
 
@@ -504,7 +506,7 @@ def main(
             print("Error: Batch size must be at least 1", file=sys.stderr)
             raise typer.Exit(1)
 
-        # Detect formats and validate consistency: all files must be the same format
+        # Detect formats. CSV/JSON/JSONL can be mixed freely; PDF cannot be mixed with them.
         try:
             fmt_by_path = {fp: detect_file_format(fp) for fp in file_paths}
         except ValueError as e:
@@ -600,6 +602,11 @@ def main(
                     elif file_fmt == "jsonl":
                         data = read_jsonl(file_path, mapping_dict)
                     elif file_fmt == "pdf":
+                        if mapping_dict:
+                            print(
+                                "Warning: --mapping is not supported for PDF imports and will be ignored.",
+                                file=sys.stderr,
+                            )
                         data = read_pdf(file_path, image_field)
                 except Exception as e:
                     print(f"Error reading file: {e}", file=sys.stderr)
@@ -614,7 +621,7 @@ def main(
                     )
                     continue
                 if file_fmt != "pdf":
-                    reserved_found = set(first.keys()) & _RESERVED_FIELDS - skip_set
+                    reserved_found = (set(first.keys()) & _RESERVED_FIELDS) - skip_set
                     if reserved_found:
                         print(
                             f"Warning: Reserved Weaviate field(s) detected in data: "
@@ -640,7 +647,7 @@ def main(
                         "file": str(file_path),
                         "format": file_fmt,
                         "total_objects": total,
-                        "imported": imported - failed,
+                        "imported": total - failed,
                         "failed": failed,
                         **({"errors": errors[:10]} if errors else {}),
                     }
