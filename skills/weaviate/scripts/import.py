@@ -411,7 +411,9 @@ def import_objects(
 
 @app.command()
 def main(
-    files: list[str] = typer.Argument(..., help="One or more CSV, JSON, JSONL, or PDF files"),
+    files: list[str] = typer.Argument(
+        ..., help="One or more CSV, JSON, JSONL, or PDF files"
+    ),
     collection: str = typer.Option(
         ..., "--collection", "-c", help="Target collection name"
     ),
@@ -559,7 +561,9 @@ def main(
 
                 try:
                     if file_format == "csv":
-                        data: Iterator[dict[str, Any]] = read_csv(file_path, mapping_dict)
+                        data: Iterator[dict[str, Any]] = read_csv(
+                            file_path, mapping_dict
+                        )
                     elif file_format == "json":
                         data = iter(read_json(file_path, mapping_dict))
                     elif file_format == "jsonl":
@@ -573,7 +577,10 @@ def main(
                 # Peek: validate non-empty and warn on reserved fields
                 first = next(data, None)
                 if first is None:
-                    print(f"Warning: No data found in {file_path}, skipping.", file=sys.stderr)
+                    print(
+                        f"Warning: No data found in {file_path}, skipping.",
+                        file=sys.stderr,
+                    )
                     continue
                 if file_format != "pdf":
                     reserved_found = set(first.keys()) & _RESERVED_FIELDS - skip_set
@@ -587,7 +594,9 @@ def main(
                         )
                 data = itertools.chain([first], data)
 
-                print(f"Importing objects in batches of {batch_size}...", file=sys.stderr)
+                print(
+                    f"Importing objects in batches of {batch_size}...", file=sys.stderr
+                )
                 total, imported, failed, errors = import_objects(
                     coll, data, prop_types, skip_set, batch_size
                 )
