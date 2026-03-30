@@ -1,6 +1,6 @@
 # Import Data
 
-Import data from CSV, JSON, JSONL, or PDF files into a Weaviate collection with automatic type conversion and column mapping. PDF files are converted page-by-page to base64-encoded JPEG images — the collection is always created fresh with the standard multimodal schema. CSV/JSON/JSONL import into an existing collection.
+Import one or more CSV, JSON, JSONL, or PDF files into a Weaviate collection with automatic type conversion and column mapping. Multiple files of the same format can be passed in a single invocation — all objects are appended to the same collection. PDF files are converted page-by-page to base64-encoded JPEG images; the collection is created automatically on first import and reused on subsequent runs.
 
 ## Usage
 
@@ -8,16 +8,22 @@ Import data from CSV, JSON, JSONL, or PDF files into a Weaviate collection with 
 # CSV/JSON/JSONL — collection must already exist
 uv run scripts/import.py "data.csv" --collection "CollectionName" [--mapping '{}'] [--tenant "name"] [--batch-size 100] [--json]
 
-# PDF — collection is created automatically 
+# Multiple files of the same format
+uv run scripts/import.py a.csv b.csv c.csv --collection "CollectionName"
+
+# PDF — collection is created automatically on first run; appended to on subsequent runs
 uv run scripts/import.py "document.pdf" --collection "CollectionName" [--image-field "doc_page"] [--batch-size 100] [--json]
+
+# Multiple PDFs into the same collection
+uv run scripts/import.py page1.pdf page2.pdf page3.pdf --collection "PDFDocuments"
 ```
 
 ## Parameters
 
 | Parameter | Flag | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `file` | — | Yes (positional) | — | Path to CSV, JSON, JSONL, or PDF file |
-| `--collection` | `-c` | Yes | — | Target collection name (must already exist for CSV/JSON/JSONL; must not exist for PDF — created automatically) |
+| `files` | — | Yes (positional, one or more) | — | One or more CSV, JSON, JSONL, or PDF files (all must be the same format) |
+| `--collection` | `-c` | Yes | — | Target collection name (must already exist for CSV/JSON/JSONL; created automatically for PDF if absent, otherwise appended to) |
 | `--mapping` | `-m` | No | — | JSON object mapping file columns/keys to collection properties (CSV/JSON/JSONL only) |
 | `--tenant` | `-t` | No | — | Tenant name for multi-tenant collections (required if collection has multi-tenancy enabled) |
 | `--batch-size` | `-b` | No | `100` | Number of objects per batch |
@@ -52,7 +58,7 @@ uv run scripts/import.py "document.pdf" --collection "CollectionName" [--image-f
   - `doc_page` (or `--image-field` value): base64-encoded JPEG image of the page
   - `page_number`: 1-indexed page number (int)
   - `file_name`: PDF filename without extension (text)
-- The collection is **always created automatically** with `multi2vec_weaviate` (`ModernVBERT/colmodernvbert` + MUVERA encoding). The collection must not already exist — delete it first if you need to re-import.
+- The collection is **created automatically** with `multi2vec_weaviate` (`ModernVBERT/colmodernvbert` + MUVERA encoding) if it does not already exist. If the collection already exists, pages are appended to it — allowing multiple PDFs to be loaded into the same collection across multiple runs.
 - Requires `poppler` to be installed on the system (for Mac, simply run `brew install poppler`)
 
 ## Type Conversion
@@ -128,15 +134,27 @@ Import JSON with custom batch size:
 uv run scripts/import.py products.json --collection "Products" --batch-size 500
 ```
 
-Import a PDF (collection is created automatically):
+Import a PDF (collection is created automatically on first run):
 
 ```bash
 uv run scripts/import.py paper.pdf --collection "PDFDocuments"
+```
+
+Import multiple PDFs into the same collection:
+
+```bash
+uv run scripts/import.py chapter1.pdf chapter2.pdf chapter3.pdf --collection "PDFDocuments"
 ```
 
 Import a PDF with a custom image field name:
 
 ```bash
 uv run scripts/import.py paper.pdf --collection "PDFDocuments" --image-field "page_image"
+```
+
+Import multiple CSV files into the same collection:
+
+```bash
+uv run scripts/import.py jan.csv feb.csv mar.csv --collection "Articles"
 ```
 

@@ -41,7 +41,7 @@ Set only the keys your collections use, refer to [Environment Requirements](refe
 ### Data Operations
 
 - [Fetch and Filter](references/fetch_filter.md): Use to **retrieve specific objects by ID** or **strictly filtered subsets** of data. Best for precise data retrieval rather than search.
-- [Import Data](references/import_data.md): Use to **bulk import data** into an existing collection from PDF, CSV, JSON, or JSONL files.
+- [Import Data](references/import_data.md): **Use this when the user asks to import, load, or ingest a file (CSV, JSON, JSONL, PDF) into a collection.** 
 - [Create Example Data](references/example_data.md): Use to create example data for immediate use of other skills, if no data is available or user requests some toy data.
 
 ## Recommendations
@@ -70,18 +70,20 @@ Set only the keys your collections use, refer to [Environment Requirements](refe
    uv run scripts/explore_collection.py "COLLECTION_NAME"
    ```
 
-5. **Import data** to populate a new collection (if needed):
+5. **Create a collection** if importing a new CSV, JSON, or JSONL file — the collection must exist before importing:
+
+   ```bash
+   uv run scripts/create_collection.py CollectionName \
+     --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
+   ```
+   > Do not specify a vectorizer unless the user explicitly requests one.
+
+6. **Import data** into an existing collection:
 
    ```bash
    uv run scripts/import.py "data.csv" --collection "CollectionName"
    ```
-
-6. **Do not specify a vectorizer when creating collections** unless requested:
-
-   ```bash
-   uv run scripts/create_collection.py Article \
-     --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
-   ```
+   > For PDF imports, the collection is created automatically — skip step 5.
 
 7. **Choose the right search type:**
    - Get AI-powered answers with source citations across multiple collections → `ask.py`
