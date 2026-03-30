@@ -104,19 +104,29 @@ def read_csv(
         sniffer = csv.Sniffer()
         try:
             dialect = sniffer.sniff(sample)
-            has_header = sniffer.has_header(sample)
         except csv.Error:
-            # Fall back to default dialect if detection fails
             dialect = csv.excel
-            has_header = True
-
-        if not has_header:
-            raise ValueError(
-                "CSV file does not appear to have a header row. "
-                "Add a header row with column names matching the collection property names."
-            )
 
         reader = csv.DictReader(f, dialect=dialect)
+
+        # Warn if the header row looks like data (all-numeric or JSON-like values
+        # suggest the file has no header row and the first data row was misread as one).
+        if reader.fieldnames:
+            suspicious = [
+                k
+                for k in reader.fieldnames
+                if k
+                and (
+                    k.lstrip("-").replace(".", "", 1).isdigit()
+                    or k.startswith(("[", "{"))
+                )
+            ]
+            if suspicious:
+                print(
+                    f"Warning: CSV column names look like data values: {suspicious}. "
+                    f"Ensure the first row is a header row with property names.",
+                    file=sys.stderr,
+                )
 
         for row in reader:
             # Apply mapping if provided
@@ -313,20 +323,39 @@ def convert_types(
                 result[key] = value
             continue
 
-        if target_type in (DataType.INT, DataType.INT_ARRAY):
+        if target_type == DataType.INT:
             try:
                 result[key] = int(value)
             except (ValueError, TypeError):
                 result[key] = value
-        elif target_type in (DataType.NUMBER, DataType.NUMBER_ARRAY):
+        elif target_type == DataType.INT_ARRAY:
+            try:
+                result[key] = [int(x) for x in json.loads(value)]
+            except (ValueError, TypeError):
+                result[key] = value
+        elif target_type == DataType.NUMBER:
             try:
                 result[key] = float(value)
             except (ValueError, TypeError):
                 result[key] = value
-        elif target_type in (DataType.BOOL, DataType.BOOL_ARRAY):
+        elif target_type == DataType.NUMBER_ARRAY:
+            try:
+                result[key] = [float(x) for x in json.loads(value)]
+            except (ValueError, TypeError):
+                result[key] = value
+        elif target_type == DataType.BOOL:
             if value.lower() in ("true", "false"):
                 result[key] = value.lower() == "true"
             else:
+                result[key] = value
+        elif target_type == DataType.BOOL_ARRAY:
+            try:
+                parsed = json.loads(value)
+                result[key] = [
+                    b if isinstance(b, bool) else str(b).lower() == "true"
+                    for b in parsed
+                ]
+            except (ValueError, TypeError):
                 result[key] = value
         elif target_type == DataType.DATE:
             if _DATE_RE.match(value):
@@ -396,9 +425,10 @@ def import_objects(
             except Exception as e:
                 failed_count += 1
                 error_msg = f"Object {i}: {str(e)}"
-                errors.append(error_msg)
-                if len(errors) <= 5:
-                    print(f"Warning: {error_msg}", file=sys.stderr)
+                if len(errors) < 10:
+                    errors.append(error_msg)
+                    if len(errors) <= 5:
+                        print(f"Warning: {error_msg}", file=sys.stderr)
 
     # Check for server-side failures
     for failed_obj in coll.batch.failed_objects:
@@ -476,25 +506,25 @@ def main(
 
         # Detect formats and validate consistency: all files must be the same format
         try:
-            formats = [detect_file_format(fp) for fp in file_paths]
+            fmt_by_path = {fp: detect_file_format(fp) for fp in file_paths}
         except ValueError as e:
             print(f"Error: {e}", file=sys.stderr)
             raise typer.Exit(1)
 
-        if len(set(formats)) > 1:
+        has_pdf = any(f == "pdf" for f in fmt_by_path.values())
+        has_non_pdf = any(f != "pdf" for f in fmt_by_path.values())
+        if has_pdf and has_non_pdf:
             print(
-                f"Error: All files must be the same format. "
-                f"Got: {', '.join(f'{fp} ({fmt})' for fp, fmt in zip(file_paths, formats))}",
+                "Error: PDF files cannot be mixed with CSV/JSON/JSONL files. "
+                "Import PDFs separately.",
                 file=sys.stderr,
             )
             raise typer.Exit(1)
 
-        file_format = formats[0]
-
         # Connect to Weaviate once for all files
         with get_client() as client:
-            # Ensure collection exists (create for PDF if absent; require for others)
-            if file_format == "pdf":
+            # PDF: create collection if absent, append if it exists. CSV/JSON/JSONL: must already exist.
+            if has_pdf:
                 if not client.collections.exists(collection):
                     print(
                         f"Creating collection '{collection}' with multimodal PDF schema...",
@@ -554,21 +584,22 @@ def main(
             file_results = []
 
             for file_path in file_paths:
+                file_fmt = fmt_by_path[file_path]
                 print(
-                    f"\n[{file_format.upper()}] {file_path}",
+                    f"\n[{file_fmt.upper()}] {file_path}",
                     file=sys.stderr,
                 )
 
                 try:
-                    if file_format == "csv":
+                    if file_fmt == "csv":
                         data: Iterator[dict[str, Any]] = read_csv(
                             file_path, mapping_dict
                         )
-                    elif file_format == "json":
+                    elif file_fmt == "json":
                         data = iter(read_json(file_path, mapping_dict))
-                    elif file_format == "jsonl":
+                    elif file_fmt == "jsonl":
                         data = read_jsonl(file_path, mapping_dict)
-                    elif file_format == "pdf":
+                    elif file_fmt == "pdf":
                         data = read_pdf(file_path, image_field)
                 except Exception as e:
                     print(f"Error reading file: {e}", file=sys.stderr)
@@ -582,7 +613,7 @@ def main(
                         file=sys.stderr,
                     )
                     continue
-                if file_format != "pdf":
+                if file_fmt != "pdf":
                     reserved_found = set(first.keys()) & _RESERVED_FIELDS - skip_set
                     if reserved_found:
                         print(
@@ -600,7 +631,6 @@ def main(
                 total, imported, failed, errors = import_objects(
                     coll, data, prop_types, skip_set, batch_size
                 )
-                success = imported - failed
                 grand_total += total
                 grand_imported += imported
                 grand_failed += failed
@@ -608,9 +638,9 @@ def main(
                 file_results.append(
                     {
                         "file": str(file_path),
-                        "format": file_format,
+                        "format": file_fmt,
                         "total_objects": total,
-                        "imported": success,
+                        "imported": imported - failed,
                         "failed": failed,
                         **({"errors": errors[:10]} if errors else {}),
                     }
@@ -626,7 +656,7 @@ def main(
                 "failed": grand_failed,
                 "files": file_results,
             }
-            if file_format == "pdf":
+            if has_pdf:
                 result["image_field"] = image_field
             if all_errors:
                 result["errors"] = all_errors[:10]
