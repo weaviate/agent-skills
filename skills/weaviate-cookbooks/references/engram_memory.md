@@ -20,7 +20,7 @@ Docs to reference if needed:
 - Use a virtual environment via `venv`
 - Use `uv` for Python project/dependency management.
 - Do not manually author `pyproject.toml` or `uv.lock`; let `uv` generate/update them.
-- Use this install set: `uv add weaviate-engram python-dotenv`
+- Use this install set: `uv add weaviate-engram python-dotenv` (see [Installation](#installation) — Engram is a separate package, not part of `weaviate-client`)
 - If combining with an agent (recommended pairing), also follow the install set from [Basic Agent](./basic_agent.md): `uv add dspy`
 - Customise this cookbook to the users specification, ask them for details if not given.
 - Engram is a managed service accessed via Weaviate Cloud. If the user does not have an Engram project, direct them to [Weaviate Cloud](https://console.weaviate.cloud/signin?utm_source=github&utm_campaign=agent_skills) to create one and generate an Engram API key.
@@ -47,6 +47,23 @@ Key concepts (use these terms with the user):
 | **Pipeline / Run** | Storage is asynchronous. `add` returns a `run_id` immediately; the pipeline extracts facts, transforms them against existing memories (dedupe, merge, rewrite), and commits. |
 
 Topics and groups are configured per project in the Weaviate Cloud console (starter templates exist for personalization and continual learning). Code interacts with them by name — do not assume you can create topics from the SDK; ask the user what topics their project defines, or assume the template default (e.g. `UserKnowledge`).
+
+## Installation
+
+Engram ships as its own Python SDK, `weaviate-engram`. It does **not** come with `weaviate-client` (or `weaviate-agents`) — installing those does not give you Engram, and Engram does not require them.
+
+```bash
+uv add weaviate-engram
+
+# or with pip
+pip install weaviate-engram
+```
+
+Note the package name and import name differ: install `weaviate-engram`, import `engram`:
+
+```python
+from engram import AsyncEngramClient
+```
 
 ## Client Setup
 
