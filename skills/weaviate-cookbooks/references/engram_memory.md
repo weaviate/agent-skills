@@ -17,8 +17,7 @@ Docs to reference if needed:
 
 ## Core Rules
 
-- Use a virtual environment via `venv`
-- Use `uv` for Python project/dependency management.
+- Use `uv` for Python project/dependency management, and let it manage the virtual environment (`uv venv`).
 - Do not manually author `pyproject.toml` or `uv.lock`; let `uv` generate/update them.
 - Use this install set: `uv add weaviate-engram python-dotenv` (see [Installation](#installation) — Engram is a separate package, not part of `weaviate-client`)
 - If combining with an agent (recommended pairing), also follow the install set from [Basic Agent](./basic_agent.md): `uv add dspy`
@@ -80,6 +79,10 @@ client = AsyncEngramClient(api_key=os.environ["ENGRAM_API_KEY"])
 
 All `client.memories.*` and `client.runs.*` methods below are coroutines — call them with `await` from async code. See [Async Client](./async_client.md) for general async patterns (lifecycle, FastAPI integration) that apply here too.
 
+### Error Handling
+
+Failed SDK calls raise `engram.errors.APIError` (carries `.status_code` and `.body`). One behaviour to handle deliberately: **searching a `user_id` that has never had an `add` raises `APIError` (HTTP 422, "user not found") instead of returning an empty result.** A user whose memories were all deleted returns an empty result, not an error. Any code that recalls memories before the user's first `add` — which includes every chatbot's first message from a new user — must catch this and treat it as "no memories" (the integration patterns below do). A 401/403 `APIError` means a bad or wrong-type API key (see Troubleshooting).
+
 ## Storing Memories
 
 `client.memories.add(...)` is fire-and-forget: it returns a run immediately and processes in the background. All three input types share optional parameters `user_id`, `properties`, and `group` (defaults to `"default"`).
@@ -127,11 +130,16 @@ Storage is async, so a search immediately after `add` may not see new memories. 
 
 ```python
 status = await client.runs.wait(run.run_id)
-print(status.status)                # "completed"
-print(status.committed_operations)  # which memories were created/updated/deleted
+print(status.status)  # "completed"
+
+# committed_operations groups results into created / updated / deleted lists,
+# each entry carrying memory_id and committed_at:
+created_ids = [op.memory_id for op in status.committed_operations.created]
 ```
 
-Run statuses: `running`, `in_buffer` (paused at a buffer step waiting for a count/time trigger), `completed`, `failed`. In production chat loops, do not wait — fire and forget.
+Run statuses: `running`, `in_buffer` (paused at a buffer step waiting for a count/time trigger), `completed`, `failed`. Default pipelines typically commit within ~5–15 seconds (conversation inputs trend slower) — a run stuck in `running` for minutes warrants checking for `failed`. `runs.wait` polls with a default `timeout=30.0` seconds and raises `EngramTimeoutError` past it; pass a larger `timeout=` when waiting in tests. In production chat loops, do not wait — fire and forget.
+
+There is no single delete-all operation for a user. For deterministic cleanup (test teardown, "forget me" features), either collect `memory_id`s from `committed_operations` at write time, or list all of a user's memories with `retrieval_config=FetchRetrieval(limit=N)` (unranked listing — a `query` string is still required but unused) and delete by id.
 
 ## Searching Memories
 
@@ -144,15 +152,18 @@ for memory in results:
     print(memory.content, memory.topic, memory.score)
 ```
 
+Two things the examples don't show: `search` returns a `SearchResults` object (a `Sequence` of memories — iteration, `len()`, and indexing work), not a plain `list`, so annotate helpers accordingly. And results are filled up to `limit` even when weakly relevant: `score` is higher-is-better, but its range depends on retrieval type — hybrid is normalised roughly 0–1, while vector and BM25 scores run far lower. Apply a relevance cutoff before injecting memories into a prompt; ~0.5 is a reasonable starting point for hybrid (it would drop everything for vector/BM25 — tune per retrieval type and app).
+
 **Retrieval types** — pass `retrieval_config`; hybrid is the default general-purpose choice:
 
 ```python
-from engram import VectorRetrieval, BM25Retrieval, HybridRetrieval
+from engram import VectorRetrieval, BM25Retrieval, HybridRetrieval, FetchRetrieval
 
 results = await client.memories.search(
     query="user preferences",
     user_id="alice",
-    retrieval_config=HybridRetrieval(limit=10),  # or VectorRetrieval / BM25Retrieval
+    retrieval_config=HybridRetrieval(limit=10),
+    # or VectorRetrieval / BM25Retrieval / FetchRetrieval (unranked listing)
 )
 ```
 
@@ -198,14 +209,20 @@ await client.memories.delete(memory_id, user_id="alice", group="default")
 The standard pattern for chatbots: search memories before generating, add the exchange after responding.
 
 ```python
+from engram.errors import APIError
+
 async def chat_turn(user_id: str, user_message: str, generate) -> str:
-    # 1. Recall relevant memories for this message
-    memories = await client.memories.search(
-        query=user_message,
-        user_id=user_id,
-        retrieval_config=HybridRetrieval(limit=5),
-    )
-    memory_context = "\n".join(f"- {m.content}" for m in memories)
+    # 1. Recall relevant memories for this message. A user_id that has never
+    #    had an add (first ever message) raises APIError, not an empty result.
+    try:
+        memories = await client.memories.search(
+            query=user_message,
+            user_id=user_id,
+            retrieval_config=HybridRetrieval(limit=5),
+        )
+    except APIError:
+        memories = []
+    memory_context = "\n".join(f"- {m.content}" for m in memories if m.score >= 0.5)
 
     # 2. Generate with memories in context (any LLM framework)
     response = generate(user_message, memory_context)
@@ -224,19 +241,26 @@ async def chat_turn(user_id: str, user_message: str, generate) -> str:
 
 `generate` is the user's generation function — e.g. the `generate` from [Basic RAG](./basic_rag.md) with `memory_context` prepended to the context.
 
+Two production notes. Conversation input extracts memories from the dialogue itself too (e.g. "the user asked for dinner ideas") — if recall gets polluted with meta-chatter over time, tighten the topic descriptions. And `chat_turn` discards the returned run — for a "forget me" feature, either record `run.run_id`/`committed_operations` out-of-band, or list-and-delete with `FetchRetrieval` (see Run Status).
+
 ## Integration Pattern: Agent Memory Tools
 
 Expose Engram as tools on the `RouterAgent` from [Basic Agent](./basic_agent.md), so the agent decides when to recall or remember:
 
 ```python
+from engram.errors import APIError
+
 async def search_memories(query: str) -> str:
     """Search the user's long-term memory for facts, preferences, and past interactions.
     Use when answering may depend on something the user said in a previous session."""
-    results = await client.memories.search(
-        query=query,
-        user_id=CURRENT_USER_ID,
-        retrieval_config=HybridRetrieval(limit=5),
-    )
+    try:
+        results = await client.memories.search(
+            query=query,
+            user_id=CURRENT_USER_ID,
+            retrieval_config=HybridRetrieval(limit=5),
+        )
+    except APIError:  # user has no memories yet
+        return "No relevant memories found."
     return "\n".join(m.content for m in results) or "No relevant memories found."
 
 
@@ -316,7 +340,9 @@ Hybrid is the right default. Vector for purely conceptual recall, BM25 for exact
 
 ## Troubleshooting
 
+- `APIError` (422, `user "..." not found`) on search: nothing has ever been added for that `user_id` — catch it and treat as an empty result, as in the integration patterns. A user whose memories were all deleted returns an empty result, not this error.
 - Searches return nothing right after `add`: processing is asynchronous — `await client.runs.wait(run.run_id)` before searching, or check the run status for `failed`.
+- Memory counts don't match inputs: extraction may split one input into several memories or merge facts into existing ones — never assert exact counts in tests; assert on search results instead.
 - Run stuck at `in_buffer`: the group's pipeline has a buffer step waiting for a count/time trigger; this is expected behaviour, not an error.
 - Facts not being stored: only information matching a configured topic description is extracted — check the project's topics in the Weaviate Cloud console and tighten/broaden their descriptions.
 - Scope errors on `add`: every scope property required by the target topic (including `user_id` for user-scoped topics) must be provided.
@@ -325,6 +351,7 @@ Hybrid is the right default. Vector for purely conceptual recall, BM25 for exact
 
 ## Done Criteria
 
-- Create test scripts to check store → wait → search → get → delete work end-to-end against the user's Engram project (use a throwaway `user_id` and clean up created memories). Tear down tests after completion, or create a proper test suite with pytest (requires install).
+- Create test scripts to check store → wait → search → get → delete work end-to-end against the user's Engram project. Use a throwaway `user_id`, and clean up by deleting the `memory_id`s collected from `committed_operations`, or by listing the user's memories with `FetchRetrieval` and deleting by id. Tear down tests after completion, or create a proper test suite with pytest (requires install).
+- Verify persistence the way a user would: seed a fact, `await client.runs.wait(...)`, then search for it from a fresh process/session.
 - Memory writes in the app are fire-and-forget; nothing in the request path blocks on `runs.wait`.
 - User has completed specification of the app.
