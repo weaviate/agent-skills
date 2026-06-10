@@ -133,6 +133,7 @@ Weaviate cookbooks are implementation guides for building full-stack AI applicat
 - [Multimodal RAG (PDF)](./skills/weaviate-cookbooks/references/pdf_multimodal_rag.md): Build a multimodal RAG system for PDF documents using Weaviate Embeddings (ModernVBERT/colmodernvbert) and Ollama with Qwen3-VL for generation.
 - [Basic Agent](./skills/weaviate-cookbooks/references/basic_agent.md): Build tool-calling AI agents with structured outputs using DSPy.
 - [Agentic RAG](./skills/weaviate-cookbooks/references/agentic_rag.md): Build RAG-powered AI agents combining retrieval with agent logic — covers naive RAG tools, hierarchical RAG, vector DB memory, and Weaviate Query Agent.
+- [Memory Management with Engram](./skills/weaviate-cookbooks/references/engram_memory.md): Add persistent long-term memory to chatbots and agents using Engram, Weaviate's managed memory server — covers storing/searching memories, scoping, and integration patterns.
 
 ### Optional Frontend Guide
 

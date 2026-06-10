@@ -1,6 +1,6 @@
 ---
 name: weaviate-cookbooks
-description: Use this skill when the user wants to build AI applications with Weaviate. It contains a high-level index of architectural patterns, 'one-shot' blueprints, and best practices for common use cases. Currently, it includes references for building a Query Agent Chatbot, Data Explorer, Multimodal PDF RAG (Document Search), Basic RAG, Advanced RAG, Basic Agent, Agentic RAG, and optional guidance on how to build a frontend for each of them.
+description: Use this skill when the user wants to build AI applications with Weaviate. It contains a high-level index of architectural patterns, 'one-shot' blueprints, and best practices for common use cases. Currently, it includes references for building a Query Agent Chatbot, Data Explorer, Multimodal PDF RAG (Document Search), Basic RAG, Advanced RAG, Basic Agent, Agentic RAG, Memory Management with Engram, and optional guidance on how to build a frontend for each of them.
 ---
 
 # Weaviate Cookbooks
@@ -31,6 +31,7 @@ Then proceed to the specific cookbook reference below.
 - [Advanced RAG](references/advanced_rag.md): Improve on basic RAG by adding extra features such as re-ranking, query decomposition, query re-writing, LLM filter selection.
 - [Basic Agent](references/basic_agent.md): Build a tool-calling AI agent with structured outputs using DSPy. Covers AgentResponse signatures, RouterAgent, tool design, and sequential multi-step loops.
 - [Agentic RAG](references/agentic_rag.md): Build RAG-powered AI agents with Weaviate. Covers naive RAG tools, hierarchical RAG with LLM-created filters, vector DB memory, Weaviate Query Agent, and Elysia integration.
+- [Memory Management with Engram](references/engram_memory.md): Add persistent long-term memory to chatbots and agents using Engram, Weaviate's managed memory server. Covers storing and searching memories, scoping, run tracking, and chatbot/agent integration patterns.
 
 ## Interface (Optional)
 
