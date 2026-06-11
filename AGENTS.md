@@ -83,6 +83,7 @@ brew install uv
 | ---------------------- | ---------------------------- | --------------------------------------------------------------------------------- |
 | **weaviate**           | `skills/weaviate/`           | Scripts and references for searching, querying, and managing Weaviate collections |
 | **weaviate-cookbooks** | `skills/weaviate-cookbooks/` | Implementation guides for building full-stack AI applications with Weaviate       |
+| **engram_memory**      | `skills/engram_memory/`      | Scripts and reference for adding persistent long-term memory with Engram          |
 
 ## Running Scripts
 
@@ -133,11 +134,16 @@ Weaviate cookbooks are implementation guides for building full-stack AI applicat
 - [Multimodal RAG (PDF)](./skills/weaviate-cookbooks/references/pdf_multimodal_rag.md): Build a multimodal RAG system for PDF documents using Weaviate Embeddings (ModernVBERT/colmodernvbert) and Ollama with Qwen3-VL for generation.
 - [Basic Agent](./skills/weaviate-cookbooks/references/basic_agent.md): Build tool-calling AI agents with structured outputs using DSPy.
 - [Agentic RAG](./skills/weaviate-cookbooks/references/agentic_rag.md): Build RAG-powered AI agents combining retrieval with agent logic — covers naive RAG tools, hierarchical RAG, vector DB memory, and Weaviate Query Agent.
-- [Memory Management with Engram](./skills/weaviate-cookbooks/references/engram_memory.md): Add persistent long-term memory to chatbots and agents using Engram, Weaviate's managed memory server — covers storing/searching memories, scoping, and integration patterns.
 
 ### Optional Frontend Guide
 
 - [Frontend Interface](./skills/weaviate-cookbooks/references/frontend_interface.md): Build a Next.js frontend (App Router, Tailwind v4, shadcn/ui) to interact with Weaviate backends.
+
+## Engram Memory
+
+Engram is Weaviate's managed memory server for LLM agents. The `engram_memory` skill lives in `skills/engram_memory/`.
+
+- [Memory Management with Engram](./skills/engram_memory/reference/engram_memory.md): Add persistent long-term memory to chatbots and agents using Engram — covers storing/searching memories, scoping, run tracking, and chatbot/agent integration patterns.
 
 ## Contributing
 

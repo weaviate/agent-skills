@@ -5,8 +5,8 @@ Add persistent, long-term memory to AI applications using Engram, Weaviate's man
 Use this cookbook when the user wants their app to remember things across sessions: user preferences, profiles, past interactions, or lessons learned by an agent (continual learning).
 
 Read if integrating with an agent or chatbot:
-- [Basic Agent Cookbook](./basic_agent.md) — for the `RouterAgent` and tool design patterns used below.
-- [Query Agent Chatbot](./query_agent_chatbot.md) — for the chatbot integration pattern.
+- [Basic Agent Cookbook](../../weaviate-cookbooks/references/basic_agent.md) — for the `RouterAgent` and tool design patterns used below.
+- [Query Agent Chatbot](../../weaviate-cookbooks/references/query_agent_chatbot.md) — for the chatbot integration pattern.
 
 Docs to reference if needed:
 - Engram docs (overview): https://docs.weaviate.io/engram
@@ -20,10 +20,10 @@ Docs to reference if needed:
 - Use `uv` for Python project/dependency management, and let it manage the virtual environment (`uv venv`).
 - Do not manually author `pyproject.toml` or `uv.lock`; let `uv` generate/update them.
 - Use this install set: `uv add weaviate-engram python-dotenv` (see [Installation](#installation) — Engram is a separate package, not part of `weaviate-client`)
-- If combining with an agent (recommended pairing), also follow the install set from [Basic Agent](./basic_agent.md): `uv add dspy`
+- If combining with an agent (recommended pairing), also follow the install set from [Basic Agent](../../weaviate-cookbooks/references/basic_agent.md): `uv add dspy`
 - Customise this cookbook to the users specification, ask them for details if not given.
 - Engram is a managed service accessed via Weaviate Cloud. If the user does not have an Engram project, direct them to [Weaviate Cloud](https://console.weaviate.cloud/signin?utm_source=github&utm_campaign=agent_skills) to create one and generate an Engram API key.
-- Do not build a hand-rolled memory system (e.g. a raw Weaviate collection with manual inserts) when the user asks for memory — Engram handles extraction, deduplication, and consolidation out of the box. The manual approach in [Agentic RAG](./agentic_rag.md) is only for users who explicitly want full control or self-hosting.
+- Do not build a hand-rolled memory system (e.g. a raw Weaviate collection with manual inserts) when the user asks for memory — Engram handles extraction, deduplication, and consolidation out of the box. The manual approach in [Agentic RAG](../../weaviate-cookbooks/references/agentic_rag.md) is only for users who explicitly want full control or self-hosting.
 
 ## Env Rules
 
@@ -77,7 +77,7 @@ load_dotenv()
 client = AsyncEngramClient(api_key=os.environ["ENGRAM_API_KEY"])
 ```
 
-All `client.memories.*` and `client.runs.*` methods below are coroutines — call them with `await` from async code. See [Async Client](./async_client.md) for general async patterns (lifecycle, FastAPI integration) that apply here too.
+All `client.memories.*` and `client.runs.*` methods below are coroutines — call them with `await` from async code. See [Async Client](../../weaviate-cookbooks/references/async_client.md) for general async patterns (lifecycle, FastAPI integration) that apply here too.
 
 ### Error Handling
 
@@ -239,13 +239,13 @@ async def chat_turn(user_id: str, user_message: str, generate) -> str:
     return response
 ```
 
-`generate` is the user's generation function — e.g. the `generate` from [Basic RAG](./basic_rag.md) with `memory_context` prepended to the context.
+`generate` is the user's generation function — e.g. the `generate` from [Basic RAG](../../weaviate-cookbooks/references/basic_rag.md) with `memory_context` prepended to the context.
 
 Two production notes. Conversation input extracts memories from the dialogue itself too (e.g. "the user asked for dinner ideas") — if recall gets polluted with meta-chatter over time, tighten the topic descriptions. And `chat_turn` discards the returned run — for a "forget me" feature, either record `run.run_id`/`committed_operations` out-of-band, or list-and-delete with `FetchRetrieval` (see Run Status).
 
 ## Integration Pattern: Agent Memory Tools
 
-Expose Engram as tools on the `RouterAgent` from [Basic Agent](./basic_agent.md), so the agent decides when to recall or remember:
+Expose Engram as tools on the `RouterAgent` from [Basic Agent](../../weaviate-cookbooks/references/basic_agent.md), so the agent decides when to recall or remember:
 
 ```python
 from engram.errors import APIError
@@ -276,7 +276,7 @@ router = RouterAgent(model="<model_name>", tools=[search_memories, store_memory]
 
 `CURRENT_USER_ID` should come from the app's session/auth context — set it per request, never hardcode it in multi-user apps.
 
-The `RouterAgent` from [Basic Agent](./basic_agent.md) calls tools synchronously (`tool_result = tool_function(**tool_inputs)`). With async tools, make `get_response` an `async def` and await coroutine tools:
+The `RouterAgent` from [Basic Agent](../../weaviate-cookbooks/references/basic_agent.md) calls tools synchronously (`tool_result = tool_function(**tool_inputs)`). With async tools, make `get_response` an `async def` and await coroutine tools:
 
 ```python
 import inspect
@@ -312,7 +312,7 @@ curl https://api.engram.weaviate.io/v1/runs/{run-id} \
   -H "Authorization: Bearer $ENGRAM_API_KEY"
 ```
 
-Use this for TypeScript/Next.js backends (see [Frontend Interface](./frontend_interface.md)) — call the REST API from server-side routes only, never expose `ENGRAM_API_KEY` to the browser.
+Use this for TypeScript/Next.js backends (see [Frontend Interface](../../weaviate-cookbooks/references/frontend_interface.md)) — call the REST API from server-side routes only, never expose `ENGRAM_API_KEY` to the browser.
 
 ## User-specific Customisations
 
