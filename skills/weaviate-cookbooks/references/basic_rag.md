@@ -17,7 +17,7 @@ Docs to reference if needed:
 - Use a virtual environment via `venv`
 - Use `uv` for Python project/dependency management.
 - Do not manually author `pyproject.toml` or `uv.lock`; let `uv` generate/update them.
-- Use this install set: `uv add weaviate-client python-dotenv dspy`
+- Use this install set: `uv add "weaviate-client>=4.23.1,<5" python-dotenv dspy`
 - Customise this cookbook to the users specification, ask them for details if not given. 
 
 Assume the user has data already to be used, do not create data unless asked to.
@@ -57,7 +57,7 @@ Clients must be closed after completion. Wrap in `try/finally` blocks with `clie
 Multi-tenancy should be checked via 
 
 ```python
-config = await collection.config.get()
+config = collection.config.get()
 config.multi_tenancy_config.enabled # bool
 ```
 
@@ -67,7 +67,7 @@ e.g.
 
 base_collection = client.collections.use(collection_name)
 
-config = collection.config.get()
+config = base_collection.config.get()
 if config.multi_tenancy_config.enabled:
     collection = base_collection.with_tenant("<tenant_name>")
 else:

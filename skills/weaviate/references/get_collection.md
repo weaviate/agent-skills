@@ -19,6 +19,7 @@ uv run scripts/get_collection.py --name "CollectionName" [--json]
 
 - **Default**: Markdown-formatted collection details with property table
 - **JSON**: Full collection configuration object
+- `vectorizer_config` reports the collection's vectorizer and model; if the collection has several named vectors, it reports the one whose name sorts first
 
 ## Examples
 

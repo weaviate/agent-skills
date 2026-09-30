@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # dependencies = [
-#   "weaviate-client==4.19.2",
+#   "weaviate-client==4.23.1",
 #   "typer==0.21.0",
 # ]
 # ///
@@ -55,6 +55,14 @@ def main(
                         else str(vc.vectorizer),
                         "model": getattr(vc, "model", None),
                     }
+            elif config.vector_config:
+                vc = config.vector_config[min(config.vector_config)].vectorizer
+                vectorizer_config = {
+                    "vectorizer": str(vc.vectorizer.value)
+                    if hasattr(vc.vectorizer, "value")
+                    else str(vc.vectorizer),
+                    "model": vc.model,
+                }
 
             # Extract properties
             properties = []

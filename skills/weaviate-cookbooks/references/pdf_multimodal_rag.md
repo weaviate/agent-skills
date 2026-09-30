@@ -61,7 +61,7 @@ brew install uv
 Install required libraries using `uv`:
 
 ```bash
-uv add weaviate-client
+uv add "weaviate-client>=4.23.1,<5"
 ```
 
 **Package breakdown:**
@@ -145,7 +145,7 @@ collection = client.collections.create(
     ],
     vector_config=[
         Configure.MultiVectors.multi2vec_weaviate(
-            name="doc_vector"
+            name="doc_vector",
             image_field="doc_page",
             model="ModernVBERT/colmodernvbert",
             encoding=Configure.VectorIndex.MultiVector.Encoding.muvera(
@@ -309,25 +309,23 @@ BLOB properties like `doc_page` are not returned by default when used as the `im
 Add filters to narrow search scope by document properties:
 
 ```python
-import weaviate.classes.config as wc
+from weaviate.classes.query import Filter
 
 # Example: Filter by document ID
 response = collection.query.near_text(
     query="query text",
     limit=5,
-    filters=wc.Filter.by_property("document_id").equal("paper_123"),
+    filters=Filter.by_property("document_id").equal("paper_123"),
 )
 
 # Example: Filter by page range
 response = collection.query.near_text(
     query="query text",
     limit=5,
-    filters=wc.Filter.by_property("page_number").less_than(10),
+    filters=Filter.by_property("page_number").less_than(10),
 )
 
 # Example: Combine multiple filters
-from weaviate.classes.query import Filter
-
 response = collection.query.near_text(
     query="query text",
     limit=5,
