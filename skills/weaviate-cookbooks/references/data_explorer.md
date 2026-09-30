@@ -16,7 +16,7 @@ Read first:
 - Use `uv` for Python project/dependency management.
 - Do not manually author `pyproject.toml` or `uv.lock`; let `uv` generate/update them.
 - Use this backend install set:
-  - `uv add fastapi 'uvicorn[standard]' weaviate-client pydantic-settings python-dotenv`
+  - `uv add fastapi 'uvicorn[standard]' "weaviate-client>=4.23.1,<5" pydantic-settings python-dotenv`
 - Depending on user request: consider combining this app with the [Query Agent Chatbot](./query_agent_chatbot.md).
   - If the user explicitly only wants a data viewer/explorer, create this app independently
   - If the user wants a fully featured chat and data explorer, combine the apps
@@ -31,7 +31,7 @@ Project bootstrap:
 uv init data_explorer
 cd data_explorer
 uv venv
-uv add fastapi 'uvicorn[standard]' weaviate-client pydantic-settings python-dotenv
+uv add fastapi 'uvicorn[standard]' "weaviate-client>=4.23.1,<5" pydantic-settings python-dotenv
 ```
 
 ### Workflow Contract

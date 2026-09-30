@@ -118,7 +118,7 @@ All scripts use inline dependency declarations (auto-installed via `uv run`):
 
 | Package           | Version  | Used By                 |
 | ----------------- | -------- | ----------------------- |
-| `weaviate-client` | >=4.19.2 | All scripts             |
+| `weaviate-client` | ==4.23.1 | All scripts             |
 | `weaviate-agents` | >=1.2.0  | ask.py, query_search.py |
 | `typer`           | >=0.21.0 | All scripts             |
 

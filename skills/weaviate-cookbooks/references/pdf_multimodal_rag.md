@@ -61,7 +61,7 @@ brew install uv
 Install required libraries using `uv`:
 
 ```bash
-uv add weaviate-client
+uv add "weaviate-client>=4.23.1,<5"
 ```
 
 **Package breakdown:**
