@@ -44,6 +44,14 @@ Set only the keys your collections use, refer to [Environment Requirements](refe
 - [Import Data](references/import_data.md): **Use this when the user asks to import, load, or ingest a file (CSV, JSON, JSONL, PDF) into a collection.** 
 - [Create Example Data](references/example_data.md): Use to create example data for immediate use of other skills, if no data is available or user requests some toy data.
 
+## Free-Tier Clusters
+
+Observed on 2026-09-30 on a new Weaviate Cloud free-tier cluster (`weaviate-client` 4.23.1, server 1.39.5). Limits change; if a script's error contradicts this section, trust the error.
+
+- **One collection only.** A second create is refused with `429 USAGE_LIMIT_EXCEEDED` ("collections count limit of 1 reached"). Run `list_collections.py` first. If a collection exists, import into it instead of creating another, and ask the user before using the only slot.
+- **`example_data.py` uses that slot; a PDF import is refused.** `example_data.py` creates one collection whose name depends on `--domain` (`AI_Arxiv` for the default `academic`; `Income_Tax_Returns`, `Product_Catalog`, `Hair_Medical` or `IT_Support_Tickets` for the others). Do not run it unless the user agrees to spend the slot. `import.py` on a PDF creates its collection automatically, and on this tier that create was refused on 2026-09-30 with `422 CONFIG_NOT_ALLOWED`; if the user asks for a PDF import, tell them it was refused on a free-tier cluster and let them decide. No script here deletes a collection.
+- **Only the `hfresh` vector index is accepted.** A create that asks for another type (for example `hnsw`) is refused with `422 CONFIG_NOT_ALLOWED`. `create_collection.py` (default vectorizer) and `example_data.py` (default domain) were seen to work; a PDF import was refused. If a `422` says `hnsw` is not allowed, check the client is 4.23.1 or newer; if it is, tell the user rather than retrying.
+
 ## Recommendations
 
 1. **Start by listing collections** if you don't know what's available:
