@@ -57,7 +57,7 @@ Clients must be closed after completion. Wrap in `try/finally` blocks with `clie
 Multi-tenancy should be checked via 
 
 ```python
-config = await collection.config.get()
+config = collection.config.get()
 config.multi_tenancy_config.enabled # bool
 ```
 
@@ -67,7 +67,7 @@ e.g.
 
 base_collection = client.collections.use(collection_name)
 
-config = collection.config.get()
+config = base_collection.config.get()
 if config.multi_tenancy_config.enabled:
     collection = base_collection.with_tenant("<tenant_name>")
 else:

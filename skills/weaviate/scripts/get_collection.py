@@ -55,6 +55,14 @@ def main(
                         else str(vc.vectorizer),
                         "model": getattr(vc, "model", None),
                     }
+            elif config.vector_config:
+                vc = config.vector_config[min(config.vector_config)].vectorizer
+                vectorizer_config = {
+                    "vectorizer": str(vc.vectorizer.value)
+                    if hasattr(vc.vectorizer, "value")
+                    else str(vc.vectorizer),
+                    "model": vc.model,
+                }
 
             # Extract properties
             properties = []

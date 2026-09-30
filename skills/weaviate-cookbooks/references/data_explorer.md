@@ -221,6 +221,7 @@ Retrieve data from a collection, using pagination, sorting and filters.
 
 ```python
 from weaviate.collections import CollectionAsync
+from weaviate.classes.query import Sort
 from fastapi import Query
 from pydantic import BaseModel
 from typing import Any
@@ -246,8 +247,8 @@ async def get_data(
 
     # include client management to import async client here
 
-    collection = await client.collections.use(collection_name)
-    data_types = await async_get_collection_data_types(collection)
+    collection = client.collections.use(collection_name)
+    data_types = await get_collection_data_types(collection)
 
     if query != "":
         response = await collection.query.bm25(
@@ -278,10 +279,10 @@ async def get_data(
     ... # existing args
     tenant: str | None = Query(default=None)
 ):
-    base_collection = await client.collections.use(collection_name)
-    data_types = await async_get_collection_data_types(collection)
+    base_collection = client.collections.use(collection_name)
+    data_types = await get_collection_data_types(base_collection)
 
-    config = await collection.config.get()
+    config = await base_collection.config.get()
     if config.multi_tenancy_config.enabled and tenant and tenant.strip():
         collection = base_collection.with_tenant(tenant)
     else:
