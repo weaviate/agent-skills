@@ -21,7 +21,7 @@ First implement the basic strategy from [here](./basic_rag.md). Then modify acco
 - Use a virtual environment via `venv`
 - Use `uv` for Python project/dependency management.
 - Do not manually author `pyproject.toml` or `uv.lock`; let `uv` generate/update them.
-- Use this install set: `uv add weaviate-client python-dotenv dspy weaviate-agents`
+- Use this install set: `uv add "weaviate-client>=4.23.1,<5" python-dotenv dspy weaviate-agents`
 - Customise this cookbook to the users specification, ask them for details if not given. 
 
 Assume the user has data already to be used, do not create data unless asked to.

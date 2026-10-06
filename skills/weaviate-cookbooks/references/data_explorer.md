@@ -16,7 +16,7 @@ Read first:
 - Use `uv` for Python project/dependency management.
 - Do not manually author `pyproject.toml` or `uv.lock`; let `uv` generate/update them.
 - Use this backend install set:
-  - `uv add fastapi 'uvicorn[standard]' weaviate-client pydantic-settings python-dotenv`
+  - `uv add fastapi 'uvicorn[standard]' "weaviate-client>=4.23.1,<5" pydantic-settings python-dotenv`
 - Depending on user request: consider combining this app with the [Query Agent Chatbot](./query_agent_chatbot.md).
   - If the user explicitly only wants a data viewer/explorer, create this app independently
   - If the user wants a fully featured chat and data explorer, combine the apps
@@ -31,7 +31,7 @@ Project bootstrap:
 uv init data_explorer
 cd data_explorer
 uv venv
-uv add fastapi 'uvicorn[standard]' weaviate-client pydantic-settings python-dotenv
+uv add fastapi 'uvicorn[standard]' "weaviate-client>=4.23.1,<5" pydantic-settings python-dotenv
 ```
 
 ### Workflow Contract
@@ -221,6 +221,7 @@ Retrieve data from a collection, using pagination, sorting and filters.
 
 ```python
 from weaviate.collections import CollectionAsync
+from weaviate.classes.query import Sort
 from fastapi import Query
 from pydantic import BaseModel
 from typing import Any
@@ -246,8 +247,8 @@ async def get_data(
 
     # include client management to import async client here
 
-    collection = await client.collections.use(collection_name)
-    data_types = await async_get_collection_data_types(collection)
+    collection = client.collections.use(collection_name)
+    data_types = await get_collection_data_types(collection)
 
     if query != "":
         response = await collection.query.bm25(
@@ -278,10 +279,10 @@ async def get_data(
     ... # existing args
     tenant: str | None = Query(default=None)
 ):
-    base_collection = await client.collections.use(collection_name)
-    data_types = await async_get_collection_data_types(collection)
+    base_collection = client.collections.use(collection_name)
+    data_types = await get_collection_data_types(base_collection)
 
-    config = await collection.config.get()
+    config = await base_collection.config.get()
     if config.multi_tenancy_config.enabled and tenant and tenant.strip():
         collection = base_collection.with_tenant(tenant)
     else:
