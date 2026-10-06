@@ -31,6 +31,10 @@ Engram ships as its own Python SDK, `weaviate-engram` — it does **not** come w
 uv add weaviate-engram   # or: pip install weaviate-engram
 ```
 
+This skill targets `weaviate-engram` **1.0.x** (current release 1.0.1; requires Python 3.11–3.14). 1.0 is the first stable API — upgrade if the project is on a 0.x release.
+
+Engram also ships a **Claude Code plugin** that needs no application code (`/plugin marketplace add weaviate/engram-plugins` then `/plugin install engram@weaviate-engram`). See the reference's Off-the-shelf Integrations section before building a custom one.
+
 ## Reference
 
 - [Memory Management with Engram](reference/engram_memory.md): The complete how-to guide for building Engram applications. Covers:
@@ -39,6 +43,7 @@ uv add weaviate-engram   # or: pip install weaviate-engram
   - **Searching** — vector, BM25, hybrid, and unranked fetch retrieval; topic filters, scope properties, and relevance-score cutoffs.
   - **Managing memories** — get and delete by id; deterministic cleanup.
   - **Integration patterns** — memory-backed chatbots and Engram-as-tools for the `RouterAgent` from the [Basic Agent](../weaviate-cookbooks/references/basic_agent.md) cookbook.
+  - **Off-the-shelf integrations** — the Claude Code plugin.
   - **REST API** — equivalent endpoints for non-Python stacks.
   - **Troubleshooting & Done Criteria** — including the new-user `APIError` behaviour and async-pipeline gotchas.
 
@@ -64,6 +69,8 @@ results = await client.memories.search(
     user_id="alice",
     retrieval_config=HybridRetrieval(limit=5),
 )
+
+await client.aclose()  # or use `async with AsyncEngramClient(...) as client:`
 ```
 
 Follow the [reference guide](reference/engram_memory.md) for the full lifecycle, error handling, and integration patterns before building.
@@ -74,4 +81,5 @@ Common errors (see the reference's Troubleshooting section for the full list):
 
 - `ENGRAM_API_KEY not set` → set the environment variable; ensure it is an Engram key (`eng_...`), not a Weaviate cluster key.
 - `APIError` (422, `user "..." not found`) on search → nothing has ever been added for that `user_id`; catch it and treat as "no memories" (every chatbot's first message from a new user hits this).
-- Search returns nothing right after `add` → storage is asynchronous; `await client.runs.wait(run.run_id)` before searching, or check the run status for `failed`.
+- **`AuthenticationError` subclasses `APIError`** → a bare `except APIError` around a search silently turns a bad API key into "no memories". Catch `AuthenticationError` first and re-raise it.
+- Search returns nothing right after `add` → storage is asynchronous; `await client.runs.wait(run.run_id)` before searching, or check the run status for `failed`. On a user's first write the tenant may still be initializing even after the run reports `completed` — retry the search briefly.

@@ -39,13 +39,15 @@ Key concepts (use these terms with the user):
 
 | Concept | Meaning |
 |---------|---------|
-| **Memory** | A discrete piece of stored information, automatically embedded for semantic search. Fields: `id`, `content`, `topic`, `group`, `user_id`, `properties`, `created_at`, `updated_at`, `score` (search only). |
+| **Memory** | A discrete piece of stored information, automatically embedded for semantic search. Fields: `id`, `project_id`, `content`, `topic`, `group`, `user_id`, `properties`, `tags`, `created_at`, `updated_at`, `score` (search only). |
 | **Topic** | A category of memory with a natural-language description that guides LLM extraction (e.g. `food_preferences`: "What food the user likes to eat"). Only information matching a topic is stored. |
 | **Group** | A named bundle of topics + pipeline, mapping 1:1 to a use case. Every project has a `default` group; all calls use it unless `group=` is passed. |
 | **Scope** | Isolation boundary: project-wide (shared, from the API key), user-scoped (`user_id`, strict isolation), or custom `properties` (e.g. `conversation_id`). |
 | **Pipeline / Run** | Storage is asynchronous. `add` returns a `run_id` immediately; the pipeline extracts facts, transforms them against existing memories (dedupe, merge, rewrite), and commits. |
 
 Topics and groups are configured per project in the Weaviate Cloud console (starter templates exist for personalization and continual learning). Code interacts with them by name — do not assume you can create topics from the SDK; ask the user what topics their project defines, or assume the template default (e.g. `UserKnowledge`).
+
+A read-only `client.groups` API (`get`, `list`, returning each group's topics with their descriptions and scoping) is merged upstream but **not in 1.0.1** — do not call it until a release includes it. Until then, ask the user rather than introspecting.
 
 ## Installation
 
@@ -64,6 +66,8 @@ Note the package name and import name differ: install `weaviate-engram`, import 
 from engram import AsyncEngramClient
 ```
 
+This guide targets `weaviate-engram` **1.0.x** (current release 1.0.1), which requires Python 3.11–3.14. 1.0 is the first stable API — if the user is on a 0.x release, upgrade before following this guide, and pin the dependency (`weaviate-engram>=1.0.1,<2`) so a future major cannot silently change the surface.
+
 ## Client Setup
 
 Use the async client (`AsyncEngramClient`) — memory calls sit in request paths and event loops (FastAPI, chat backends, agents), so they should not block. A synchronous `EngramClient` with the identical surface (drop the `await`) exists for scripts and sync-only frameworks.
@@ -79,9 +83,45 @@ client = AsyncEngramClient(api_key=os.environ["ENGRAM_API_KEY"])
 
 All `client.memories.*` and `client.runs.*` methods below are coroutines — call them with `await` from async code. See [Async Client](../../weaviate-cookbooks/references/async_client.md) for general async patterns (lifecycle, FastAPI integration) that apply here too.
 
+**Close the client when you are done with it.** Both clients hold an HTTP connection pool: `await client.aclose()` on the async client, `client.close()` on the sync one. Both are also context managers, which is the safer form for scripts and tests:
+
+```python
+async with AsyncEngramClient(api_key=os.environ["ENGRAM_API_KEY"]) as client:
+    ...
+```
+
+In a long-lived server, construct one client at startup and close it on shutdown (FastAPI `lifespan`) — never one per request.
+
+`EngramClient`/`AsyncEngramClient` also accept `base_url` (default `https://api.engram.weaviate.io`) and `timeout` (default `30.0` seconds).
+
 ### Error Handling
 
-Failed SDK calls raise `engram.errors.APIError` (carries `.status_code` and `.body`). One behaviour to handle deliberately: **searching a `user_id` that has never had an `add` raises `APIError` (HTTP 422, "user not found") instead of returning an empty result.** A user whose memories were all deleted returns an empty result, not an error. Any code that recalls memories before the user's first `add` — which includes every chatbot's first message from a new user — must catch this and treat it as "no memories" (the integration patterns below do). A 401/403 `APIError` means a bad or wrong-type API key (see Troubleshooting).
+All SDK exceptions inherit from `EngramError` and import from either `engram` or `engram.errors`:
+
+| Exception | Raised when |
+|-----------|-------------|
+| `APIError` | Any non-2xx response. Carries `.status_code` and `.body`. |
+| `AuthenticationError` | 401 — missing, invalid, or wrong-type API key. **Subclasses `APIError`.** |
+| `ValidationError` | Invalid client configuration, raised before any request. In 1.0.1 the only trigger is a non-positive `timeout`; an empty/malformed `api_key` is *not* caught here and surfaces as `AuthenticationError` on the first call. |
+| `ConnectionError` | Network failure reaching the Engram API. |
+| `EngramTimeoutError` | `runs.wait()` did not reach a terminal status in time. |
+
+Two behaviours to handle deliberately.
+
+**Searching a `user_id` that has no memories yet raises `APIError` (HTTP 422, "user not found") instead of returning an empty result.** A user whose memories were all deleted returns an empty result, not an error. Any code that recalls memories before the user's first `add` — which includes every chatbot's first message from a new user — must catch this and treat it as "no memories" (the integration patterns below do). The same error also appears transiently just after a user's *first* `add` while the tenant initializes; see [Run Status](#run-status).
+
+**`AuthenticationError` subclasses `APIError`, so a bare `except APIError` swallows a bad API key** — and a misconfigured app then looks exactly like one with an empty memory store, silently and permanently. Always let authentication errors through:
+
+```python
+from engram.errors import APIError, AuthenticationError
+
+try:
+    memories = await client.memories.search(query=q, user_id=user_id)
+except AuthenticationError:
+    raise                  # configuration error — never silently degrade
+except APIError:
+    memories = []          # this user genuinely has no memories yet
+```
 
 ## Storing Memories
 
@@ -124,6 +164,33 @@ run = await client.memories.add(
 )
 ```
 
+**Typed inputs** — the plain `str` and `list[dict]` forms above are shorthands. The explicit models add fields the shorthands cannot express, most usefully **timestamps**, which matter when backfilling history so Engram reconciles facts in the order they actually happened rather than the order you uploaded them:
+
+```python
+from datetime import datetime
+from engram import StringInput, ConversationInput, MessageInput
+
+run = await client.memories.add(
+    StringInput(
+        content="The user switched from Postgres to DuckDB.",
+        created_at=datetime(2026, 3, 14, 9, 30),
+    ),
+    user_id="alice",
+)
+
+run = await client.memories.add(
+    ConversationInput(
+        messages=[MessageInput(role="user", content="I prefer specialty coffee.")],
+        metadata={"source": "support-ticket"},
+    ),
+    user_id="alice",
+)
+```
+
+`MessageInput` also carries `tool_call_id`, `name`, and `tool_calls` for agent transcripts that include tool calls.
+
+The REST API accepts one further parameter the Python SDK does not expose: `root`, the pipeline root name, for projects with advanced multi-pipeline configurations. Call the REST API directly if a project needs it.
+
 ### Run Status
 
 Storage is async, so a search immediately after `add` may not see new memories. Block until processing finishes when tests or demos need read-after-write:
@@ -133,11 +200,36 @@ status = await client.runs.wait(run.run_id)
 print(status.status)  # "completed"
 
 # committed_operations groups results into created / updated / deleted lists,
-# each entry carrying memory_id and committed_at:
-created_ids = [op.memory_id for op in status.committed_operations.created]
+# each entry carrying memory_id and committed_at. Prefer the three shorthand
+# properties: committed_operations is None on a failed run, so reaching through
+# it (status.committed_operations.created) raises AttributeError exactly when
+# something went wrong — the shorthands return [] instead.
+created_ids = [op.memory_id for op in status.memories_created]
+#   also available: status.memories_updated, status.memories_deleted
 ```
 
-Run statuses: `running`, `in_buffer` (paused at a buffer step waiting for a count/time trigger), `completed`, `failed`. Default pipelines typically commit within ~5–15 seconds (conversation inputs trend slower) — a run stuck in `running` for minutes warrants checking for `failed`. `runs.wait` polls with a default `timeout=30.0` seconds and raises `EngramTimeoutError` past it; pass a larger `timeout=` when waiting in tests. In production chat loops, do not wait — fire and forget.
+Run statuses: `running`, `in_buffer` (paused at a buffer step waiting for a count/time trigger), `completed`, `failed`. **Only `completed` and `failed` are terminal.** `runs.wait` keeps polling anything else, so waiting on a run that parks at `in_buffer` always ends in `EngramTimeoutError` — never block a test on a buffered pipeline; use `runs.get` and accept `in_buffer` as a valid resting state. Default pipelines typically commit within ~5–15 seconds (conversation inputs trend slower) — a run stuck in `running` for minutes warrants checking for `failed`. `runs.wait` polls every `interval=0.5` seconds with a default `timeout=30.0` seconds and raises `EngramTimeoutError` past it; pass a larger `timeout=` when waiting in tests. In production chat loops, do not wait — fire and forget.
+
+**A `completed` run does not guarantee the memory is searchable yet.** On a user's *first* `add`, the backing tenant may still be initializing, and a search issued right after the run completes can raise `APIError` or come back empty. Tests, demos, and seed scripts that need read-after-write should retry briefly:
+
+```python
+import asyncio
+from engram.errors import APIError, AuthenticationError
+
+async def search_when_ready(**kwargs):
+    """Search, tolerating a cold tenant right after a user's first add."""
+    for attempt in range(5):
+        try:
+            return await client.memories.search(**kwargs)
+        except AuthenticationError:
+            raise
+        except APIError:
+            if attempt == 4:
+                raise
+            await asyncio.sleep(3)
+```
+
+This only affects the first write for a given scope — steady-state searches do not need it.
 
 There is no single delete-all operation for a user. For deterministic cleanup (test teardown, "forget me" features), either collect `memory_id`s from `committed_operations` at write time, or list all of a user's memories with `retrieval_config=FetchRetrieval(limit=N)` (unranked listing — a `query` string is still required but unused) and delete by id.
 
@@ -167,6 +259,8 @@ results = await client.memories.search(
 )
 ```
 
+When the server-side default limit is fine, `retrieval_config` also accepts the bare strings `"vector"`, `"bm25"`, `"hybrid"`, and `"fetch"` — `retrieval_config="hybrid"` is equivalent to `HybridRetrieval()`. Omitting `retrieval_config` entirely lets the server pick.
+
 **Filter by topic:**
 
 ```python
@@ -188,11 +282,14 @@ results = await client.memories.search(
     user_id="alice",
     properties={"conversation_id": "abc-123"},
     topics=[
-        "user_facts",
-        Topic(name="messages", properties={"conversation_id": None}),  # per-topic override
+        "user_facts",                                                  # plain string: not conversation-scoped, ignores the filter
+        Topic(name="conversation_summary"),                            # no properties: inherits the global filter
+        Topic(name="messages", properties={"conversation_id": None}),  # None: clears the global filter for this topic only
     ],
 )
 ```
+
+Omitting `topics` searches every topic in the group.
 
 ## Managing Memories
 
@@ -209,17 +306,21 @@ await client.memories.delete(memory_id, user_id="alice", group="default")
 The standard pattern for chatbots: search memories before generating, add the exchange after responding.
 
 ```python
-from engram.errors import APIError
+from engram.errors import APIError, AuthenticationError
 
 async def chat_turn(user_id: str, user_message: str, generate) -> str:
     # 1. Recall relevant memories for this message. A user_id that has never
     #    had an add (first ever message) raises APIError, not an empty result.
+    #    AuthenticationError subclasses APIError, so re-raise it — otherwise a
+    #    bad API key degrades into "this user has no memories" forever.
     try:
         memories = await client.memories.search(
             query=user_message,
             user_id=user_id,
             retrieval_config=HybridRetrieval(limit=5),
         )
+    except AuthenticationError:
+        raise
     except APIError:
         memories = []
     memory_context = "\n".join(f"- {m.content}" for m in memories if m.score >= 0.5)
@@ -248,7 +349,7 @@ Two production notes. Conversation input extracts memories from the dialogue its
 Expose Engram as tools on the `RouterAgent` from [Basic Agent](../../weaviate-cookbooks/references/basic_agent.md), so the agent decides when to recall or remember:
 
 ```python
-from engram.errors import APIError
+from engram.errors import APIError, AuthenticationError
 
 async def search_memories(query: str) -> str:
     """Search the user's long-term memory for facts, preferences, and past interactions.
@@ -259,6 +360,8 @@ async def search_memories(query: str) -> str:
             user_id=CURRENT_USER_ID,
             retrieval_config=HybridRetrieval(limit=5),
         )
+    except AuthenticationError:
+        raise  # configuration error — never report it to the model as "no memories"
     except APIError:  # user has no memories yet
         return "No relevant memories found."
     return "\n".join(m.content for m in results) or "No relevant memories found."
@@ -290,6 +393,26 @@ If the agent framework is strictly synchronous and cannot be adapted, use the sy
 
 For **continual learning** (project-wide agent memory, e.g. "filter on the genres property instead of doing a near-text query"), use a project-wide topic and omit `user_id` — lessons learned from one user's sessions then benefit all users. This is configured in the project's topics (the continual learning template).
 
+## Off-the-shelf Integrations
+
+Before writing a custom integration, check whether the packaged one already fits — it needs no application code.
+
+**Claude Code plugin** — gives [Claude Code](https://claude.com/claude-code) long-term, cross-session memory backed by Engram. It recalls relevant memories before each answer and stores each completed turn through hooks; the agent has no tools to call, and memory is best-effort and never blocks a session. Pick the **Coding Assistant** topic template when creating the project, then:
+
+```bash
+export ENGRAM_API_KEY=...   # in ~/.zshrc or ~/.bashrc
+```
+
+```bash
+# inside a Claude Code session
+/plugin marketplace add weaviate/engram-plugins
+/plugin install engram@weaviate-engram
+```
+
+See [weaviate/engram-plugins](https://github.com/weaviate/engram-plugins) for optional customization.
+
+The plugin reads `ENGRAM_BASE_URL` to target a staging or self-hosted endpoint; the SDK takes the same override as `EngramClient(base_url=...)`.
+
 ## REST API (non-Python stacks)
 
 Same operations over HTTP, with `Authorization: Bearer $ENGRAM_API_KEY`:
@@ -312,7 +435,7 @@ curl https://api.engram.weaviate.io/v1/runs/{run-id} \
   -H "Authorization: Bearer $ENGRAM_API_KEY"
 ```
 
-Use this for TypeScript/Next.js backends (see [Frontend Interface](../../weaviate-cookbooks/references/frontend_interface.md)) — call the REST API from server-side routes only, never expose `ENGRAM_API_KEY` to the browser.
+There is no official TypeScript/JavaScript SDK, so REST is the integration path for TypeScript/Next.js backends (see [Frontend Interface](../../weaviate-cookbooks/references/frontend_interface.md)) — call it from server-side routes only, never expose `ENGRAM_API_KEY` to the browser. The full endpoint list is at https://docs.weaviate.io/engram/api/rest.
 
 ## User-specific Customisations
 
@@ -341,17 +464,23 @@ Hybrid is the right default. Vector for purely conceptual recall, BM25 for exact
 ## Troubleshooting
 
 - `APIError` (422, `user "..." not found`) on search: nothing has ever been added for that `user_id` — catch it and treat as an empty result, as in the integration patterns. A user whose memories were all deleted returns an empty result, not this error.
-- Searches return nothing right after `add`: processing is asynchronous — `await client.runs.wait(run.run_id)` before searching, or check the run status for `failed`.
+- A bad API key behaves like an empty memory store: `AuthenticationError` subclasses `APIError`, so a bare `except APIError` swallows it. Catch `AuthenticationError` first and re-raise.
+- Searches return nothing right after `add`: processing is asynchronous — `await client.runs.wait(run.run_id)` before searching, or check the run status for `failed`. If this is the *first* write for that user, the tenant can still be initializing even after the run reports `completed`; retry the search a few times with a short sleep (see [Run Status](#run-status)).
 - Memory counts don't match inputs: extraction may split one input into several memories or merge facts into existing ones — never assert exact counts in tests; assert on search results instead.
-- Run stuck at `in_buffer`: the group's pipeline has a buffer step waiting for a count/time trigger; this is expected behaviour, not an error.
+- Run stuck at `in_buffer`: the group's pipeline has a buffer step waiting for a count/time trigger; this is expected behaviour, not an error. Because `in_buffer` is not terminal, `runs.wait` will raise `EngramTimeoutError` on it — use `runs.get` instead when a pipeline buffers.
 - Facts not being stored: only information matching a configured topic description is extracted — check the project's topics in the Weaviate Cloud console and tighten/broaden their descriptions.
 - Scope errors on `add`: every scope property required by the target topic (including `user_id` for user-scoped topics) must be provided.
-- 401/403 errors: ensure `ENGRAM_API_KEY` is set and is an Engram key (`eng_...`), not a Weaviate cluster API key.
+- `AuthenticationError` (401, `.status_code == 401`): ensure `ENGRAM_API_KEY` is set and is an Engram key (`eng_...`), not a Weaviate cluster API key. An empty or malformed key is not validated client-side — it fails on the first call. Note 403 raises plain `APIError`, not `AuthenticationError`.
+- `EngramTimeoutError` from `runs.wait`: the default `timeout` is 30 s and conversation inputs can exceed it. The exception carries `.run_id` and `.timeout`. Pass a larger `timeout=`, or stop waiting and let the pipeline finish in the background. Check the run is not simply parked at `in_buffer` before raising the timeout.
+- Unclosed-connection warnings at exit: close the client (`await client.aclose()` / `client.close()`) or use it as a context manager.
+- `ImportError` on `StringInput`, `MessageInput`, or `AuthenticationError`: the project is on a 0.x `weaviate-engram`; upgrade to 1.0.1 or newer.
 - For any other issues, refer to the official docs at https://docs.weaviate.io/engram and use web search extensively for troubleshooting.
 
 ## Done Criteria
 
-- Create test scripts to check store → wait → search → get → delete work end-to-end against the user's Engram project. Use a throwaway `user_id`, and clean up by deleting the `memory_id`s collected from `committed_operations`, or by listing the user's memories with `FetchRetrieval` and deleting by id. Tear down tests after completion, or create a proper test suite with pytest (requires install).
+- Create test scripts to check store → wait → search → get → delete work end-to-end against the user's Engram project. Use a throwaway `user_id` (e.g. `f"test-{uuid.uuid4().hex[:8]}"`), and clean up by deleting the `memory_id`s from `status.memories_created`, or by listing the user's memories with `FetchRetrieval` and deleting by id. Wrap the first search in the retry helper from [Run Status](#run-status) so a cold tenant does not fail the test. Tear down tests after completion, or create a proper test suite with pytest (requires install).
 - Verify persistence the way a user would: seed a fact, `await client.runs.wait(...)`, then search for it from a fresh process/session.
 - Memory writes in the app are fire-and-forget; nothing in the request path blocks on `runs.wait`.
+- Recall paths re-raise `AuthenticationError` instead of folding it into "no memories".
+- The client is closed on shutdown (`aclose`/`close`, or a context manager), and is not constructed per request.
 - User has completed specification of the app.
