@@ -83,6 +83,7 @@ brew install uv
 | ---------------------- | ---------------------------- | --------------------------------------------------------------------------------- |
 | **weaviate**           | `skills/weaviate/`           | Scripts and references for searching, querying, and managing Weaviate collections |
 | **weaviate-cookbooks** | `skills/weaviate-cookbooks/` | Implementation guides for building full-stack AI applications with Weaviate       |
+| **engram_memory**      | `skills/engram_memory/`      | Reference for adding persistent long-term memory with Engram (separate `weaviate-engram` SDK) |
 
 ## Running Scripts
 
@@ -137,6 +138,14 @@ Weaviate cookbooks are implementation guides for building full-stack AI applicat
 ### Optional Frontend Guide
 
 - [Frontend Interface](./skills/weaviate-cookbooks/references/frontend_interface.md): Build a Next.js frontend (App Router, Tailwind v4, shadcn/ui) to interact with Weaviate backends.
+
+## Engram Memory
+
+Engram is Weaviate's managed memory server for LLM agents. The `engram_memory` skill lives in `skills/engram_memory/`.
+
+It is reference-only — it ships no scripts, so the dependency table above does not apply to it. Engram uses its own SDK, `weaviate-engram` (1.0.x, Python 3.11–3.14), installed per project, and authenticates with `ENGRAM_API_KEY` (`eng_...`); `WEAVIATE_URL` / `WEAVIATE_API_KEY` are not used.
+
+- [Memory Management with Engram](./skills/engram_memory/reference/engram_memory.md): Add persistent long-term memory to chatbots and agents using Engram — covers storing/searching memories, scoping, run tracking, and chatbot/agent integration patterns.
 
 ## Contributing
 
