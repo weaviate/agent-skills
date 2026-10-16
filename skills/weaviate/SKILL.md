@@ -49,7 +49,7 @@ uv run /path/to/skills/weaviate/scripts/list_collections.py
 ### Data Operations
 
 - [Fetch and Filter](references/fetch_filter.md): Use to **retrieve specific objects by ID** or **strictly filtered subsets** of data. Best for precise data retrieval rather than search.
-- [Import Data](references/import_data.md): **Use this when the user asks to import, load, or ingest a file (CSV, JSON, JSONL, PDF) into a collection.** 
+- [Import Data](references/import_data.md): **Use this when the user asks to import, load, or ingest a file (CSV, JSON, JSONL, PDF) into a collection.** A PDF import is refused on a free-tier cluster, see [Free-Tier Clusters](#free-tier-clusters).
 - [Create Example Data](references/example_data.md): Use to create example data for immediate use of other skills, if no data is available or user requests some toy data.
 
 ## Free-Tier Clusters
@@ -99,7 +99,7 @@ Weaviate Cloud free-tier clusters have limits that can change; if a script's err
    ```bash
    uv run SKILL_DIR/scripts/import.py "data.csv" --collection "CollectionName"
    ```
-   > For PDF imports, the collection is created automatically — skip step 5.
+   > For PDF imports, the collection is created automatically — skip step 5. On a free-tier cluster a PDF import is refused; see [Free-Tier Clusters](#free-tier-clusters).
 
 7. **Choose the right search type:**
    - Get AI-powered answers with source citations across multiple collections → `ask.py`
