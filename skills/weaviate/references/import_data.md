@@ -11,7 +11,7 @@ uv run SKILL_DIR/scripts/import.py "data.csv" --collection "CollectionName" [--m
 # Multiple files of the same format
 uv run SKILL_DIR/scripts/import.py a.csv b.csv c.csv --collection "CollectionName"
 
-# PDF — collection is created automatically on first run; appended to on subsequent runs
+# PDF — collection is created automatically on first run; appended to on subsequent runs; refused on a free-tier cluster
 uv run SKILL_DIR/scripts/import.py "document.pdf" --collection "CollectionName" [--image-field "doc_page"] [--batch-size 100] [--json]
 
 # Multiple PDFs into the same collection
@@ -23,7 +23,7 @@ uv run SKILL_DIR/scripts/import.py page1.pdf page2.pdf page3.pdf --collection "P
 | Parameter | Flag | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | `files` | — | Yes (positional, one or more) | — | One or more CSV, JSON, JSONL, or PDF files (all must be the same format) |
-| `--collection` | `-c` | Yes | — | Target collection name (must already exist for CSV/JSON/JSONL; created automatically for PDF if absent, otherwise appended to) |
+| `--collection` | `-c` | Yes | — | Target collection name (must already exist for CSV/JSON/JSONL; created automatically for PDF if absent, otherwise appended to; a PDF import is refused on a free-tier cluster) |
 | `--mapping` | `-m` | No | — | JSON object mapping file columns/keys to collection properties (CSV/JSON/JSONL only) |
 | `--tenant` | `-t` | No | — | Tenant name for multi-tenant collections (required if collection has multi-tenancy enabled) |
 | `--batch-size` | `-b` | No | `100` | Number of objects per batch |
@@ -58,7 +58,7 @@ uv run SKILL_DIR/scripts/import.py page1.pdf page2.pdf page3.pdf --collection "P
   - `doc_page` (or `--image-field` value): base64-encoded JPEG image of the page
   - `page_number`: 1-indexed page number (int)
   - `file_name`: PDF filename without extension (text)
-- The collection is **created automatically** with `multi2vec_weaviate` (`ModernVBERT/colmodernvbert` + MUVERA encoding) if it does not already exist. If the collection already exists, pages are appended to it — allowing multiple PDFs to be loaded into the same collection across multiple runs.
+- The collection is **created automatically** with `multi2vec_weaviate` (`ModernVBERT/colmodernvbert` + MUVERA encoding) if it does not already exist. If the collection already exists, pages are appended to it — allowing multiple PDFs to be loaded into the same collection across multiple runs. A PDF import is refused on a free-tier cluster; see [Free-Tier Clusters](../SKILL.md#free-tier-clusters).
 - Requires `poppler` to be installed on the system (for Mac, simply run `brew install poppler`)
 
 ## Type Conversion
@@ -134,7 +134,7 @@ Import JSON with custom batch size:
 uv run SKILL_DIR/scripts/import.py products.json --collection "Products" --batch-size 500
 ```
 
-Import a PDF (collection is created automatically on first run):
+Import a PDF (collection is created automatically on first run; refused on a free-tier cluster):
 
 ```bash
 uv run SKILL_DIR/scripts/import.py paper.pdf --collection "PDFDocuments"
