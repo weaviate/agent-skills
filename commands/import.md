@@ -24,7 +24,7 @@ Import one or more CSV, JSON, JSONL, or PDF files into a Weaviate collection wit
    uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/import.py FILE --collection "CollectionName"
    ```
 
-2. **PDF** — collection is created automatically on first run (multimodal schema with `ModernVBERT/colmodernvbert`); subsequent runs append to it. A PDF import is refused on a free-tier cluster; see [Free-Tier Clusters](../skills/weaviate/SKILL.md#free-tier-clusters).
+2. **PDF** — collection is created automatically on first run (multimodal schema with `ModernVBERT/colmodernvbert`); subsequent runs append to it. A PDF import that has to create its collection is refused on a free-tier cluster; see [Free-Tier Clusters](../skills/weaviate/SKILL.md#free-tier-clusters).
    ```bash
    uv run ${CLAUDE_PLUGIN_ROOT}/skills/weaviate/scripts/import.py FILE.pdf --collection "CollectionName"
    ```

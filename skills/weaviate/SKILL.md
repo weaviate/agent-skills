@@ -49,7 +49,7 @@ uv run /path/to/skills/weaviate/scripts/list_collections.py
 ### Data Operations
 
 - [Fetch and Filter](references/fetch_filter.md): Use to **retrieve specific objects by ID** or **strictly filtered subsets** of data. Best for precise data retrieval rather than search.
-- [Import Data](references/import_data.md): **Use this when the user asks to import, load, or ingest a file (CSV, JSON, JSONL, PDF) into a collection.** A PDF import is refused on a free-tier cluster, see [Free-Tier Clusters](#free-tier-clusters).
+- [Import Data](references/import_data.md): **Use this when the user asks to import, load, or ingest a file (CSV, JSON, JSONL, PDF) into a collection.** A PDF import that has to create its collection is refused on a free-tier cluster; see [Free-Tier Clusters](#free-tier-clusters).
 - [Create Example Data](references/example_data.md): Use to create example data for immediate use of other skills, if no data is available or user requests some toy data.
 
 ## Free-Tier Clusters
@@ -57,7 +57,7 @@ uv run /path/to/skills/weaviate/scripts/list_collections.py
 Weaviate Cloud free-tier clusters have limits that can change; if a script's error contradicts this section, trust the error.
 
 - **One collection only.** A second create is refused with `429 USAGE_LIMIT_EXCEEDED` ("collections count limit of 1 reached"). Run `list_collections.py` first. If a collection exists, import into it instead of creating another, and ask the user before using the only slot.
-- **`example_data.py` uses that slot; a PDF import is refused.** `example_data.py` creates one collection whose name depends on `--domain` (`AI_Arxiv` for the default `academic`; `Income_Tax_Returns`, `Product_Catalog`, `Hair_Medical` or `IT_Support_Tickets` for the others). Do not run it unless the user agrees to spend the slot. `import.py` on a PDF creates its collection automatically, and a PDF import is refused on a free-tier cluster with `422 CONFIG_NOT_ALLOWED`; if the user asks for one, tell them it is refused on a free-tier cluster and let them decide. No script here deletes a collection.
+- **`example_data.py` uses that slot.** `example_data.py` creates one collection whose name depends on `--domain` (`AI_Arxiv` for the default `academic`; `Income_Tax_Returns`, `Product_Catalog`, `Hair_Medical` or `IT_Support_Tickets` for the others). Do not run it unless the user agrees to spend the slot. `import.py` on a PDF creates its collection automatically when it is absent, and a PDF import that has to create its collection is refused on a free-tier cluster with `422 CONFIG_NOT_ALLOWED`; if the user asks for one, let them decide. No script here deletes a collection.
 - **Only the `hfresh` vector index is accepted.** A create that asks for another type (for example `hnsw`) is refused with `422 CONFIG_NOT_ALLOWED`. The scripts pin `weaviate-client` 4.23.1, which leaves the index type to the server; older clients request `hnsw` and are refused. If a `422` says `hnsw` is not allowed on 4.23.1 or newer, tell the user rather than retrying.
 
 ## Recommendations
@@ -99,7 +99,7 @@ Weaviate Cloud free-tier clusters have limits that can change; if a script's err
    ```bash
    uv run SKILL_DIR/scripts/import.py "data.csv" --collection "CollectionName"
    ```
-   > For PDF imports, the collection is created automatically — skip step 5. On a free-tier cluster a PDF import is refused; see [Free-Tier Clusters](#free-tier-clusters).
+   > For PDF imports, the collection is created automatically — skip step 5. On a free-tier cluster, a PDF import that has to create its collection is refused; see [Free-Tier Clusters](#free-tier-clusters).
 
 7. **Choose the right search type:**
    - Get AI-powered answers with source citations across multiple collections → `ask.py`
