@@ -23,7 +23,7 @@ Set only the keys your collections use, refer to [Environment Requirements](refe
 
 ## Running Scripts
 
-Script paths in this skill and its references are relative to this skill's folder, the folder that contains this `SKILL.md`. Commands write that folder as `SKILL_DIR`; replace it with its absolute path and run the command from the user's project, so file arguments such as `data.csv` resolve against the project:
+Commands start from `SKILL_DIR`, the absolute path of the folder that contains this `SKILL.md`. Replace it before running, and run the command from the user's project so file arguments such as `data.csv` resolve against the project:
 
 ```bash
 uv run /path/to/skills/weaviate/scripts/list_collections.py
