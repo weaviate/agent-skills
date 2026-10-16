@@ -12,7 +12,7 @@ uv run SKILL_DIR/scripts/example_data.py --domain "DOMAIN_NAME" [--vectorizer ".
 |-----------|------|----------|---------|-------------|
 | `--domain` | `-d` | No | `academic` | Defines which dataset is being used. One of 'academic', 'finance', 'ecommerce', 'medical', or 'customer_support'. |
 | `--vectorizer` | `-v` | No | `text2vec_weaviate` | Optional vectorizer (e.g., `text2vec_openai`, `text2vec_cohere`, `none`) |
-| `--nrows` | `-n` | No | `None` | Optionally subset the data. If not supplied uses full dataset. |
+| `--nrows` | `-n` | No | `1000` | Number of rows to load from the dataset. A larger value than the dataset holds loads the whole dataset. |
 
 **When to use:** Creating example data for immediate use of other skills, if no data is available or user requests some toy data.
 
