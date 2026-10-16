@@ -916,7 +916,7 @@ def create_helpdesk_tickets_collection(
 @app.command()
 def main(
     domain: str = typer.Option("academic", "--domain", "-d"),
-    nrows: int = typer.Option(1000, "--nrows", "-n"),
+    nrows: int = typer.Option(200, "--nrows", "-n"),
     vectorizer: str = typer.Option(
         "text2vec_weaviate",
         "--vectorizer",
