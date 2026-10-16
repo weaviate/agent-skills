@@ -3,7 +3,7 @@
 Add example data to a Weaviate collection for users without their own data or wanting a quick example. Downloads data from the huggingface hub.
 
 ```bash
-uv run scripts/example_data.py --domain "DOMAIN_NAME" [--vectorizer "..."] [--nrows X]
+uv run SKILL_DIR/scripts/example_data.py --domain "DOMAIN_NAME" [--vectorizer "..."] [--nrows X]
 ```
 
 ## Parameters

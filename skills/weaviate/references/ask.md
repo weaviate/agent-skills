@@ -5,7 +5,7 @@ Generate AI-powered answers with source citations using the Weaviate Query Agent
 ## Usage
 
 ```bash
-uv run scripts/ask.py --query "USER_QUESTION" --collections "Collection1,Collection2" [--json]
+uv run SKILL_DIR/scripts/ask.py --query "USER_QUESTION" --collections "Collection1,Collection2" [--json]
 ```
 
 ## Parameters
@@ -26,11 +26,11 @@ uv run scripts/ask.py --query "USER_QUESTION" --collections "Collection1,Collect
 Ask a question across multiple collections:
 
 ```bash
-uv run scripts/ask.py --query "What are the main topics in the dataset?" --collections "Articles,Reports"
+uv run SKILL_DIR/scripts/ask.py --query "What are the main topics in the dataset?" --collections "Articles,Reports"
 ```
 
 JSON output:
 
 ```bash
-uv run scripts/ask.py --query "Summarize recent findings" --collections "Research" --json
+uv run SKILL_DIR/scripts/ask.py --query "Summarize recent findings" --collections "Research" --json
 ```

@@ -5,7 +5,7 @@ Get statistical insights, aggregation metrics, and sample data from a collection
 ## Usage
 
 ```bash
-uv run scripts/explore_collection.py "CollectionName" [--limit 5] [--no-metrics] [--json]
+uv run SKILL_DIR/scripts/explore_collection.py "CollectionName" [--limit 5] [--no-metrics] [--json]
 ```
 
 ## Parameters
@@ -40,11 +40,11 @@ Use `--no-metrics` to skip metric calculation for faster results when you only n
 Explore with default settings:
 
 ```bash
-uv run scripts/explore_collection.py "Articles"
+uv run SKILL_DIR/scripts/explore_collection.py "Articles"
 ```
 
 More samples, skip metrics:
 
 ```bash
-uv run scripts/explore_collection.py "Products" --limit 20 --no-metrics
+uv run SKILL_DIR/scripts/explore_collection.py "Products" --limit 20 --no-metrics
 ```

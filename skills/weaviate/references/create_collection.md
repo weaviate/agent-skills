@@ -5,7 +5,7 @@ Create a new Weaviate collection with a custom schema, optional vectorizer, and 
 ## Usage
 
 ```bash
-uv run scripts/create_collection.py CollectionName --properties '[...]' [--description "..."] [--vectorizer "..."] [--replication-factor N] [--multi-tenancy] [--auto-tenant-creation] [--json]
+uv run SKILL_DIR/scripts/create_collection.py CollectionName --properties '[...]' [--description "..."] [--vectorizer "..."] [--replication-factor N] [--multi-tenancy] [--auto-tenant-creation] [--json]
 ```
 
 ## Parameters
@@ -111,7 +111,7 @@ From the sample, map each field to a Weaviate data type:
 Basic collection:
 
 ```bash
-uv run scripts/create_collection.py Article \
+uv run SKILL_DIR/scripts/create_collection.py Article \
   --description "News articles with title and full body text." \
   --properties '[
     {"name": "title", "data_type": "text", "description": "Title of the article"},
@@ -122,7 +122,7 @@ uv run scripts/create_collection.py Article \
 Collection with various data types, descriptions, and recommended index flags:
 
 ```bash
-uv run scripts/create_collection.py Product \
+uv run SKILL_DIR/scripts/create_collection.py Product \
   --description "E-commerce product catalog with pricing, brand, stock status, and tags." \
   --properties '[
     {"name": "name", "data_type": "text", "description": "Name or title of the product"},
@@ -137,7 +137,7 @@ uv run scripts/create_collection.py Product \
 With explicit vectorizer:
 
 ```bash
-uv run scripts/create_collection.py Article \
+uv run SKILL_DIR/scripts/create_collection.py Article \
   --description "News articles with title and full body text." \
   --properties '[{"name": "title", "data_type": "text", "description": "Title of the article"}]' \
   --vectorizer "text2vec_openai"
@@ -146,7 +146,7 @@ uv run scripts/create_collection.py Article \
 With multi-tenancy:
 
 ```bash
-uv run scripts/create_collection.py Workspace \
+uv run SKILL_DIR/scripts/create_collection.py Workspace \
   --properties '[{"name": "content", "data_type": "text"}]' \
   --multi-tenancy --auto-tenant-creation
 ```

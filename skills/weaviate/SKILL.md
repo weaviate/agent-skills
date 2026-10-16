@@ -21,6 +21,14 @@ If the user does not have an instance yet, direct them to the cloud console to r
 **External Provider Keys (auto-detected):**
 Set only the keys your collections use, refer to [Environment Requirements](references/environment_requirements.md) for more information.
 
+## Running Scripts
+
+Script paths in this skill and its references are relative to this skill's folder, the folder that contains this `SKILL.md`. Commands write that folder as `SKILL_DIR`; replace it with its absolute path and run the command from the user's project, so file arguments such as `data.csv` resolve against the project:
+
+```bash
+uv run /path/to/skills/weaviate/scripts/list_collections.py
+```
+
 ## Script Index
 
 ### Search & Query
@@ -57,31 +65,31 @@ Weaviate Cloud free-tier clusters have limits that can change; if a script's err
 1. **Start by listing collections** if you don't know what's available:
 
    ```bash
-   uv run scripts/list_collections.py
+   uv run SKILL_DIR/scripts/list_collections.py
    ```
 
 2. **Ask the user** if they want to **create example data** if nothing is available and the user requests it. Otherwise continue.
 
    ```bash
-   uv run scripts/example_data.py
+   uv run SKILL_DIR/scripts/example_data.py
    ```
 
 3. **Get collection details** to understand the schema:
 
    ```bash
-   uv run scripts/get_collection.py --name "COLLECTION_NAME"
+   uv run SKILL_DIR/scripts/get_collection.py --name "COLLECTION_NAME"
    ```
 
 4. **Explore collection data** to see values and statistics:
 
    ```bash
-   uv run scripts/explore_collection.py "COLLECTION_NAME"
+   uv run SKILL_DIR/scripts/explore_collection.py "COLLECTION_NAME"
    ```
 
 5. **Create a collection** if importing a new CSV, JSON, or JSONL file — the collection must exist before importing:
 
    ```bash
-   uv run scripts/create_collection.py CollectionName \
+   uv run SKILL_DIR/scripts/create_collection.py CollectionName \
      --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
    ```
    > Do not specify a vectorizer unless the user explicitly requests one.
@@ -89,7 +97,7 @@ Weaviate Cloud free-tier clusters have limits that can change; if a script's err
 6. **Import data** into an existing collection:
 
    ```bash
-   uv run scripts/import.py "data.csv" --collection "CollectionName"
+   uv run SKILL_DIR/scripts/import.py "data.csv" --collection "CollectionName"
    ```
    > For PDF imports, the collection is created automatically — skip step 5.
 

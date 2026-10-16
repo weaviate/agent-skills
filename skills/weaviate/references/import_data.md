@@ -6,16 +6,16 @@ Import one or more CSV, JSON, JSONL, or PDF files into a Weaviate collection wit
 
 ```bash
 # CSV/JSON/JSONL — collection must already exist
-uv run scripts/import.py "data.csv" --collection "CollectionName" [--mapping '{}'] [--tenant "name"] [--batch-size 100] [--json]
+uv run SKILL_DIR/scripts/import.py "data.csv" --collection "CollectionName" [--mapping '{}'] [--tenant "name"] [--batch-size 100] [--json]
 
 # Multiple files of the same format
-uv run scripts/import.py a.csv b.csv c.csv --collection "CollectionName"
+uv run SKILL_DIR/scripts/import.py a.csv b.csv c.csv --collection "CollectionName"
 
 # PDF — collection is created automatically on first run; appended to on subsequent runs
-uv run scripts/import.py "document.pdf" --collection "CollectionName" [--image-field "doc_page"] [--batch-size 100] [--json]
+uv run SKILL_DIR/scripts/import.py "document.pdf" --collection "CollectionName" [--image-field "doc_page"] [--batch-size 100] [--json]
 
 # Multiple PDFs into the same collection
-uv run scripts/import.py page1.pdf page2.pdf page3.pdf --collection "PDFDocuments"
+uv run SKILL_DIR/scripts/import.py page1.pdf page2.pdf page3.pdf --collection "PDFDocuments"
 ```
 
 ## Parameters
@@ -88,16 +88,16 @@ For CSV, JSON, and JSONL imports the script uses the collection schema to guide 
 
 ```bash
 # Drop the top-level id field entirely
-uv run scripts/import.py data.json --collection "Articles" --skip-fields "id"
+uv run SKILL_DIR/scripts/import.py data.json --collection "Articles" --skip-fields "id"
 
 # Rename top-level id to source_id
-uv run scripts/import.py data.json --collection "Articles" --mapping '{"id": "source_id"}'
+uv run SKILL_DIR/scripts/import.py data.json --collection "Articles" --mapping '{"id": "source_id"}'
 
 # Rename a nested id field inside an object property (e.g. author.id → author.author_id)
-uv run scripts/import.py data.json --collection "Articles" --mapping '{"author.id": "author.author_id"}'
+uv run SKILL_DIR/scripts/import.py data.json --collection "Articles" --mapping '{"author.id": "author.author_id"}'
 
 # Drop a nested id field
-uv run scripts/import.py data.json --collection "Articles" --skip-fields "author.id"
+uv run SKILL_DIR/scripts/import.py data.json --collection "Articles" --skip-fields "author.id"
 ```
 
 ## Output
@@ -112,49 +112,49 @@ Returns exit code `1` if any imports fail.
 Import from CSV:
 
 ```bash
-uv run scripts/import.py data.csv --collection "Articles"
+uv run SKILL_DIR/scripts/import.py data.csv --collection "Articles"
 ```
 
 Import with column mapping:
 
 ```bash
-uv run scripts/import.py data.csv --collection "Articles" \
+uv run SKILL_DIR/scripts/import.py data.csv --collection "Articles" \
   --mapping '{"title_col": "title", "body_col": "content"}'
 ```
 
 Import to multi-tenant collection:
 
 ```bash
-uv run scripts/import.py data.jsonl --collection "Workspace" --tenant "tenant1"
+uv run SKILL_DIR/scripts/import.py data.jsonl --collection "Workspace" --tenant "tenant1"
 ```
 
 Import JSON with custom batch size:
 
 ```bash
-uv run scripts/import.py products.json --collection "Products" --batch-size 500
+uv run SKILL_DIR/scripts/import.py products.json --collection "Products" --batch-size 500
 ```
 
 Import a PDF (collection is created automatically on first run):
 
 ```bash
-uv run scripts/import.py paper.pdf --collection "PDFDocuments"
+uv run SKILL_DIR/scripts/import.py paper.pdf --collection "PDFDocuments"
 ```
 
 Import multiple PDFs into the same collection:
 
 ```bash
-uv run scripts/import.py chapter1.pdf chapter2.pdf chapter3.pdf --collection "PDFDocuments"
+uv run SKILL_DIR/scripts/import.py chapter1.pdf chapter2.pdf chapter3.pdf --collection "PDFDocuments"
 ```
 
 Import a PDF with a custom image field name:
 
 ```bash
-uv run scripts/import.py paper.pdf --collection "PDFDocuments" --image-field "page_image"
+uv run SKILL_DIR/scripts/import.py paper.pdf --collection "PDFDocuments" --image-field "page_image"
 ```
 
 Import multiple CSV files into the same collection:
 
 ```bash
-uv run scripts/import.py jan.csv feb.csv mar.csv --collection "Articles"
+uv run SKILL_DIR/scripts/import.py jan.csv feb.csv mar.csv --collection "Articles"
 ```
 
