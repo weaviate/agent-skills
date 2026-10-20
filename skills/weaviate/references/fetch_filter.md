@@ -5,7 +5,7 @@ Fetch objects from a collection by UUID, with filters, or as a random sample. Su
 ## Usage
 
 ```bash
-uv run scripts/fetch_filter.py "CollectionName" [--id "UUID"] [--filters 'JSON'] [--limit 10] [--properties "prop1,prop2"] [--json]
+uv run SKILL_DIR/scripts/fetch_filter.py "CollectionName" [--id "UUID"] [--filters 'JSON'] [--limit 10] [--properties "prop1,prop2"] [--json]
 ```
 
 ## Parameters
@@ -65,24 +65,24 @@ uv run scripts/fetch_filter.py "CollectionName" [--id "UUID"] [--filters 'JSON']
 Fetch by UUID:
 
 ```bash
-uv run scripts/fetch_filter.py "Articles" --id "550e8400-e29b-41d4-a716-446655440000"
+uv run SKILL_DIR/scripts/fetch_filter.py "Articles" --id "550e8400-e29b-41d4-a716-446655440000"
 ```
 
 Filter by property:
 
 ```bash
-uv run scripts/fetch_filter.py "Products" --filters '{"property": "price", "operator": "less_than", "value": 50}'
+uv run SKILL_DIR/scripts/fetch_filter.py "Products" --filters '{"property": "price", "operator": "less_than", "value": 50}'
 ```
 
 Complex filter with AND/OR:
 
 ```bash
-uv run scripts/fetch_filter.py "Articles" --filters '{"operator": "or", "filters": [{"property": "category", "operator": "equal", "value": "Science"}, {"property": "category", "operator": "equal", "value": "Tech"}]}'
+uv run SKILL_DIR/scripts/fetch_filter.py "Articles" --filters '{"operator": "or", "filters": [{"property": "category", "operator": "equal", "value": "Science"}, {"property": "category", "operator": "equal", "value": "Tech"}]}'
 ```
 
 Select specific properties:
 
 ```bash
-uv run scripts/fetch_filter.py "Products" --properties "name,price" --limit 5
+uv run SKILL_DIR/scripts/fetch_filter.py "Products" --properties "name,price" --limit 5
 ```
 

@@ -5,7 +5,7 @@ Combines vector similarity and keyword (BM25) matching for balanced search resul
 ## Usage
 
 ```bash
-uv run scripts/hybrid_search.py --query "USER_QUERY" --collection "CollectionName" [--alpha 0.7] [--limit 10] [--properties "prop1,prop2"] [--target-vector "vector_name"] [--json]
+uv run SKILL_DIR/scripts/hybrid_search.py --query "USER_QUERY" --collection "CollectionName" [--alpha 0.7] [--limit 10] [--properties "prop1,prop2"] [--target-vector "vector_name"] [--json]
 ```
 
 ## Parameters
@@ -30,18 +30,18 @@ uv run scripts/hybrid_search.py --query "USER_QUERY" --collection "CollectionNam
 Basic hybrid search:
 
 ```bash
-uv run scripts/hybrid_search.py --query "climate change effects" --collection "Articles"
+uv run SKILL_DIR/scripts/hybrid_search.py --query "climate change effects" --collection "Articles"
 ```
 
 Keyword-heavy search (lower alpha):
 
 ```bash
-uv run scripts/hybrid_search.py --query "product SKU-1234" --collection "Products" --alpha 0.3
+uv run SKILL_DIR/scripts/hybrid_search.py --query "product SKU-1234" --collection "Products" --alpha 0.3
 ```
 
 Search specific properties with named vector:
 
 ```bash
-uv run scripts/hybrid_search.py --query "renewable energy" --collection "Papers" --properties "title,abstract" --target-vector "title_vector"
+uv run SKILL_DIR/scripts/hybrid_search.py --query "renewable energy" --collection "Papers" --properties "title,abstract" --target-vector "title_vector"
 ```
 

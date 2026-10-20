@@ -5,7 +5,7 @@ Pure vector similarity search using embeddings on a single collection.
 ## Usage
 
 ```bash
-uv run scripts/semantic_search.py --query "USER_QUERY" --collection "CollectionName" [--limit 10] [--distance 0.5] [--target-vector "vector_name"] [--json]
+uv run SKILL_DIR/scripts/semantic_search.py --query "USER_QUERY" --collection "CollectionName" [--limit 10] [--distance 0.5] [--target-vector "vector_name"] [--json]
 ```
 
 ## Parameters
@@ -29,18 +29,18 @@ uv run scripts/semantic_search.py --query "USER_QUERY" --collection "CollectionN
 Basic semantic search:
 
 ```bash
-uv run scripts/semantic_search.py --query "environmental impact of urbanization" --collection "Research"
+uv run SKILL_DIR/scripts/semantic_search.py --query "environmental impact of urbanization" --collection "Research"
 ```
 
 With distance threshold:
 
 ```bash
-uv run scripts/semantic_search.py --query "machine learning" --collection "Papers" --distance 0.3 --limit 5
+uv run SKILL_DIR/scripts/semantic_search.py --query "machine learning" --collection "Papers" --distance 0.3 --limit 5
 ```
 
 With named vector:
 
 ```bash
-uv run scripts/semantic_search.py --query "abstract art" --collection "Artworks" --target-vector "description_vector"
+uv run SKILL_DIR/scripts/semantic_search.py --query "abstract art" --collection "Artworks" --target-vector "description_vector"
 ```
 

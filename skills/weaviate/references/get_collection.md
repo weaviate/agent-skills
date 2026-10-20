@@ -5,7 +5,7 @@ Get detailed configuration of a specific collection including vectorizer, proper
 ## Usage
 
 ```bash
-uv run scripts/get_collection.py --name "CollectionName" [--json]
+uv run SKILL_DIR/scripts/get_collection.py --name "CollectionName" [--json]
 ```
 
 ## Parameters
@@ -24,10 +24,10 @@ uv run scripts/get_collection.py --name "CollectionName" [--json]
 ## Examples
 
 ```bash
-uv run scripts/get_collection.py --name "Articles"
+uv run SKILL_DIR/scripts/get_collection.py --name "Articles"
 ```
 
 ```bash
-uv run scripts/get_collection.py --name "Products" --json
+uv run SKILL_DIR/scripts/get_collection.py --name "Products" --json
 ```
 

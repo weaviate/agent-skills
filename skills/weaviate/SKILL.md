@@ -21,6 +21,14 @@ If the user does not have an instance yet, direct them to the cloud console to r
 **External Provider Keys (auto-detected):**
 Set only the keys your collections use, refer to [Environment Requirements](references/environment_requirements.md) for more information.
 
+## Running Scripts
+
+Commands start from `SKILL_DIR`, the absolute path of the folder that contains this `SKILL.md`. Replace it before running, and run the command from the user's project so file arguments such as `data.csv` resolve against the project:
+
+```bash
+uv run /path/to/skills/weaviate/scripts/list_collections.py
+```
+
 ## Script Index
 
 ### Search & Query
@@ -41,7 +49,7 @@ Set only the keys your collections use, refer to [Environment Requirements](refe
 ### Data Operations
 
 - [Fetch and Filter](references/fetch_filter.md): Use to **retrieve specific objects by ID** or **strictly filtered subsets** of data. Best for precise data retrieval rather than search.
-- [Import Data](references/import_data.md): **Use this when the user asks to import, load, or ingest a file (CSV, JSON, JSONL, PDF) into a collection.** 
+- [Import Data](references/import_data.md): **Use this when the user asks to import, load, or ingest a file (CSV, JSON, JSONL, PDF) into a collection.** A PDF import that has to create its collection is refused on a free-tier cluster; see [Free-Tier Clusters](#free-tier-clusters).
 - [Create Example Data](references/example_data.md): Use to create example data for immediate use of other skills, if no data is available or user requests some toy data.
 
 ## Free-Tier Clusters
@@ -49,7 +57,7 @@ Set only the keys your collections use, refer to [Environment Requirements](refe
 Weaviate Cloud free-tier clusters have limits that can change; if a script's error contradicts this section, trust the error.
 
 - **One collection only.** A second create is refused with `429 USAGE_LIMIT_EXCEEDED` ("collections count limit of 1 reached"). Run `list_collections.py` first. If a collection exists, import into it instead of creating another, and ask the user before using the only slot.
-- **`example_data.py` uses that slot; a PDF import is refused.** `example_data.py` creates one collection whose name depends on `--domain` (`AI_Arxiv` for the default `academic`; `Income_Tax_Returns`, `Product_Catalog`, `Hair_Medical` or `IT_Support_Tickets` for the others). Do not run it unless the user agrees to spend the slot. `import.py` on a PDF creates its collection automatically, and free-tier clusters refuse that create with `422 CONFIG_NOT_ALLOWED`; if the user asks for a PDF import, tell them it is refused on a free-tier cluster and let them decide. No script here deletes a collection.
+- **`example_data.py` uses that slot.** `example_data.py` creates one collection whose name depends on `--domain` (`AI_Arxiv` for the default `academic`; `Income_Tax_Returns`, `Product_Catalog`, `Hair_Medical` or `IT_Support_Tickets` for the others). Do not run it unless the user agrees to spend the slot. `import.py` on a PDF creates its collection automatically when it is absent, and a PDF import that has to create its collection is refused on a free-tier cluster with `422 CONFIG_NOT_ALLOWED`; if the user asks for one, let them decide. No script here deletes a collection.
 - **Only the `hfresh` vector index is accepted.** A create that asks for another type (for example `hnsw`) is refused with `422 CONFIG_NOT_ALLOWED`. The scripts pin `weaviate-client` 4.23.1, which leaves the index type to the server; older clients request `hnsw` and are refused. If a `422` says `hnsw` is not allowed on 4.23.1 or newer, tell the user rather than retrying.
 
 ## Recommendations
@@ -57,31 +65,31 @@ Weaviate Cloud free-tier clusters have limits that can change; if a script's err
 1. **Start by listing collections** if you don't know what's available:
 
    ```bash
-   uv run scripts/list_collections.py
+   uv run SKILL_DIR/scripts/list_collections.py
    ```
 
 2. **Ask the user** if they want to **create example data** if nothing is available and the user requests it. Otherwise continue.
 
    ```bash
-   uv run scripts/example_data.py
+   uv run SKILL_DIR/scripts/example_data.py
    ```
 
 3. **Get collection details** to understand the schema:
 
    ```bash
-   uv run scripts/get_collection.py --name "COLLECTION_NAME"
+   uv run SKILL_DIR/scripts/get_collection.py --name "COLLECTION_NAME"
    ```
 
 4. **Explore collection data** to see values and statistics:
 
    ```bash
-   uv run scripts/explore_collection.py "COLLECTION_NAME"
+   uv run SKILL_DIR/scripts/explore_collection.py "COLLECTION_NAME"
    ```
 
 5. **Create a collection** if importing a new CSV, JSON, or JSONL file — the collection must exist before importing:
 
    ```bash
-   uv run scripts/create_collection.py CollectionName \
+   uv run SKILL_DIR/scripts/create_collection.py CollectionName \
      --properties '[{"name": "title", "data_type": "text"}, {"name": "body", "data_type": "text"}]'
    ```
    > Do not specify a vectorizer unless the user explicitly requests one.
@@ -89,9 +97,9 @@ Weaviate Cloud free-tier clusters have limits that can change; if a script's err
 6. **Import data** into an existing collection:
 
    ```bash
-   uv run scripts/import.py "data.csv" --collection "CollectionName"
+   uv run SKILL_DIR/scripts/import.py "data.csv" --collection "CollectionName"
    ```
-   > For PDF imports, the collection is created automatically — skip step 5.
+   > For PDF imports, the collection is created automatically — skip step 5. On a free-tier cluster, a PDF import that has to create its collection is refused; see [Free-Tier Clusters](#free-tier-clusters).
 
 7. **Choose the right search type:**
    - Get AI-powered answers with source citations across multiple collections → `ask.py`

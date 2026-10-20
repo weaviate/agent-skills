@@ -5,7 +5,7 @@ BM25 keyword matching search on a single collection.
 ## Usage
 
 ```bash
-uv run scripts/keyword_search.py --query "USER_QUERY" --collection "CollectionName" [--limit 10] [--properties "title^2,content"] [--json]
+uv run SKILL_DIR/scripts/keyword_search.py --query "USER_QUERY" --collection "CollectionName" [--limit 10] [--properties "title^2,content"] [--json]
 ```
 
 ## Parameters
@@ -28,11 +28,11 @@ uv run scripts/keyword_search.py --query "USER_QUERY" --collection "CollectionNa
 Basic keyword search:
 
 ```bash
-uv run scripts/keyword_search.py --query "Python tutorial" --collection "Articles"
+uv run SKILL_DIR/scripts/keyword_search.py --query "Python tutorial" --collection "Articles"
 ```
 
 Search with property boosting:
 
 ```bash
-uv run scripts/keyword_search.py --query "authentication" --collection "Docs" --properties "title^2,body"
+uv run SKILL_DIR/scripts/keyword_search.py --query "authentication" --collection "Docs" --properties "title^2,body"
 ```

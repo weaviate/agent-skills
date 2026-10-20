@@ -87,7 +87,7 @@ brew install uv
 
 ## Running Scripts
 
-All scripts are in `skills/weaviate/scripts/`. Run from that directory.
+All scripts are in `skills/weaviate/scripts/`. Run them from the user's project by absolute path, so file arguments resolve against the project. `SKILL_DIR` in the skill's references stands for the absolute path of `skills/weaviate/`; see [Running Scripts](./skills/weaviate/SKILL.md#running-scripts).
 
 ## Available Scripts
 

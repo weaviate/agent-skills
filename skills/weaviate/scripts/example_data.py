@@ -237,7 +237,7 @@ def create_ai_arxiv_collection(
         for i in range(min(nrows, len(dataset))):
             item = dataset[i]
 
-            if i % int(min(nrows, len(dataset)) / 10) == 0:
+            if i % max(1, int(min(nrows, len(dataset)) / 10)) == 0:
                 print(
                     f"Importing {i}/{min(nrows, len(dataset))} objects... (AI_Arxiv)",
                     file=sys.stderr,
@@ -446,7 +446,7 @@ def create_income_tax_returns_collection(
         for i in range(min(nrows, len(dataset))):
             item = dataset[i]
 
-            if i % int(min(nrows, len(dataset)) / 10) == 0:
+            if i % max(1, int(min(nrows, len(dataset)) / 10)) == 0:
                 print(
                     f"Importing {i}/{min(nrows, len(dataset))} objects... (Income_Tax_Returns)",
                     file=sys.stderr,
@@ -615,7 +615,7 @@ def create_product_catalog_collection(
         for i in range(min(nrows, len(dataset))):
             item = dataset[i]
 
-            if i % int(min(nrows, len(dataset)) / 10) == 0:
+            if i % max(1, int(min(nrows, len(dataset)) / 10)) == 0:
                 print(
                     f"Importing {i}/{min(nrows, len(dataset))} objects... (Product_Catalog)",
                     file=sys.stderr,
@@ -761,7 +761,7 @@ def create_hair_medical_collection(
         for i in range(min(nrows, len(dataset))):
             item = dataset[i]
 
-            if i % int(min(nrows, len(dataset)) / 10) == 0:
+            if i % max(1, int(min(nrows, len(dataset)) / 10)) == 0:
                 print(
                     f"Importing {i}/{min(nrows, len(dataset))} objects... (Hair_Medical)",
                     file=sys.stderr,
@@ -870,7 +870,7 @@ def create_helpdesk_tickets_collection(
         for i in range(min(nrows, len(dataset))):
             item = dataset[i]
 
-            if i % int(min(nrows, len(dataset)) / 10) == 0:
+            if i % max(1, int(min(nrows, len(dataset)) / 10)) == 0:
                 print(
                     f"Importing {i}/{min(nrows, len(dataset))} objects... (IT_Support_Tickets)",
                     file=sys.stderr,
@@ -916,7 +916,7 @@ def create_helpdesk_tickets_collection(
 @app.command()
 def main(
     domain: str = typer.Option("academic", "--domain", "-d"),
-    nrows: int = typer.Option(None, "--nrows", "-n"),
+    nrows: int = typer.Option(200, "--nrows", "-n"),
     vectorizer: str = typer.Option(
         "text2vec_weaviate",
         "--vectorizer",

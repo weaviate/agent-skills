@@ -5,7 +5,7 @@ Show all available Weaviate collections with their properties.
 ## Usage
 
 ```bash
-uv run scripts/list_collections.py [--json]
+uv run SKILL_DIR/scripts/list_collections.py [--json]
 ```
 
 ## Parameters
@@ -22,10 +22,10 @@ uv run scripts/list_collections.py [--json]
 ## Examples
 
 ```bash
-uv run scripts/list_collections.py
+uv run SKILL_DIR/scripts/list_collections.py
 ```
 
 ```bash
-uv run scripts/list_collections.py --json
+uv run SKILL_DIR/scripts/list_collections.py --json
 ```
 

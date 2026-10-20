@@ -5,7 +5,7 @@ Retrieve raw objects using natural language queries across multiple collections 
 ## Usage
 
 ```bash
-uv run scripts/query_search.py --query "USER_QUERY" --collections "Collection1,Collection2" [--limit 10] [--json]
+uv run SKILL_DIR/scripts/query_search.py --query "USER_QUERY" --collections "Collection1,Collection2" [--limit 10] [--json]
 ```
 
 ## Parameters
@@ -27,12 +27,12 @@ uv run scripts/query_search.py --query "USER_QUERY" --collections "Collection1,C
 Search across collections:
 
 ```bash
-uv run scripts/query_search.py --query "machine learning papers" --collections "Articles,Research" --limit 5
+uv run SKILL_DIR/scripts/query_search.py --query "machine learning papers" --collections "Articles,Research" --limit 5
 ```
 
 JSON output:
 
 ```bash
-uv run scripts/query_search.py --query "products under $50" --collections "Products" --json
+uv run SKILL_DIR/scripts/query_search.py --query "products under $50" --collections "Products" --json
 ```
 

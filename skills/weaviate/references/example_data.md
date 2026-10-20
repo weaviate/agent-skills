@@ -3,7 +3,7 @@
 Add example data to a Weaviate collection for users without their own data or wanting a quick example. Downloads data from the huggingface hub.
 
 ```bash
-uv run scripts/example_data.py --domain "DOMAIN_NAME" [--vectorizer "..."] [--nrows X]
+uv run SKILL_DIR/scripts/example_data.py --domain "DOMAIN_NAME" [--vectorizer "..."] [--nrows X]
 ```
 
 ## Parameters
@@ -12,7 +12,7 @@ uv run scripts/example_data.py --domain "DOMAIN_NAME" [--vectorizer "..."] [--nr
 |-----------|------|----------|---------|-------------|
 | `--domain` | `-d` | No | `academic` | Defines which dataset is being used. One of 'academic', 'finance', 'ecommerce', 'medical', or 'customer_support'. |
 | `--vectorizer` | `-v` | No | `text2vec_weaviate` | Optional vectorizer (e.g., `text2vec_openai`, `text2vec_cohere`, `none`) |
-| `--nrows` | `-n` | No | `None` | Optionally subset the data. If not supplied uses full dataset. |
+| `--nrows` | `-n` | No | `200` | Number of rows to load from the dataset. A larger value than the dataset holds loads the whole dataset. For `academic`, each row is one paper, which is stored as many objects, so 200 rows is roughly 12,000 objects. |
 
 **When to use:** Creating example data for immediate use of other skills, if no data is available or user requests some toy data.
 
