@@ -3,11 +3,11 @@ name: weaviate-best-practices
 description: Use when building, migrating, reviewing, or scaling any Weaviate app or service (Docker Compose, Weaviate Cloud, `weaviate-client`, `vector_config`, quantization/RQ/HFresh, bulk batch ingestion, async indexing, hybrid/filtered search, reranking, or RAG). Not for live-cluster administration or ad-hoc data queries.
 ---
 
-# Weaviate application best practices
+# Weaviate application best practices (1.40 / Python v4.24)
 
 - **Last updated:** 2026-11-24 · **Target versions:** Weaviate `1.40.7`, `weaviate-client==4.24.1`
 
-Focuses on current Weaviate APIs, defaults, and best practice understanding of how to get the most out of Weaviate. Examples use Python v4 with no Cloud or model-provider credentials. Load references only as needed:
+Examples use Python v4 with no Cloud or model-provider credentials. Load references only as needed:
 - [references/schema-and-indexing.md](references/schema-and-indexing.md): tokenizers, index defaults, HFresh/RQ-4/RQ-8, Cloud Free limits, ACORN vs PathSeer, Object TTL, schema/index drops, collection aliases
 - [references/ingestion-and-async.md](references/ingestion-and-async.md): server-side batching (`data.ingest` / `batch.stream`), pre-embedded vectors, async queue drain, pinned 1.40.7 Compose & `LIMIT_RESOURCES`
 - [references/search-and-idioms.md](references/search-and-idioms.md): async client, built-in MCP (1.38), Boost & MMR (1.39), `explain_score`, cursors, local reranker/Ollama
@@ -75,7 +75,7 @@ client.collections.create(
 
 ## 4. Server-side batching and async indexing (1.36+ / Python 4.20+)
 
-- **Server-side batching (GA 1.36, Python 4.20+):** Prefer `collection.data.ingest(iterable)` (one-shot, inspect `result.errors`) or `collection.batch.stream()` (context manager, check `batch.number_errors` and `collection.batch.failed_objects` immediately after exit—resets on next batch) over legacy client-side `batch.dynamic()`/`fixed_size()`. Python's batch API is **not thread-safe** per client.
+- **Server-side batching:** Prefer `collection.data.ingest(iterable)` for one-shot imports; check `result.errors`. For incremental writes, use `collection.batch.stream()`. Monitor `batch.number_errors` during the batch and read `collection.batch.failed_objects` after exit, before the next batch resets it. Run one batch workflow at a time per client.
 - **UUIDs & pre-embedded vectors:** Derive UUIDv5 from a unique per-object key (never a shared parent document ID). Pass pre-embedded vectors as a named dict (`vector={"body_vector": vec}`).
 - **Async indexing:** With `ASYNC_INDEXING=true`, wait for [every expected shard replica](references/ingestion-and-async.md#draining-async-vector-indexing) to report loaded, `READY`, and an empty vector queue. Missing reports do not establish readiness.
 
