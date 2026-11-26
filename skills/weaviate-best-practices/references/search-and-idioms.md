@@ -16,7 +16,7 @@ If HTTP succeeds but gRPC times out, check the gRPC host/port (`50051` by defaul
 
 ## 1.38+ search features and built-in MCP
 
-- **Built-in MCP server (GA [1.38](https://weaviate.io/blog/weaviate-1-38-release)):** Served natively at `/v1/mcp` over Streamable HTTP when `MCP_SERVER_ENABLED=true` (add `MCP_SERVER_WRITE_ACCESS_ENABLED=true` for writes), enforcing existing API-key and RBAC auth—prefer it over writing a custom MCP wrapper.
+- **Built-in MCP server (GA [1.38](https://weaviate.io/blog/weaviate-1-38-release)):** Set `MCP_SERVER_ENABLED=true` to serve `/v1/mcp` over Streamable HTTP. MCP uses the instance's authentication and authorization settings; enabling it does not secure an anonymous deployment. Leave `MCP_SERVER_WRITE_ACCESS_ENABLED` off unless clients need writes.
 - **Boost (GA 1.39):** Use [Boost](https://weaviate.io/blog/weaviate-1-39-release#boost-api---general-availability) for soft ranking preferences (e.g. freshness) without a model call—not for hard filters.
 - **MMR (GA 1.39):** Use MMR for near-duplicate diversity on **unpaginated** retrieval (`limit` sets candidates, MMR limit sets returned items). Do not combine with offset pagination.
 
@@ -39,6 +39,7 @@ page = products.query.hybrid(
 )
 ```
 
+- On replicated collections, choose the [read or write consistency level](https://docs.weaviate.io/weaviate/concepts/replication-architecture/consistency) with `collection.with_consistency_level(...)`. `ONE`, `QUORUM`, and `ALL` determine how many replicas must respond. A stronger read level affects the object versions returned, not which UUIDs a search matches.
 - A filter-only count is not a hybrid hit count. Avoid exact counts on every page.
 - `offset + limit` cannot exceed `QUERY_MAXIMUM_RESULTS`. For full collection scans/exports, use [cursor iteration](https://docs.weaviate.io/weaviate/manage-objects/read-all-objects) (`collection.iterator()`), not ranked `offset`/`limit`.
 - See [filters](https://docs.weaviate.io/weaviate/search/filters), [hybrid search](https://docs.weaviate.io/weaviate/search/hybrid), and [pagination](https://docs.weaviate.io/weaviate/search/basics#paginate-with-limit-and-offset).

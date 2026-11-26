@@ -3,36 +3,29 @@ name: weaviate-best-practices
 description: Use when building, migrating, reviewing, or scaling any Weaviate app or service (Docker Compose, Weaviate Cloud, `weaviate-client`, `vector_config`, quantization/RQ/HFresh, bulk batch ingestion, async indexing, hybrid/filtered search, reranking, or RAG). Not for live-cluster administration or ad-hoc data queries.
 ---
 
-# Weaviate application best practices (1.40 / Python v4.24)
+# Weaviate application best practices
 
-- **Last updated:** 2026-11-24 · **Target versions:** Weaviate `1.40.7`, `weaviate-client==4.24.1`
+**Example versions:** Weaviate `1.40.7` and Python `weaviate-client==4.24.1`.
 
 Examples use Python v4 with no Cloud or model-provider credentials. Load references only as needed:
 - [references/schema-and-indexing.md](references/schema-and-indexing.md): tokenizers, index defaults, HFresh/RQ-4/RQ-8, Cloud Free limits, ACORN vs PathSeer, Object TTL, schema/index drops, collection aliases
-- [references/ingestion-and-async.md](references/ingestion-and-async.md): server-side batching (`data.ingest` / `batch.stream`), pre-embedded vectors, async queue drain, pinned 1.40.7 Compose & `LIMIT_RESOURCES`
+- [references/ingestion-and-async.md](references/ingestion-and-async.md): server-side batching (`data.ingest` / `batch.stream`), pre-embedded vectors, async queue drain, local Compose example and `LIMIT_RESOURCES`
 - [references/search-and-idioms.md](references/search-and-idioms.md): async client, built-in MCP (1.38), Boost & MMR (1.39), `explain_score`, cursors, local reranker/Ollama
 
 **Not covered here:** Cluster/ops configuration—including RBAC, OIDC/API-key user management, replication, backups, and cluster monitoring. Weaviate supports native RBAC and OIDC; consult the [deployment & configuration docs](https://docs.weaviate.io/deploy) or [Hosted Docs MCP](https://docs.weaviate.io/weaviate/mcp/docs-mcp-server) when you need them.
 
 ## 1. Versions and transports
 
-- **Versions:** Check existing pins before choosing APIs. For new deployments, pin the latest **stable** server and a compatible SDK from the [release matrix](https://docs.weaviate.io/weaviate/release-notes#weaviate-database-and-client-releases). The examples use the target versions above. Use [Hosted Docs MCP](https://docs.weaviate.io/weaviate/mcp/docs-mcp-server) when available.
-- **SDK connectivity:** Make both HTTP and gRPC endpoints reachable for SDK workflows. Self-hosted defaults are `8080` and `50051`; managed endpoints can differ. Do not add new GraphQL queries: the API is [deprecated and scheduled for removal](https://docs.weaviate.io/weaviate/api/graphql). Use SDK queries over gRPC. If gRPC is unavailable, check whether [REST Search supports the operation](https://docs.weaviate.io/weaviate/api/graphql/migration#rest-search-api).
+- **Versions:** Check the project's server and SDK pins before choosing APIs. For a new deployment, use the [release matrix](https://docs.weaviate.io/weaviate/release-notes#weaviate-database-and-client-releases) to choose a compatible stable pair, then pin both versions. Use [Hosted Docs MCP](https://docs.weaviate.io/weaviate/mcp/docs-mcp-server) when available.
+- **SDK connectivity:** Make both HTTP and gRPC endpoints reachable for SDK workflows. Self-hosted defaults are `8080` and `50051`; managed endpoints can differ. Do not add new GraphQL queries: the API is [deprecated and scheduled for removal](https://docs.weaviate.io/weaviate/api/graphql). Use SDK queries over gRPC. If gRPC is unavailable, check whether [REST Search](https://docs.weaviate.io/weaviate/api/graphql/migration#rest-search-api) supports the operation on your server version. REST Search is a preview in 1.40.
 
-In Python, `collections.use("Article")` returns a lazy handle; use `collections.exists("Article")` to check existence. Run the later snippets inside an open client context:
-
-```python
-import weaviate
-
-with weaviate.connect_to_local() as client:
-    articles = client.collections.use("Article")
-```
+The snippets assume an open `client`. In a local script, run them inside `with weaviate.connect_to_local() as client:` so the client stays open through the last operation. `articles = client.collections.use("Article")` returns a lazy handle; use `client.collections.exists("Article")` if you need to check existence.
 
 ## 2. Schema, named vectors, and index defaults
 
 - **Breaking in 1.40:** The server ignores `DEFAULT_VECTORIZER_MODULE`. Always configure vectors per collection via `vector_config=Configure.Vectors.*(...)`—never legacy `vectorizer_config` / `Configure.Vectorizer`.
 - **Server & property defaults:** Set `AUTOSCHEMA_ENABLED=false`. On `DataType.TEXT`, `index_filterable` and `index_searchable` default to `True`: use `tokenization=Tokenization.FIELD` for whole-value filters and set `index_searchable=False` only if the field is not used by BM25. `index_range_filters` defaults to **`False`**—explicitly set `index_range_filters=True` on scalar `INT`/`NUMBER`/`DATE` properties used in range filters.
-- **Local baseline:** This example follows the [Docker quickstart](https://docs.weaviate.io/weaviate/quickstart/local) and uses Ollama with `nomic-embed-text` for embeddings. Other [model integrations](https://docs.weaviate.io/weaviate/model-providers) are available.
+- **Local baseline:** This example follows the [Docker quickstart](https://docs.weaviate.io/weaviate/quickstart/local) and uses Ollama with `nomic-embed-text` for embeddings. Other [model integrations](https://docs.weaviate.io/weaviate/model-providers) are available. Set `api_endpoint` and inference service URLs in trusted deployment configuration, never from end-user input.
 
 ```python
 from weaviate.classes.config import Configure, DataType, Property, Tokenization
@@ -67,6 +60,14 @@ client.collections.create(
 )
 ```
 
+For the reranked query in §5, enable `reranker-transformers` and point `RERANKER_INFERENCE_API` at its sidecar. Add `reranker_config=Configure.Reranker.transformers()` to the creation call above, or configure an existing collection once during schema setup:
+
+```python
+from weaviate.classes.config import Reconfigure
+
+articles.config.update(reranker_config=Reconfigure.Reranker.transformers())
+```
+
 ## 3. Vector index, quantization, and filtered HNSW (1.34–1.40)
 
 - **Indexes:** `Flat` for small collections/tenants; `HNSW` for fast in-RAM reads; **`HFresh`** (GA 1.38, disk postings + 1-bit RQ + 8-bit RQ centroids) when RAM is constrained and SSD I/O is available.
@@ -97,12 +98,12 @@ if failed:
 
 ## 5. Hybrid search, reranking, and RAG
 
-- **Hybrid:** Use `.query.hybrid(..., target_vector="body_vector", filters=eligible)` for mixed keyword/semantic search. For `self_provided` vectors, pass `vector=query_embedding` and keep the text `query` for BM25. Keep shallow `offset`/`limit` pagination (bounded by `QUERY_MAXIMUM_RESULTS`) separate from bounded RAG retrieval + `Rerank(...)` (never rerank or apply MMR per page).
-- **Ranking:** Use **Boost** (GA 1.39) for soft preferences and **MMR** (GA 1.39) for unpaginated diversity.
-- **Mutable reranker/generative configs:** Configure at creation (`Configure.Reranker.*` / `Configure.Generative.*`) or update in place via `collection.config.update(...)`, provided the module is enabled on the server (`ENABLE_MODULES`).
+- **Hybrid search** combines BM25 keyword matches with vector similarity when both signals matter. For a `self_provided` vector, the application supplies `vector=query_embedding` for similarity and the text `query` for BM25.
+- **Ranking options** address different goals. A reranker scores retrieved passages against the question. Boost can favor a property such as recency without excluding older results. MMR can reduce near-duplicates when selecting passages for context. Boost and MMR are GA in 1.39.
+
+The examples below are alternatives: the first fetches a page (`offset + limit` is bounded by `QUERY_MAXIMUM_RESULTS`); the second reranks 20 candidates and keeps six for RAG. Reranking or applying MMR independently to each page cannot compare candidates across pages.
 
 ```python
-from weaviate.classes.config import Reconfigure
 from weaviate.classes.query import Filter, Rerank
 
 eligible = Filter.by_property("category").equal("guides")
@@ -110,10 +111,7 @@ page = articles.query.hybrid(
     text, target_vector="body_vector", filters=eligible, limit=10, offset=20
 )
 
-# Requires reranker-transformers and a reachable RERANKER_INFERENCE_API:
-articles.config.update(
-    reranker_config=Reconfigure.Reranker.transformers(),
-)
+# Requires the collection reranker configured in §2.
 passages = articles.query.hybrid(
     question,
     target_vector="body_vector",

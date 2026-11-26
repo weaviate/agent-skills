@@ -65,7 +65,9 @@ else:
 
 See [async indexing](https://docs.weaviate.io/weaviate/config-refs/indexing/vector-index#asynchronous-indexing), [monitoring](https://docs.weaviate.io/deploy/configuration/monitoring), and [multi-node shard status](https://docs.weaviate.io/weaviate/manage-collections/multi-node-setup).
 
-## Local Docker Compose (1.40.7)
+## Local Docker Compose example
+
+Local development only: this example allows anonymous access and binds the published ports to loopback. Before exposing Weaviate or its MCP endpoint to other users, disable anonymous access and configure authentication and authorization.
 
 ```yaml
 services:

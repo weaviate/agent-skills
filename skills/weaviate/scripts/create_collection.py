@@ -284,7 +284,7 @@ def main(
             client.collections.create(**collection_config)
 
             # Verify creation by fetching the config
-            collection = client.collections.get(name)
+            collection = client.collections.use(name)
             config = collection.config.get()
 
             result = {

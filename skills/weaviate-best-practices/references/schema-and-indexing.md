@@ -51,4 +51,4 @@ See [RQ compression](https://docs.weaviate.io/weaviate/configuration/compression
 client.alias.update(alias_name="Products", new_target_collection="ProductV2")
 ```
 
-- **Multi-tenancy:** For isolated subsets with identical schemas, use [multi-tenancy](https://docs.weaviate.io/weaviate/best-practices#use-multi-tenancy-for-data-subsets) rather than one collection per subset.
+- **Multi-tenancy:** When tenants share a schema, enable multi-tenancy on one collection rather than creating a collection per tenant. Use a tenant-scoped handle (`articles.with_tenant(tenant_name)`) for reads and writes. An `ACTIVE` tenant can serve requests; an `INACTIVE` tenant keeps its data on local disk, and an `OFFLOADED` tenant keeps it in object storage. Allow for reactivation before serving requests for either. See [managing tenants and their states](https://docs.weaviate.io/weaviate/manage-collections/multi-tenancy).

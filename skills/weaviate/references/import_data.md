@@ -2,6 +2,8 @@
 
 Import one or more CSV, JSON, JSONL, or PDF files into a Weaviate collection with automatic type conversion and column mapping. Multiple files of the same format can be passed in a single invocation — all objects are appended to the same collection. PDF files are converted page-by-page to base64-encoded JPEG images; the collection is created automatically on first import and reused on subsequent runs.
 
+Imports use server-side batching and require Weaviate 1.36 or later.
+
 ## Usage
 
 ```bash
@@ -26,7 +28,7 @@ uv run SKILL_DIR/scripts/import.py page1.pdf page2.pdf page3.pdf --collection "P
 | `--collection` | `-c` | Yes | — | Target collection name (must already exist for CSV/JSON/JSONL; created automatically for PDF if absent, otherwise appended to) |
 | `--mapping` | `-m` | No | — | JSON object mapping file columns/keys to collection properties (CSV/JSON/JSONL only) |
 | `--tenant` | `-t` | No | — | Tenant name for multi-tenant collections (required if collection has multi-tenancy enabled) |
-| `--batch-size` | `-b` | No | `100` | Number of objects per batch |
+| `--batch-size` | `-b` | No | `100` | Report progress every N objects; the server controls batching |
 | `--image-field` | `-i` | No | `doc_page` | BLOB property name to store base64 page images (PDF imports only) |
 | `--skip-fields` | — | No | — | Comma-separated field names to exclude from import (e.g. `vector`) |
 | `--json` | — | No | `false` | Output in JSON format |
@@ -128,7 +130,7 @@ Import to multi-tenant collection:
 uv run SKILL_DIR/scripts/import.py data.jsonl --collection "Workspace" --tenant "tenant1"
 ```
 
-Import JSON with custom batch size:
+Import JSON and report progress every 500 objects:
 
 ```bash
 uv run SKILL_DIR/scripts/import.py products.json --collection "Products" --batch-size 500

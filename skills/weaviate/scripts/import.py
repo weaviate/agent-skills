@@ -407,7 +407,7 @@ def import_objects(
     failed_count = 0
     errors: list[str] = []
 
-    with coll.batch.dynamic() as batch:
+    with coll.batch.stream() as batch:
         for i, obj in enumerate(data, 1):
             total_count += 1
             try:
@@ -459,7 +459,7 @@ def main(
         None, "--tenant", "-t", help="Tenant name for multi-tenant collections"
     ),
     batch_size: int = typer.Option(
-        100, "--batch-size", "-b", help="Number of objects per batch"
+        100, "--batch-size", "-b", help="Report progress every N objects"
     ),
     image_field: str = typer.Option(
         "doc_page",
@@ -549,7 +549,7 @@ def main(
                     raise typer.Exit(1)
 
             # Fetch schema once — used for multi-tenancy check and type-safe coercion
-            coll = client.collections.get(collection)
+            coll = client.collections.use(collection)
             config = coll.config.get()
             prop_types: dict[str, DataType] = {
                 p.name: p.data_type for p in config.properties
@@ -632,9 +632,7 @@ def main(
                         )
                 data = itertools.chain([first], data)
 
-                print(
-                    f"Importing objects in batches of {batch_size}...", file=sys.stderr
-                )
+                print("Streaming objects to Weaviate...", file=sys.stderr)
                 total, imported, failed, errors = import_objects(
                     coll, data, prop_types, skip_set, batch_size
                 )

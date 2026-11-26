@@ -108,8 +108,8 @@ await client.close()
 **Key distinction** ([docs](https://docs.weaviate.io/weaviate/client-libraries/python/async#which-methods-are-async)): Methods involving server requests are async; local operations are synchronous.
 
 ```python
-# Collection retrieval is SYNC (no await)
-collection = client.collections.get("MyCollection")
+# Getting a collection handle is SYNC (no await)
+collection = client.collections.use("MyCollection")
 
 # Operations on collections are ASYNC (need await)
 config = await collection.config.get()
@@ -128,10 +128,10 @@ count = await collection.aggregate.over_all()
 import weaviate
 
 with weaviate.connect_to_weaviate_cloud(...) as client:
-    collection = client.collections.get("MyCollection")
+    collection = client.collections.use("MyCollection")
 
-    # Batch insert handles concurrency automatically
-    with collection.batch.dynamic() as batch:
+    # Server-side batching requires Weaviate 1.36+ and Python client 4.20+.
+    with collection.batch.stream() as batch:
         for item in large_dataset:
             batch.add_object(properties=item)
 ```
@@ -379,7 +379,7 @@ async def test_weaviate_connection():
 | ---------------- | --------------------------------------------- | ------- |
 | Create client    | `weaviate.use_async_with_weaviate_cloud(...)` | No      |
 | Connect          | `client.connect()`                            | **Yes** |
-| Get collection   | `client.collections.get("Name")`              | No      |
+| Get collection   | `client.collections.use("Name")`              | No      |
 | List collections | `client.collections.list_all()`               | **Yes** |
 | Query data       | `collection.query.fetch_objects()`            | **Yes** |
 | Get config       | `collection.config.get()`                     | **Yes** |
