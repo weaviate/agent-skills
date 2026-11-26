@@ -206,9 +206,9 @@ def image_to_base64(image):
 Weaviate Embeddings generates embeddings server-side during import — no local model needed:
 
 ```python
-collection = client.collections.get(collection_name)
+collection = client.collections.use(collection_name)
 
-with collection.batch.dynamic() as batch:
+with collection.batch.stream() as batch:
     for idx, document in enumerate(your_document_dataset):
         # Convert image to base64
         img_base64 = image_to_base64(document["image"])
@@ -236,7 +236,7 @@ print(f"Total documents indexed: {len(collection)}")
 ```
 
 **Performance Tips:**
-- **Batch size**: Weaviate automatically manages batch size with `dynamic()` mode
+- **Batch size**: With `batch.stream()`, the server controls the import rate (Weaviate 1.36+).
 - **No local GPU needed**: Weaviate Embeddings runs server-side
 - **Image format**: JPEG is recommended for smaller payload sizes
 - **Large datasets**: Process in chunks, delete intermediate variables to free memory
@@ -260,7 +260,7 @@ def search_documents(query_text, limit=3):
     Returns:
         List of dicts with document properties, similarity scores, and base64 images
     """
-    collection = client.collections.get(collection_name)
+    collection = client.collections.use(collection_name)
 
     # Search — Weaviate embeds the query server-side
     # Include doc_page in return_properties to get the base64-encoded image blob

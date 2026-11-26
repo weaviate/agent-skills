@@ -93,6 +93,13 @@ Blueprints for complete end-to-end AI applications with state-of-the art guideli
 
 </details>
 
+<details>
+<summary><strong>Best practices</strong></summary>
+
+Use [weaviate-best-practices](skills/weaviate-best-practices/SKILL.md) to write or review Weaviate application code, with guidance on schema design, batch imports, and search.
+
+</details>
+
 ## Security Note
 
 The scripts and cookbooks in this agent skills repository rely on some widely adopted third-party packages. However, we are not responsible for the security of any third-party components, as new vulnerabilities may arise at any time. The user should run their own security scans before executing any code and review packages flagged for known issues. 

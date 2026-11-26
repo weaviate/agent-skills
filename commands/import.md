@@ -68,7 +68,7 @@ Import one or more CSV, JSON, JSONL, or PDF files into a Weaviate collection wit
 | `--mapping` / `-m` | — | JSON object mapping file columns/keys to property names |
 | `--skip-fields` | — | Comma-separated field names to exclude (e.g. `id,created_at`) |
 | `--tenant` / `-t` | — | Tenant name for multi-tenant collections |
-| `--batch-size` / `-b` | `100` | Objects per batch |
+| `--batch-size` / `-b` | `100` | Report progress every N objects |
 | `--image-field` / `-i` | `doc_page` | BLOB property name for base64 page images (PDF only) |
 | `--json` | `false` | Output results as JSON |
 
