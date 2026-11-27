@@ -389,6 +389,25 @@ def convert_types(
     return result
 
 
+def open_batch(coll: Any) -> Any:
+    """
+    Open a batch context manager on *coll*.
+
+    Prefers server-side streaming batches (Weaviate >= 1.36). Older local or
+    self-hosted servers reject them with WeaviateUnsupportedFeatureError, in
+    which case the client-side dynamic batcher is used instead.
+    """
+    try:
+        return coll.batch.stream()
+    except weaviate.exceptions.WeaviateUnsupportedFeatureError:
+        print(
+            "Note: server does not support streaming batches (needs Weaviate "
+            ">= 1.36); using client-side dynamic batching instead.",
+            file=sys.stderr,
+        )
+        return coll.batch.dynamic()
+
+
 def import_objects(
     coll: Any,
     data: Iterator[dict[str, Any]],
@@ -407,7 +426,7 @@ def import_objects(
     failed_count = 0
     errors: list[str] = []
 
-    with coll.batch.stream() as batch:
+    with open_batch(coll) as batch:
         for i, obj in enumerate(data, 1):
             total_count += 1
             try:
@@ -632,7 +651,7 @@ def main(
                         )
                 data = itertools.chain([first], data)
 
-                print("Streaming objects to Weaviate...", file=sys.stderr)
+                print("Importing objects to Weaviate...", file=sys.stderr)
                 total, imported, failed, errors = import_objects(
                     coll, data, prop_types, skip_set, batch_size
                 )

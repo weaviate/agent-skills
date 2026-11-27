@@ -5,7 +5,42 @@ Use this reference when building apps that connect to Weaviate and require exter
 ## Required Weaviate Auth
 
 - `WEAVIATE_URL`
-- `WEAVIATE_API_KEY`
+- `WEAVIATE_API_KEY` (required for Weaviate Cloud, optional for local / self-hosted servers)
+
+## Connecting to Local or Self-Hosted Weaviate
+
+The scripts choose the connection type from the host in `WEAVIATE_URL`:
+
+| `WEAVIATE_URL` | Connection | Notes |
+|----------------|------------|-------|
+| `https://<cluster>.weaviate.cloud` | Weaviate Cloud | `WEAVIATE_API_KEY` is required |
+| `http://localhost:8080` (or `127.0.0.1`) | Local (e.g. Docker) | API key optional; gRPC defaults to port `50051` |
+| `https://weaviate.example.com`, `http://10.0.0.5:8080`, ... | Self-hosted / custom | API key optional; ports default to 443 (https) or 80 (http) for REST |
+
+Optional variables for non-cloud servers:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `WEAVIATE_GRPC_PORT` | `50051` (`443` when gRPC is secure) | gRPC port, e.g. when Docker maps it elsewhere |
+| `WEAVIATE_GRPC_HOST` | same as the URL host | gRPC host if it differs from REST (for example behind a proxy) |
+| `WEAVIATE_GRPC_SECURE` | same as the URL scheme | `true` / `false` |
+
+Examples:
+
+```bash
+# Local Docker with anonymous access
+export WEAVIATE_URL="http://localhost:8080"
+
+# Local Docker with a custom gRPC port and an API key
+export WEAVIATE_URL="http://localhost:8080"
+export WEAVIATE_GRPC_PORT=50052
+export WEAVIATE_API_KEY="your-api-key"
+```
+
+Notes:
+
+- Server-side streaming batches need Weaviate 1.36 or newer. `import.py` automatically falls back to client-side batching on older servers.
+- `ask.py` uses the Weaviate Query Agent, which is only available on Weaviate Cloud.
 
 ## External Provider Env Vars and Headers
 

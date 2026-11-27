@@ -15,8 +15,10 @@ If the user does not have an instance yet, direct them to the cloud console to r
 
 **Required:**
 
-- `WEAVIATE_URL` - Your Weaviate Cloud cluster URL
-- `WEAVIATE_API_KEY` - Your Weaviate API key
+- `WEAVIATE_URL` - Your Weaviate Cloud cluster URL, or the URL of a local / self-hosted server (e.g. `http://localhost:8080`)
+- `WEAVIATE_API_KEY` - Your Weaviate API key (required for Weaviate Cloud, optional for local / self-hosted servers with anonymous access)
+
+For local or self-hosted servers with non-default gRPC settings, see [Environment Requirements](references/environment_requirements.md#connecting-to-local-or-self-hosted-weaviate).
 
 **External Provider Keys (auto-detected):**
 Set only the keys your collections use, refer to [Environment Requirements](references/environment_requirements.md) for more information.
