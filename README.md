@@ -50,6 +50,17 @@ export WEAVIATE_URL="https://your-cluster.weaviate.cloud"
 export WEAVIATE_API_KEY="your-api-key"
 ```
 
+### Local or Self-Hosted Weaviate
+
+Point `WEAVIATE_URL` at your own server and the scripts connect to it automatically. The API key is optional for servers that allow anonymous access:
+
+```bash
+export WEAVIATE_URL="http://localhost:8080"
+export WEAVIATE_GRPC_PORT=50051   # optional, default 50051
+```
+
+See [Environment Requirements](skills/weaviate/references/environment_requirements.md#connecting-to-local-or-self-hosted-weaviate) for self-hosted deployments with separate gRPC settings.
+
 ### External Provider Keys (Auto-Detected)
 
 For the complete env var list and header mapping, see:

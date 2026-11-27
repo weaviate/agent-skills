@@ -26,7 +26,7 @@ import weaviate
 from weaviate.agents.query import QueryAgent
 
 # Import shared connection utilities (local to this skill)
-from weaviate_conn import get_client
+from weaviate_conn import get_client, is_cloud_url, validate_env
 
 app = typer.Typer()
 
@@ -50,6 +50,18 @@ def main(
 ):
     """Query Weaviate using Query Agent in Ask mode (generates answer with sources)."""
     collection_list = parse_collections(collections)
+
+    # The Query Agent is a Weaviate Cloud service; fail fast with a clear message
+    # instead of an opaque network/auth error when pointed at a local server.
+    weaviate_url, _ = validate_env()
+    if not is_cloud_url(weaviate_url):
+        print(
+            "Error: The Query Agent is only available on Weaviate Cloud, but "
+            f"WEAVIATE_URL points to {weaviate_url}. Use hybrid_search.py or "
+            "semantic_search.py instead.",
+            file=sys.stderr,
+        )
+        raise typer.Exit(1)
 
     try:
         with get_client() as client:

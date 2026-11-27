@@ -17,6 +17,8 @@ WEAVIATE_URL="https://your-cluster.weaviate.cloud"
 WEAVIATE_API_KEY="your-api-key"
 ```
 
+For a local or self-hosted server, set `WEAVIATE_URL` (e.g. `http://localhost:8080`); `WEAVIATE_API_KEY` is then optional. Optional `WEAVIATE_GRPC_HOST`, `WEAVIATE_GRPC_PORT` and `WEAVIATE_GRPC_SECURE` are described in the [environment requirements](skills/weaviate/references/environment_requirements.md#connecting-to-local-or-self-hosted-weaviate).
+
 **External Provider Keys (auto-detected):**
 
 Set only the keys your collections use:
