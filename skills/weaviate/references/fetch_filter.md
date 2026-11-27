@@ -21,7 +21,7 @@ uv run SKILL_DIR/scripts/fetch_filter.py "CollectionName" [--id "UUID"] [--filte
 
 ## Modes
 
-1. **Fetch by UUID**: Use `--id` to retrieve a specific object
+1. **Fetch by UUID**: Use `--id` to retrieve a specific object (cannot be combined with `--filters`)
 2. **Fetch with filters**: Use `--filters` to retrieve filtered subsets
 3. **Fetch random sample**: Omit both `--id` and `--filters` for unfiltered results
 
@@ -53,7 +53,17 @@ uv run SKILL_DIR/scripts/fetch_filter.py "CollectionName" [--id "UUID"] [--filte
 
 ### Supported operators
 
-`equal`, `not_equal`, `less_than`, `less_or_equal`, `greater_than`, `greater_or_equal`, `like`, `contains_any`, `contains_all`, `is_none`
+`equal`, `not_equal`, `less_than`, `less_or_equal`, `greater_than`, `greater_or_equal`, `like`, `contains_any`, `contains_all`, `contains_none`, `is_none`
+
+| Operator | `value` |
+|----------|---------|
+| `equal`, `not_equal`, `less_than`, `less_or_equal`, `greater_than`, `greater_or_equal`, `like` | any JSON value |
+| `contains_any`, `contains_all`, `contains_none` | JSON array |
+| `is_none` | `true` (property is null) or `false` (property is set) |
+
+### Validation
+
+Filters are validated before connecting to Weaviate. An unknown operator, a missing `property`/`operator`/`value`, a wrongly-typed `value`, or an empty `and`/`or` group is a hard error (exit code 1, message names the offending clause, e.g. `filters.and[1]`). The script never silently drops a clause or falls back to an unfiltered fetch, so a successful result always reflects the full filter you passed.
 
 ## Output
 

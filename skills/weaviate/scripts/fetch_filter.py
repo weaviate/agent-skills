@@ -25,7 +25,7 @@ Environment Variables:
 
 import json
 import sys
-from typing import Any, List, Optional
+from typing import Any
 
 import typer
 import weaviate
@@ -37,9 +37,45 @@ from weaviate_conn import get_client
 app = typer.Typer()
 
 
-def parse_filter_item(item: Any) -> Optional[Filter]:
+class FilterError(ValueError):
+    """Raised when a --filters JSON document is malformed or unsupported."""
+
+
+_MISSING = object()
+
+# operator name -> (Filter method name, value kind)
+#   "any"  : any JSON value
+#   "list" : must be a JSON array
+#   "bool" : must be a JSON boolean
+_PROPERTY_OPERATORS: dict[str, tuple[str, str]] = {
+    "equal": ("equal", "any"),
+    "not_equal": ("not_equal", "any"),
+    "less_than": ("less_than", "any"),
+    "less_or_equal": ("less_or_equal", "any"),
+    "greater_than": ("greater_than", "any"),
+    "greater_or_equal": ("greater_or_equal", "any"),
+    "like": ("like", "any"),
+    "contains_any": ("contains_any", "list"),
+    "contains_all": ("contains_all", "list"),
+    "contains_none": ("contains_none", "list"),
+    "is_none": ("is_none", "bool"),
+}
+
+
+def _coerce_bool(op: str, prop: str, val: Any) -> bool:
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, str) and val.strip().lower() in ("true", "false"):
+        return val.strip().lower() == "true"
+    raise FilterError(
+        f"Operator '{op}' on property '{prop}' needs a boolean value "
+        f"(true/false), got {val!r}."
+    )
+
+
+def parse_filter_item(item: Any, path: str = "filters") -> Filter:
     """
-    Recursively parse a single filter item (dict or list).
+    Recursively parse a single filter item (dict or list) into a Filter.
 
     Supported structures:
     1. List of filters (implicit AND): [filter1, filter2]
@@ -48,88 +84,74 @@ def parse_filter_item(item: Any) -> Optional[Filter]:
        {"operator": "or", "filters": [...]}
     3. Property Filter:
        {"property": "name", "operator": "equal", "value": "foo"}
+
+    Fails closed: anything that cannot be turned into a real filter raises
+    FilterError instead of being silently dropped. Dropping a clause would
+    return a *different* result set than the one that was asked for while
+    looking like a successful, filtered query.
     """
     if isinstance(item, list):
-        # Implicit AND for lists
-        sub_filters = [parse_filter_item(x) for x in item]
-        # Filter out Nones
-        sub_filters = [f for f in sub_filters if f is not None]
-        if not sub_filters:
-            return None
-        return Filter.all_of(sub_filters)
+        if not item:
+            raise FilterError(f"{path}: filter list is empty.")
+        return Filter.all_of(
+            [parse_filter_item(x, f"{path}[{i}]") for i, x in enumerate(item)]
+        )
 
     if not isinstance(item, dict):
-        return None
-
-    # Check for logical operators
-    op = item.get("operator")
-
-    if op == "and":
-        sub_items = item.get("filters", [])
-        sub_filters = [parse_filter_item(x) for x in sub_items]
-        sub_filters = [f for f in sub_filters if f is not None]
-        return Filter.all_of(sub_filters) if sub_filters else None
-
-    if op == "or":
-        sub_items = item.get("filters", [])
-        sub_filters = [parse_filter_item(x) for x in sub_items]
-        sub_filters = [f for f in sub_filters if f is not None]
-        return Filter.any_of(sub_filters) if sub_filters else None
-
-    # Property Filter
-    prop = item.get("property")
-    val = item.get("value")
-
-    if not prop or not op:
-        return None
-
-    current_filter = Filter.by_property(prop)
-
-    # Map operator string to method
-    if op == "equal":
-        return current_filter.equal(val)
-    elif op == "not_equal":
-        return current_filter.not_equal(val)
-    elif op == "less_than":
-        return current_filter.less_than(val)
-    elif op == "less_or_equal":
-        return current_filter.less_or_equal(val)
-    elif op == "greater_than":
-        return current_filter.greater_than(val)
-    elif op == "greater_or_equal":
-        return current_filter.greater_or_equal(val)
-    elif op == "like":
-        return current_filter.like(val)
-    elif op == "contains_any":
-        if not isinstance(val, list):
-            print(
-                f"Error: Value for 'contains_any' must be a list, got {type(val)}",
-                file=sys.stderr,
-            )
-            raise typer.Exit(1)
-        return current_filter.contains_any(val)
-    elif op == "contains_all":
-        if not isinstance(val, list):
-            print(
-                f"Error: Value for 'contains_all' must be a list, got {type(val)}",
-                file=sys.stderr,
-            )
-            raise typer.Exit(1)
-        return current_filter.contains_all(val)
-    elif op == "is_none":
-        return current_filter.is_none(bool(val))
-    else:
-        print(
-            f"Warning: Unknown operator '{op}' for property '{prop}'. Skipping.",
-            file=sys.stderr,
+        raise FilterError(
+            f"{path}: expected a filter object or list, got {type(item).__name__} "
+            f"({item!r})."
         )
-        return None
+
+    op = item.get("operator")
+    if not isinstance(op, str) or not op:
+        raise FilterError(f"{path}: missing 'operator'.")
+
+    # Logical operators
+    if op in ("and", "or"):
+        sub_items = item.get("filters")
+        if not isinstance(sub_items, list) or not sub_items:
+            raise FilterError(
+                f"{path}: '{op}' needs a non-empty 'filters' array."
+            )
+        sub_filters = [
+            parse_filter_item(x, f"{path}.{op}[{i}]") for i, x in enumerate(sub_items)
+        ]
+        return Filter.all_of(sub_filters) if op == "and" else Filter.any_of(sub_filters)
+
+    # Property filter
+    prop = item.get("property")
+    if not isinstance(prop, str) or not prop:
+        raise FilterError(f"{path}: missing 'property' for operator '{op}'.")
+
+    if op not in _PROPERTY_OPERATORS:
+        raise FilterError(
+            f"{path}: unknown operator '{op}' for property '{prop}'. "
+            f"Supported: and, or, {', '.join(_PROPERTY_OPERATORS)}."
+        )
+
+    val = item.get("value", _MISSING)
+    if val is _MISSING:
+        raise FilterError(f"{path}: operator '{op}' on '{prop}' needs a 'value'.")
+
+    method_name, kind = _PROPERTY_OPERATORS[op]
+    if kind == "list" and not isinstance(val, list):
+        raise FilterError(
+            f"{path}: operator '{op}' on '{prop}' needs a list value, "
+            f"got {type(val).__name__}."
+        )
+    if kind == "bool":
+        val = _coerce_bool(op, prop, val)
+
+    return getattr(Filter.by_property(prop), method_name)(val)
 
 
-def parse_filters(filter_json: str) -> Optional[Filter]:
+def parse_filters(filter_json: str | None) -> Filter | None:
     """
     Parse a JSON string of filters into a Weaviate Filter object.
-    Supports complex nesting with AND/OR.
+
+    Returns None only when no filter was requested (None/empty string or an
+    explicit empty list). Any malformed filter raises FilterError.
     """
     if not filter_json:
         return None
@@ -137,8 +159,10 @@ def parse_filters(filter_json: str) -> Optional[Filter]:
     try:
         data = json.loads(filter_json)
     except json.JSONDecodeError as e:
-        print(f"Error parsing filters JSON: {e}", file=sys.stderr)
-        raise typer.Exit(1)
+        raise FilterError(f"Invalid JSON in --filters: {e}") from e
+
+    if data == []:
+        return None
 
     return parse_filter_item(data)
 
@@ -158,6 +182,21 @@ def main(
     json_output: bool = typer.Option(False, "--json", help="Output in JSON format"),
 ):
     """Fetch objects with optional filtering."""
+    if obj_id and filters:
+        print(
+            "Error: --id and --filters cannot be combined; --id fetches a single "
+            "object and would ignore the filters.",
+            file=sys.stderr,
+        )
+        raise typer.Exit(1)
+
+    # Validate filters before opening a connection so mistakes fail fast.
+    try:
+        weaviate_filter = parse_filters(filters)
+    except FilterError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        raise typer.Exit(1)
+
     try:
         with get_client() as client:
             if not client.collections.exists(collection_name):
@@ -192,8 +231,6 @@ def main(
 
             else:
                 # Fetch multiple with filters
-                weaviate_filter = parse_filters(filters)
-
                 if not json_output:
                     print(
                         f"Fetching objects from '{collection_name}'...", file=sys.stderr
